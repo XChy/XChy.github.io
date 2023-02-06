@@ -28,9 +28,53 @@
       </tags>
   </entry>
   <entry>
+    <title>Neovim常用配置(1)</title>
+    <url>/2023/02/06/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-1/</url>
+    <content><![CDATA[<p>网上有关Neovim API的中文资料实在稀缺，在此特意整理一部分</p>
+<p>若英文水平过关，可以直接输入指令 <code>:h lua guide</code> 获得Neovim的Lua API相关英文文档</p>
+<span id="more"></span>
+
+<h2 id="Neovim’s-Lua-API"><a href="#Neovim’s-Lua-API" class="headerlink" title="Neovim’s Lua API"></a>Neovim’s Lua API</h2><ul>
+<li><p><code>vim.keymap.set(mode , from_keys, to_expr, opts)</code></p>
+<p> <em>作用:创建一个键位映射</em></p>
+<p> <strong>mode</strong>：类型：<strong>string</strong>，映射作用的模式，”n”代表normal，”i”代表insert,”v”代表visual</p>
+<p> <strong>from_keys</strong>：类型：<strong>string</strong>，则指被映射的按键</p>
+<p> <strong>to_expr</strong>：类型：<strong>any</strong>，指映射得到的键位，vim表达式，或者Lua函数</p>
+<p> <strong>opts</strong>：类型：<strong>table</strong>，键位映射有关的设置</p>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p><code>vim.api.nvim_create_user_command(commandName, expr)</code></p>
+<p> <em>作用:创建一个用户命令</em></p>
+<p> <strong>commandName</strong>：类型：<strong>string</strong>， 命令名(必须首字母大写)</p>
+<p> <strong>expr</strong>：类型：<strong>any</strong>，命令执行的键位，表达式或者Lua函数</p>
+</li>
+</ul>
+<hr>
+<ul>
+<li><p>‘vim.api.nvim_create_autocmd(event, opts)’</p>
+<p>  <em>作用:创建一个自动命令</em></p>
+<p>  <strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
+<p>  <strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
+<ul>
+<li><p><strong>pattern</strong>: 文件名的pattern</p>
+</li>
+<li><p><strong>callback</strong>: 自动命令的回调函数，可以是键位，vim表达式，或者Lua函数</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+]]></content>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>第一篇博客文章</title>
     <url>/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/</url>
-    <content><![CDATA[<p>奋战了2个小时后，终于成功用Hexo搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#x78;&#x73;&#x5f;&#x63;&#x68;&#121;&#x40;&#x6f;&#x75;&#116;&#x6c;&#111;&#x6f;&#107;&#x2e;&#99;&#x6f;&#109;">&#120;&#x78;&#x73;&#x5f;&#x63;&#x68;&#121;&#x40;&#x6f;&#x75;&#116;&#x6c;&#111;&#x6f;&#107;&#x2e;&#99;&#x6f;&#109;</a></strong>联系我</p>
+    <content><![CDATA[<p>奋战了2个小时后，终于成功用Hexo搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#120;&#x73;&#x5f;&#x63;&#104;&#x79;&#64;&#x6f;&#117;&#116;&#108;&#111;&#x6f;&#x6b;&#46;&#99;&#111;&#x6d;">&#120;&#120;&#x73;&#x5f;&#x63;&#104;&#x79;&#64;&#x6f;&#117;&#116;&#108;&#111;&#x6f;&#x6b;&#46;&#99;&#111;&#x6d;</a></strong>联系我</p>
 ]]></content>
       <categories>
         <category>Blog&#39;s configuration</category>
