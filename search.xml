@@ -53,7 +53,7 @@
 </ul>
 <hr>
 <ul>
-<li><p>‘vim.api.nvim_create_autocmd(event, opts)’</p>
+<li><p><code>vim.api.nvim_create_autocmd(event, opts)</code></p>
 <p>  <em>作用:创建一个自动命令</em></p>
 <p>  <strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
 <p>  <strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
