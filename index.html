@@ -220,7 +220,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-02-14 17:05:28" itemprop="dateModified" datetime="2023-02-14T17:05:28+08:00">2023-02-14</time>
+                <time title="Modified: 2023-02-14 17:06:23" itemprop="dateModified" datetime="2023-02-14T17:06:23+08:00">2023-02-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -243,9 +243,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>###使用Lua配置Neovim，并设置自己的workflow</p>
-<p>####结合命令行工具</p>
-<p>我在编码时常常有使用git的需求，但又不想总是在命令行中敲命令</p>
+          <h3 id="使用Lua配置Neovim，并设置自己的workflow"><a href="#使用Lua配置Neovim，并设置自己的workflow" class="headerlink" title="使用Lua配置Neovim，并设置自己的workflow"></a>使用Lua配置Neovim，并设置自己的workflow</h3><h4 id="结合命令行工具"><a href="#结合命令行工具" class="headerlink" title="结合命令行工具"></a>结合命令行工具</h4><p>我在编码时常常有使用git的需求，但又不想总是在命令行中敲命令</p>
 <p>于是我利用与ToggleTerm把命令行工具lazygit嵌入至Neovim中</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Terminal = <span class="built_in">require</span>(<span class="string">&#x27;toggleterm.terminal&#x27;</span>).Terminal</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> lazygit = Terminal:new(&#123; cmd = <span class="string">&quot;lazygit&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"><span class="keyword">local</span> top = Terminal:new(&#123; cmd = <span class="string">&quot;top&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- lazygit</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;LazyGit&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        lazygit:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- top</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;Top&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        top:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br></pre></td></tr></table></figure>
           <!--noindex-->
