@@ -189,7 +189,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2-%E6%8F%92%E4%BB%B6-md/">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/doge.jpg">
@@ -203,7 +203,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2-%E6%8F%92%E4%BB%B6-md/" class="post-title-link" itemprop="url">Neovim常用配置(2)</a>
+            <a href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/" class="post-title-link" itemprop="url">Neovim常用配置(2)</a>
         </h2>
 
         <div class="post-meta">
@@ -220,7 +220,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-02-14 17:01:41" itemprop="dateModified" datetime="2023-02-14T17:01:41+08:00">2023-02-14</time>
+                <time title="Modified: 2023-02-14 17:05:28" itemprop="dateModified" datetime="2023-02-14T17:05:28+08:00">2023-02-14</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -243,12 +243,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>###使用Lua配置Neovim，并设置自己的workflow<br>####结合命令行工具<br>我在编码时常常有使用git的需求，但又不想总是在命令行中敲命令</p>
+          <p>###使用Lua配置Neovim，并设置自己的workflow</p>
+<p>####结合命令行工具</p>
+<p>我在编码时常常有使用git的需求，但又不想总是在命令行中敲命令</p>
 <p>于是我利用与ToggleTerm把命令行工具lazygit嵌入至Neovim中</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Terminal = <span class="built_in">require</span>(<span class="string">&#x27;toggleterm.terminal&#x27;</span>).Terminal</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> lazygit = Terminal:new(&#123; cmd = <span class="string">&quot;lazygit&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"><span class="keyword">local</span> top = Terminal:new(&#123; cmd = <span class="string">&quot;top&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- lazygit</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;LazyGit&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        lazygit:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- top</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;Top&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        top:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2-%E6%8F%92%E4%BB%B6-md/#more" rel="contents">
+              <a class="btn" href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -485,7 +487,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>奋战了2个小时后，终于成功用Hexo搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#120;&#x73;&#x5f;&#99;&#x68;&#x79;&#64;&#111;&#x75;&#x74;&#108;&#111;&#111;&#x6b;&#x2e;&#99;&#x6f;&#x6d;">&#120;&#120;&#x73;&#x5f;&#99;&#x68;&#x79;&#64;&#111;&#x75;&#x74;&#108;&#111;&#111;&#x6b;&#x2e;&#99;&#x6f;&#x6d;</a></strong>联系我</p>
+          <p>奋战了2个小时后，终于成功用Hexo搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#x78;&#120;&#115;&#x5f;&#x63;&#x68;&#x79;&#x40;&#x6f;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#x63;&#x6f;&#109;">&#x78;&#120;&#115;&#x5f;&#x63;&#x68;&#x79;&#x40;&#x6f;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#x63;&#x6f;&#109;</a></strong>联系我</p>
 
       
     </div>
