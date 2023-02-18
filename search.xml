@@ -143,4 +143,30 @@
         <tag>Blog&#39;s configuration</tag>
       </tags>
   </entry>
+  <entry>
+    <title>XSharp开发思路-Type</title>
+    <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
+    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统"><a href="#一个好的编程语言需要有一个好的类型系统" class="headerlink" title="一个好的编程语言需要有一个好的类型系统"></a>一个好的编程语言需要有一个好的类型系统</h3><p>笔者计划为XSharp开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
+<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
+<p>于是<strong>TypeNode</strong>出现了</p>
+<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如ArrayType有elementType的子类型，FunctionType有paramTypes的子节点列表</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
+<p>从而确定TypeNode的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
+<p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析variant类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的typeID，并通过typeID实现运行时反射</p>
+<p>在TypeSystem中我们将实现这一功能</p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>XSharp</tag>
+      </tags>
+  </entry>
 </search>
