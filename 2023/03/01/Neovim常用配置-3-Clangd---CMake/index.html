@@ -20,21 +20,20 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱&amp;#120;&amp;#x78;&amp;#115;&amp;#95;&amp;#x63;&amp;#x68;&amp;#121;&amp;#x40;&amp;#111;&amp;#117;&amp;#x74;&amp;#108;&amp;#111;&amp;#111;&amp;#107;&amp;#x2e;&amp;#99;&amp;#111;&amp;#109;联系我">
+  <meta name="description" content="在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 clangd 作为 lsp 提供语法高亮&#x2F;重构等语言服务 其中 clangd 根据自动推断宏的功能也是十分有效，搭配CMake可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件) 下面提供简要的集成 clangd 与 cmake 的方法 一般来说clangd可以自动识">
 <meta property="og:type" content="article">
-<meta property="og:title" content="第一篇博客文章">
-<meta property="og:url" content="http://xchy.github.io/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/index.html">
+<meta property="og:title" content="Neovim常用配置(3) (clangd &amp; CMake)">
+<meta property="og:url" content="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
-<meta property="og:description" content="奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱&amp;#120;&amp;#x78;&amp;#115;&amp;#95;&amp;#x63;&amp;#x68;&amp;#121;&amp;#x40;&amp;#111;&amp;#117;&amp;#x74;&amp;#108;&amp;#111;&amp;#111;&amp;#107;&amp;#x2e;&amp;#99;&amp;#111;&amp;#109;联系我">
+<meta property="og:description" content="在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 clangd 作为 lsp 提供语法高亮&#x2F;重构等语言服务 其中 clangd 根据自动推断宏的功能也是十分有效，搭配CMake可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件) 下面提供简要的集成 clangd 与 cmake 的方法 一般来说clangd可以自动识">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2023-02-06T07:32:01.000Z">
-<meta property="article:modified_time" content="2023-03-01T14:43:52.638Z">
+<meta property="article:published_time" content="2023-03-01T14:42:55.000Z">
+<meta property="article:modified_time" content="2023-03-01T15:04:19.074Z">
 <meta property="article:author" content="XChy">
-<meta property="article:tag" content="Helloworld">
-<meta property="article:tag" content="Blog&#39;s configuration">
+<meta property="article:tag" content="Vim">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://xchy.github.io/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">
+<link rel="canonical" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
 
 
 <script id="page-configurations">
@@ -47,7 +46,7 @@
   };
 </script>
 
-  <title>第一篇博客文章 | XChy's Blog</title>
+  <title>Neovim常用配置(3) (clangd & CMake) | XChy's Blog</title>
   
 
 
@@ -196,7 +195,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/doge.jpg">
@@ -209,7 +208,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          第一篇博客文章
+          Neovim常用配置(3) (clangd & CMake)
         </h1>
 
         <div class="post-meta">
@@ -218,23 +217,17 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2023-02-06 15:32:01" itemprop="dateCreated datePublished" datetime="2023-02-06T15:32:01+08:00">2023-02-06</time>
+              <time title="Created: 2023-03-01 22:42:55 / Modified: 23:04:19" itemprop="dateCreated datePublished" datetime="2023-03-01T22:42:55+08:00">2023-03-01</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-03-01 22:43:52" itemprop="dateModified" datetime="2023-03-01T22:43:52+08:00">2023-03-01</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Blog-s-configuration/" itemprop="url" rel="index"><span itemprop="name">Blog's configuration</span></a>
+                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
                 </span>
             </span>
 
@@ -249,7 +242,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#x78;&#115;&#95;&#x63;&#x68;&#121;&#x40;&#111;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#99;&#111;&#109;">&#120;&#x78;&#115;&#95;&#x63;&#x68;&#121;&#x40;&#111;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#99;&#111;&#109;</a></strong>联系我</p>
+        <p>在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮&#x2F;重构等语言服务</p>
+<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
+<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
+<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
+<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
+
+<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
+<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+
+<p>构建时只需要输入 build.sh</p>
 
     </div>
 
@@ -260,8 +264,7 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/Helloworld/" rel="tag"><i class="fa fa-tag"></i> Helloworld</a>
-              <a href="/tags/Blog-s-configuration/" rel="tag"><i class="fa fa-tag"></i> Blog's configuration</a>
+              <a href="/tags/Vim/" rel="tag"><i class="fa fa-tag"></i> Vim</a>
           </div>
 
         
@@ -270,13 +273,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2023/02/06/hello-world/" rel="prev" title="Hello World">
-      <i class="fa fa-chevron-left"></i> Hello World
+    <a href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/" rel="prev" title="XSharp开发思路-Type">
+      <i class="fa fa-chevron-left"></i> XSharp开发思路-Type
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2023/02/06/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-1/" rel="next" title="Neovim常用配置(1)">
-      Neovim常用配置(1) <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
