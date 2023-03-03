@@ -110,6 +110,87 @@
       </tags>
   </entry>
   <entry>
+    <title>Neovim常用配置(3) (clangd &amp; CMake)</title>
+    <url>/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/</url>
+    <content><![CDATA[<p>在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮&#x2F;重构等语言服务</p>
+<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
+<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
+<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
+<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
+
+<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
+<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+
+<p>构建时只需要输入 build.sh</p>
+]]></content>
+      <categories>
+        <category>Tools</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp开发思路-Mutable Variable的LLVM IR生成</title>
+    <url>/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/</url>
+    <content><![CDATA[<h3 id="为什么需要-Mutable-Variable"><a href="#为什么需要-Mutable-Variable" class="headerlink" title="为什么需要 Mutable Variable?"></a>为什么需要 Mutable Variable?</h3><p>由于 LLVM 内部优化等原因，LLVM IR 中的寄存器必须遵循<strong>SSA</strong>原则，即每个寄存器在 SSA 中仅被赋值一次。</p>
+<p>但由于 XSharp 需要支持同个变量的多次引用，我们不能直接使用寄存器作为变量的存储单元。</p>
+<p>幸运的是，LLVM 并不强制要求栈上的变量保持<strong>SSA</strong>，所以我们可以考虑将所有变量存放在栈上，</p>
+<p>然后再通过 LLVM 提供的 Mem2Reg 工具或者 Pass 进行栈上内存的数据流分析，尽可能地将栈上的变量转换至寄存器上。</p>
+<p>原文档在此:<a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Mutable Variable</a></p>
+<p>而针对 XSharp,我们可以写出如下代码</p>
+<span id="more"></span>
+
+<p>首先，LLVM 通过<strong>AllocaInst</strong>分配栈上的变量</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">VariableDeclarationNode* varNode = <span class="built_in">get</span>();</span><br><span class="line">TypeNode* typenode = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> xsharpType = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"><span class="keyword">auto</span> llvmValue =</span><br><span class="line">builder.<span class="built_in">CreateAlloca</span>(</span><br><span class="line">    <span class="built_in">llvmTypeFor</span>(xsharpType, context), <span class="literal">nullptr</span>,</span><br><span class="line">    varNode-&gt;<span class="built_in">name</span>().<span class="built_in">toStdString</span>());</span><br></pre></td></tr></table></figure>
+
+<p>同时，也可以把函数的参数存在栈上，以下复制自 <a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Tutorial</a></p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function">Function *<span class="title">FunctionAST::codegen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  Builder-&gt;<span class="built_in">SetInsertPoint</span>(BB);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Record the function arguments in the NamedValues map.</span></span><br><span class="line">  NamedValues.<span class="built_in">clear</span>();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">auto</span> &amp;Arg : TheFunction-&gt;<span class="built_in">args</span>()) &#123;</span><br><span class="line">    <span class="comment">// Create an alloca for this variable.</span></span><br><span class="line">    AllocaInst *Alloca = <span class="built_in">CreateEntryBlockAlloca</span>(TheFunction, Arg.<span class="built_in">getName</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Store the initial value into the alloca.</span></span><br><span class="line">    Builder-&gt;<span class="built_in">CreateStore</span>(&amp;Arg, Alloca);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Add arguments to variable symbol table.</span></span><br><span class="line">    NamedValues[std::<span class="built_in">string</span>(Arg.<span class="built_in">getName</span>())] = Alloca;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Value *RetVal = Body-&gt;<span class="built_in">codegen</span>()) &#123;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>并用<strong>PromoteMemoryToRegisterPass</strong>实现 Mem2Reg 的优化</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Promote allocas to registers.</span></span><br><span class="line">functionPassManager-&gt;<span class="built_in">add</span>(<span class="built_in">createPromoteMemoryToRegisterPass</span>());</span><br></pre></td></tr></table></figure>
+
+<p>LLVM 也对性能等问题做了解释<br><img src="/images/Mem2RegLLVM.png" alt="content"></p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>XSharp</tag>
+        <tag>LLVM</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp开发思路-Type</title>
+    <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
+    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统"><a href="#一个好的编程语言需要有一个好的类型系统" class="headerlink" title="一个好的编程语言需要有一个好的类型系统"></a>一个好的编程语言需要有一个好的类型系统</h3><p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
+<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
+<p>于是<strong>TypeNode</strong>出现了</p>
+<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
+<p>从而确定 TypeNode 的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
+<p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析 variant 类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的 typeID，并通过 typeID 实现运行时反射</p>
+<p>在 TypeSystem 中我们将实现这一功能</p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>XSharp</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hello World</title>
     <url>/2023/02/06/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
@@ -140,7 +221,7 @@
   <entry>
     <title>第一篇博客文章</title>
     <url>/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/</url>
-    <content><![CDATA[<p>奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#x78;&#115;&#95;&#x63;&#x68;&#121;&#x40;&#111;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#99;&#111;&#109;">&#120;&#x78;&#115;&#95;&#x63;&#x68;&#121;&#x40;&#111;&#117;&#x74;&#108;&#111;&#111;&#107;&#x2e;&#99;&#111;&#109;</a></strong>联系我</p>
+    <content><![CDATA[<p>奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#x78;&#115;&#x5f;&#99;&#104;&#x79;&#x40;&#x6f;&#x75;&#x74;&#x6c;&#x6f;&#x6f;&#107;&#x2e;&#99;&#111;&#109;">&#120;&#x78;&#115;&#x5f;&#99;&#104;&#x79;&#x40;&#x6f;&#x75;&#x74;&#x6c;&#x6f;&#x6f;&#107;&#x2e;&#99;&#111;&#109;</a></strong>联系我</p>
 ]]></content>
       <categories>
         <category>Blog&#39;s configuration</category>
@@ -148,55 +229,6 @@
       <tags>
         <tag>Helloworld</tag>
         <tag>Blog&#39;s configuration</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>XSharp开发思路-Type</title>
-    <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
-    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统"><a href="#一个好的编程语言需要有一个好的类型系统" class="headerlink" title="一个好的编程语言需要有一个好的类型系统"></a>一个好的编程语言需要有一个好的类型系统</h3><p>笔者计划为XSharp开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
-<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
-<p>于是<strong>TypeNode</strong>出现了</p>
-<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如ArrayType有elementType的子类型，FunctionType有paramTypes的子节点列表</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>
-
-<p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
-<p>从而确定TypeNode的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
-<p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析variant类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的typeID，并通过typeID实现运行时反射</p>
-<p>在TypeSystem中我们将实现这一功能</p>
-]]></content>
-      <categories>
-        <category>XSharp</category>
-      </categories>
-      <tags>
-        <tag>Compiler</tag>
-        <tag>XSharp</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Neovim常用配置(3) (clangd &amp; CMake)</title>
-    <url>/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/</url>
-    <content><![CDATA[<p>在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮&#x2F;重构等语言服务</p>
-<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
-<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
-<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
-<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
-
-<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
-<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
-
-<p>构建时只需要输入 build.sh</p>
-]]></content>
-      <categories>
-        <category>Tools</category>
-      </categories>
-      <tags>
-        <tag>Vim</tag>
       </tags>
   </entry>
 </search>
