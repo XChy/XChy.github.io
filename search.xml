@@ -231,4 +231,62 @@
         <tag>Blog&#39;s configuration</tag>
       </tags>
   </entry>
+  <entry>
+    <title>XSharp开发思路-表达式解析-Pratt Parsing</title>
+    <url>/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/</url>
+    <content><![CDATA[<p>手工实现 Parser 常用<strong>递归下降法(Recusive Descent)</strong>，XSharp 的 Parser 也采用了<strong>递归下降</strong>的主体结构。</p>
+<p>一般来说递归下降法适用于自上而下的结构，更容易解析开头有标识符的语言，如：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> () &#123;&#125;</span><br><span class="line"><span class="keyword">while</span> () &#123;&#125;</span><br><span class="line"><span class="keyword">class</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>但也由于同样的原因，递归下降法处理表达式非常吃力。Parser 在读到表达式开头的时候，无法知道自己身处哪种表达式之中，这是因为操作符往往在表达式的中间位置（甚至结尾），比如加法运算的+、函数调用的()。为了能自顶向下地解析表达式，你需要将每一种操作符 <strong>优先级(priority)</strong> 都单独作为一个层级，为其编写解析函数，并手动处理 <strong>结合性(associativity)</strong> ，因此解析函数会比较多、比较复杂。</p>
+<p>所以在重构 XSharp 的 Parser 时，我选择了 <strong>Pratt Parsing</strong> 作为表达式的算法</p>
+<p>笔者参考了 <a href="https://zhuanlan.zhihu.com/p/471075848">Pratt Parsing 知乎</a> 和 <a href="https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html">Pratt Parsing Rust</a> 进行了有关代码的重构</p>
+<p>核心代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">ASTNode* lhs = <span class="built_in">operand</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">isStopwords</span>(current, stopwords)) <span class="keyword">return</span> lhs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (current-&gt;type != Operator)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">XSharpError</span>(<span class="string">&quot;No operator matched after operand&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">priority</span>(current-&gt;value) &lt;= ctxPriority) <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">    XString op = current-&gt;value;</span><br><span class="line"></span><br><span class="line">    forward();</span><br><span class="line">    <span class="keyword">auto</span> right_binding_power =</span><br><span class="line">        <span class="built_in">assoc</span>(op) == LeftToRight ? <span class="built_in">priority</span>(op) : <span class="built_in">priority</span>(op) - <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">auto</span> rhs = <span class="built_in">expression</span>(stopwords, right_binding_power);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> new_lhs = <span class="keyword">new</span> BinaryOperatorNode;</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setOperatorStr</span>(op);</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setLeft</span>(lhs);</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setRight</span>(rhs);</span><br><span class="line">    lhs = new_lhs;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> lhs;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<p>原理如下：</p>
+<p>我们在解析表达式时，我们总是倾向于让<strong>priority</strong>较高的运算符与<strong>operand</strong>结合</p>
+<p>故我们在已知左边表达式 lhs 时，从人类通常思维出发</p>
+<p>我们倾向于在 op 的 priority 较高时拆散 lhs，让 op 不断与 lhs 最右边的 operand 结合直到优先级不足</p>
+<p>而在 op 的 priority 较低时，让 op 与 lhs 整体结合</p>
+<p>但这不符合机器从左到右解析的顺序，所以我们可以换一种思路</p>
+<p>所以，我们从左向右扫描，设初始优先级为 0，从 priority 较低的层级出发，一步步找到优先级更高的运算符并结合</p>
+<p>以表达式 <code>a / b = 2 + 5 * 6</code> 为例</p>
+<p>初始层级优先级为 0，给当前层级命名 <strong>initial</strong></p>
+<ul>
+<li><p>进入 initial 层，我们先读入 token <strong>a</strong></p>
+<p>发现 <strong>/</strong> 的优先级大于 0，于是结合 0 与/<br>并进入属于 <strong>‘/’</strong> 的层级，该层级优先级为 3，该层级求优先级大于 3 的 rhs</p>
+<ul>
+<li><p>然后读入 token <strong>b</strong>, b 属于 <strong>‘/’</strong> 层级，又读入 operator <strong>=</strong> 发现其优先级&lt;=当前层级最小优先级</p>
+<p>于是结束 <strong>‘/’</strong> 层级， 确定其 rhs 为 b，得到一个整体 <code>(a / b)</code></p>
+</li>
+</ul>
+</li>
+<li><p>回到 initial 层，且此时 lhs 为<code>a / b</code>，继续读入 operator <strong>=</strong> ，其优先级为 1&gt;=0，故进入 <strong>‘=’</strong> 层</p>
+<ul>
+<li><p>现在读入 token <strong>2</strong>，再读入 operator <strong>+</strong>，发现其优先级 2&gt;=1 故可作为 rhs，进入 <strong>‘+’</strong> 层</p>
+<ul>
+<li><p>继续求 <strong>‘+’</strong> 的 rhs，发现 token <strong>5</strong>，和 operator <strong>*</strong> ，<strong>*</strong> 的优先级 3&gt;=2，故进入<strong>‘*‘</strong>层</p>
+<ul>
+<li>读入 <code>6</code> 表达式结束，将 6 作为 <strong>‘*‘</strong> 的 rhs，开始回溯</li>
+</ul>
+<p>将 <code>5 * 6</code> 作为 <strong>‘+’</strong> 的 rhs，退出 <strong>‘+’</strong> 层</p>
+</li>
+</ul>
+<p>得到 <code>2 + (5*6)</code> ，将其作为 <strong>‘=’</strong> 的 rhs，退出 <strong>‘=’</strong> 层</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>最后回到<strong>initial</strong>层，结合已有 lhs：<code>a / b</code>, op: <code>=</code>, rhs <code>2 + ( 5 * 6 )</code>，返回<code>(a / b) = ( 2 + ( 5 * 6 ) )</code></p>
+<p>至此基本算法结束，对于右结合的<strong>associativity</strong>可以通过降低其’右优先级‘来实现（如代码所示），其他高级特性可参考上面引用的文章</p>
+<p>通过这个算法，我们成功把原本 200 行的复杂函数压缩到 20 行，且获得了更高的性能。</p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>XSharp</tag>
+      </tags>
+  </entry>
 </search>
