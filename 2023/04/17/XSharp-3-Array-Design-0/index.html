@@ -20,15 +20,22 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="XChy&#39;s Blog">
-<meta property="og:url" content="http://xchy.github.io/tags/Compiler/index.html">
+  <meta name="description" content="参考了 Java 中的对象模型我决定把 XSharp 中的 数组(Array) 的模型设计为以下形式：[ 8 bytes ] object header as length of array[ 4 or 8 bytes ] pointer p to a sequential memory (for elements) 故对以下 XSharp 代码 1i64[] a &#x3D; new i64[100]">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XSharp开发思路-数组设计">
+<meta property="og:url" content="http://xchy.github.io/2023/04/17/XSharp-3-Array-Design-0/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
+<meta property="og:description" content="参考了 Java 中的对象模型我决定把 XSharp 中的 数组(Array) 的模型设计为以下形式：[ 8 bytes ] object header as length of array[ 4 or 8 bytes ] pointer p to a sequential memory (for elements) 故对以下 XSharp 代码 1i64[] a &#x3D; new i64[100]">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-04-16T16:46:21.000Z">
+<meta property="article:modified_time" content="2023-05-17T17:04:42.677Z">
 <meta property="article:author" content="XChy">
+<meta property="article:tag" content="Compiler">
+<meta property="article:tag" content="XSharp">
+<meta property="article:tag" content="LLVM">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://xchy.github.io/tags/Compiler/">
+<link rel="canonical" href="http://xchy.github.io/2023/04/17/XSharp-3-Array-Design-0/">
 
 
 <script id="page-configurations">
@@ -36,12 +43,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Tag: Compiler | XChy's Blog</title>
+  <title>XSharp开发思路-数组设计 | XChy's Blog</title>
   
 
 
@@ -183,131 +190,109 @@
         <div class="content-wrap">
           
 
-          <div class="content tag">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <h2 class="collection-header">Compiler
-          <small>Tag</small>
-        </h2>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/04/17/XSharp-3-Array-Design-0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          XSharp开发思路-数组设计
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-04-17 00:46:21" itemprop="dateCreated datePublished" datetime="2023-04-17T00:46:21+08:00">2023-04-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-05-18 01:04:42" itemprop="dateModified" datetime="2023-05-18T01:04:42+08:00">2023-05-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2023</span>
-    </div>
+        <p>参考了 Java 中的对象模型<br>我决定把 XSharp 中的 <strong>数组(Array)</strong> 的模型设计为以下形式：<br>[ <strong>8</strong> bytes ] object header as <strong>length of array</strong><br>[ <strong>4 or 8</strong> bytes ] pointer <strong><em>p</em></strong> to a sequential memory (<strong>for elements</strong>)</p>
+<p>故对以下 XSharp 代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i64[] a = new i64[100]</span><br></pre></td></tr></table></figure>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-05-18T00:28:17+08:00"
-              content="2023-05-18">
-          05-18
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/05/18/XSharp-4-Class-Design/" itemprop="url">
-            <span itemprop="name">XSharp-4-Class-Design</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-04-17T00:46:21+08:00"
-              content="2023-04-17">
-          04-17
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/04/17/XSharp-3-Array-Design-0/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-数组设计</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-03-15T23:16:20+08:00"
-              content="2023-03-15">
-          03-15
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-表达式解析-Pratt Parsing</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-03-03T20:06:53+08:00"
-              content="2023-03-03">
-          03-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-Mutable Variable的LLVM IR生成</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-02-18T18:41:20+08:00"
-              content="2023-02-18">
-          02-18
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-Type</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
+<p>在 64 位系统上，我们将会在栈上分配 8 + 4 字节的内存，由于 align 的要求我们再加上 4 字节的 padding，<br>一共 16 字节，并为 100 个 i64 元素在堆上分配 100 * 8 字节的内存</p>
+<p>而每次执行<code>a[i]</code>这样的操作时，我们会对取 a 的地址 并加上 8，得到指向对应连续内存的指针 <strong><em>p</em></strong> ，<br>再对 <strong>p + i _ sizeof(i64)</strong> 对应的地址指向读&#x2F;写操作</p>
+<p>对应到 LLVM 的 CodeGen，我们则需要定义形如<code>StructType&lt;i64,PointerTo&lt;xxx&gt;&gt;</code>这样的类型，<br>并用<strong>getelementptr inbound</strong>和<strong>getelementptr</strong>指令获得某个元素的地址</p>
+<p>这样设计的好处则是将长度 length 放到栈上，不需要在堆分配和取元素时进行额外的计算，<br>也不需要 align 来保证 cache friendly，同时也方便优化。</p>
+<p>而相较于 C 语言风格的数组，我们的数组主体始终放在堆上，故内存的管理不够精细，<br>但经过了封装，其易用性更胜一筹，基于这些限制，其优化也更容易实现。</p>
 
     </div>
-  </div>
-  
-  
-  
 
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Compiler/" rel="tag"><i class="fa fa-tag"></i> Compiler</a>
+              <a href="/tags/XSharp/" rel="tag"><i class="fa fa-tag"></i> XSharp</a>
+              <a href="/tags/LLVM/" rel="tag"><i class="fa fa-tag"></i> LLVM</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/" rel="prev" title="XSharp开发思路-表达式解析-Pratt Parsing">
+      <i class="fa fa-chevron-left"></i> XSharp开发思路-表达式解析-Pratt Parsing
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/18/XSharp-4-Class-Design/" rel="next" title="XSharp-4-Class-Design">
+      XSharp-4-Class-Design <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 
