@@ -329,10 +329,10 @@
     <title>第一次给LLVM的Contribution</title>
     <url>/2023/06/30/LLVM-First-Contribution/</url>
     <content><![CDATA[<h2 id="为什么要参与LLVM的开源？"><a href="#为什么要参与LLVM的开源？" class="headerlink" title="为什么要参与LLVM的开源？"></a>为什么要参与LLVM的开源？</h2><p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译，<br>我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
-<p>于是我参考了一位LLVM贡献者的文章:<br><a href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
+<p>于是我参考了一位LLVM Member的文章:<br><a href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
 <p>以下则是我从编译到提交patch的全流程。</p>
 <h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
-<p>那么我们首先要clone LLVM的git仓库，或者自己fork一个再clone。二者区别不大，我按照github的开源习惯选了后者。</p>
+<p>那么我们首先要clone LLVM的git仓库，或者自己fork了<strong>llvm-project</strong>后再clone到本地。二者区别不大，我按照github的开源习惯选了后者。</p>
 <p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。<br>以下是cmake的模板：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cmake -GNinja -Bbuild -Hllvm \</span><br><span class="line">    -DLLVM_ENABLE_PROJECTS=&quot;clang&quot; \</span><br><span class="line">    -DLLVM_TARGETS_TO_BUILD=&quot;all&quot; \</span><br><span class="line">    -DCMAKE_BUILD_TYPE=Release \</span><br><span class="line">    -DLLVM_ENABLE_ASSERTIONS=true \</span><br><span class="line">    -DLLVM_CCACHE_BUILD=true \</span><br><span class="line">    -DLLVM_USE_LINKER=lld</span><br></pre></td></tr></table></figure>
 
@@ -340,14 +340,104 @@
 <p>而ninja的编译速度相对较快，所以以下有构建和测试的shell：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Build LLVM</span></span><br><span class="line">ninja -Cbuild</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run all LLVM tests</span></span><br><span class="line">ninja -Cbuild check-llvm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run tests <span class="keyword">in</span> a specific directory.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v will <span class="built_in">print</span> additional information <span class="keyword">for</span> failures.</span></span><br><span class="line">build/bin/llvm-lit -v llvm/test/Transforms/InstCombine</span><br></pre></td></tr></table></figure>
 
-
-<h3 id="选Issue"><a href="#选Issue" class="headerlink" title="选Issue"></a>选Issue</h3><p>由于我是LLVM领域的新手，我肯定不能一上来就砍大龙，所以我选择挑个简单的。</p>
+<h3 id="选Issue"><a href="#选Issue" class="headerlink" title="选Issue"></a>选Issue</h3><p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。</p>
 <span id="more"></span>
-<p>而LLVM项目包括许多子项目，包括LLVM本身、Clang编译器、LLD链接器、libc++标准库以及许多其他项目。即使在LLVM本身中也有不同的领域。主要分为与中端优化器与LLVM中间表示(IR)有关的项目，和与后端将IR转换为机器代码有关的项目。</p>
-<p>而我对中端的了解比较多，所以本博客主要针对中端IR优化的<strong>InstCombine</strong>进行讨论，挑选的也是<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:llvm:instcombine">InstCombine Issue</a>。<br>当然，LLVM还有许多其他容易解决的Issue，如：<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:%22good+first+issue%22">good first issues</a>，Clang，Flang还有clang-tidy和clang-format等项目的Issue。</p>
+<p>而llvm-project包括许多子项目，包括LLVM本身、Clang编译器、LLD链接器、libc++标准库以及许多其他项目。即使在LLVM本身中也有不同的领域。主要分为与中端优化器与LLVM中间表示(IR)有关的项目，和与后端将IR转换为机器代码有关的项目。</p>
+<p>而我对中端的了解比较多，而且中端优化的代码有许多corner cases，可以通过简单的几行代码解决这些cases，<br>所以本博客主要针对中端IR优化的<strong>InstCombine</strong>进行讨论，挑选的也是<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:llvm:instcombine">InstCombine Issue</a>。<br>当然，LLVM还有许多其他容易解决的Issue，如：<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:%22good+first+issue%22">good first issues</a>，Clang，Flang还有clang-tidy和clang-format等项目的Issue。</p>
 <p>在这里我将展示我的一次LLVM贡献经历：<a href="https://reviews.llvm.org/D154126/new/">D154126</a></p>
-<p>以及相关<a href="https://github.com/llvm/llvm-project/issues/62586">Issue</a>。</p>
-<h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><h3 id="提交Patch"><a href="#提交Patch" class="headerlink" title="提交Patch"></a>提交Patch</h3><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3>]]></content>
+<p>相关<a href="https://github.com/llvm/llvm-project/issues/62586">Issue</a>。</p>
+<h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><p>这篇Issue里提到的问题为: <code>(a &gt; b) | (a &lt; b)</code> 的优化会在 <code>b == 0</code> 时失效。</p>
+<p>而一般的 <code>(a &gt; b) | (a &lt; b)</code> 会折叠为 <code>ZExt(a != 0)</code>，对应的LLVM-IR如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = icmp slt i32 %A, %B</span><br><span class="line">  %5 = zext i1 %4 to i32</span><br><span class="line">  %6 = or i32 %3, %5</span><br><span class="line">  ret i32 %6</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但对于 <code>b == 0</code> 的case，其对应的InstCombine优化为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32 </span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %3, %4</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也就是说在这种情况下 <code>A &lt; 0</code> 被优化成了 <code>A &lt;&lt; 31</code>，而之前对应的 <code>A &lt; B | A &gt; B</code> 的<strong>Pattern Matching</strong>被破坏掉了。</p>
+<p>在分析如何解决这个优化问题前，我们先了解LLVM的中端优化代码提交patch的特殊规则。</p>
+<p>LLVM的patch由两部分组成，第一部分是<strong>impl</strong>前的<strong>misoptimization tests</strong>，第二部分则是<strong>impl</strong>以及应用<strong>impl</strong>后的<strong>tests</strong>。<br>这样分解patch的好处有以下2点：</p>
+<ol>
+<li>便于通过对tests的前后对比查看你实现的优化效果。</li>
+<li>可以把tests作为单独的patch提交，这样能简单提高LLVM的测试量。</li>
+</ol>
+<p>除此之外，在你提交patch前，你还要证明你优化的正确性。</p>
+<h4 id="证明Transform的正确性"><a href="#证明Transform的正确性" class="headerlink" title="证明Transform的正确性"></a>证明Transform的正确性</h4><p>一般来讲，我们会使用 <a href="https://github.com/AliveToolkit/alive2">alive2</a> 验证不同<strong>LLVM-IR</strong>的正确性，<a href="https://alive2.llvm.org/ce/">online</a>版。<br>本篇的Issue的alive2结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %0, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br><span class="line">Transformation seems to be correct!</span><br></pre></td></tr></table></figure>
+
+<p>虽然<strong>alive2</strong>是确保LLVM转换正确性的非常重要的工具，但值得注意的是它可能会产生<strong>false negative</strong>结果（即有时它会声称一个不正确的转换是正确的）。这通常发生在循环优化的背景下，并且通常不会影响<strong>InstCombine</strong>优化。</p>
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>在我们写<strong>impl</strong>之前，我们需要先完成所有testcases的构建。</p>
+<p>首先是基本成功转换的测试样例:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[X_LOBIT:%.*]] = lshr i32 [[X]], 31</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i32</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i32 [[X_LOBIT]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意，其中的<strong>CHECK-LABEL</strong>后的是testcase的函数名，<strong>CHECK-NEXT</strong>后则是经过转换后期望的IR，在测试时若不满足期望，则会返回失败的测试报告。<br>这里的测试是未进行优化时的结果，故<strong>CHECK</strong>的结果也自然是未优化的。<br>当然这里<strong>CHECK</strong>的内容不用自己直接输入，可以用llvm的脚本自动生成，脚本如下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
+
+<p>这段脚本会用<strong>InstCombine</strong>对<code>and-or-icmps</code>的每个testcase进行一次优化，并把优化结果作为<strong>CHECK</strong>的IR插入到<code>and-or-icmps</code>中。</p>
+<p>而上面的测试用例只考虑了i32的基本类型，这里我们再添加i64的测试类型:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64(i64 %x) &#123;</span><br><span class="line">  %A = icmp slt i64 %x, 0</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = zext i1 %A to i64</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除此之外，我们还需要一些反例(如改变左移的位数，把大于变为小于等)，防止我们的转换误优化，一例如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64_fail2(i64 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i64_fail2(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i64 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[C:%.*]] = lshr i64 [[X]], 62</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i64</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i64 [[C]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i64 [[E]]</span><br><span class="line">;</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = lshr i64 %x, 62</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，我们可能还要考虑向量化的测试如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define &lt;2 x i64&gt; @icmp_slt_0_or_icmp_sgt_0_i64x2(&lt;2 x i64&gt; %x) &#123;</span><br><span class="line">  %A = icmp slt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %B = icmp sgt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %C = zext &lt;2 x i1&gt; %A to &lt;2 x i64&gt;</span><br><span class="line">  %D = zext &lt;2 x i1&gt; %B to &lt;2 x i64&gt;</span><br><span class="line">  %E = or &lt;2 x i64&gt; %C, %D</span><br><span class="line">  ret &lt;2 x i64&gt; %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完成这些testcases后我们进行一次commit。</p>
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p>最终到了我们的实现部分，在实现之前，我们要进行有关的分析&#x2F;debug的工作。</p>
+<p>我们在这里通过<code>build/bin/opt -passes=instcombine -S -debug src.ll</code>进行Debug，在不同函数中插入打印的函数，从而根据输出判断优化的代码位置。</p>
+<p>经过一系列排查，我们可以发现当<code>b == 0</code>时无法优化的原因是在<br><strong>InstCombineAndOr.cpp</strong>中的<strong>transformZExtICmp</strong>函数会把<code>ZExt(a &lt; 0)</code>转化为<code>a &lt;&lt; 31</code>。</p>
+<p>而优化 <code>a &lt; b | a &gt; b</code> 的函数<strong>foldAndOrOfICmpsUsingRanges</strong>无法识别<code>a &lt;&lt; 31</code>这样的语句，自然就无法优化了。<br>由于笔者并不是特别清楚InstCombine优化的顺序，故笔者选择在<strong>foldCastedBitwiseLogic</strong>中增加对<code>Zext(a &gt; 0) | a &lt;&lt; 31</code>的匹配，并进行对应的优化。<br>代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ( A &lt;&lt; (X - 1) ) | ((A &gt; 0) zext to iX)</span></span><br><span class="line"><span class="comment">// &lt;=&gt; A &lt; 0 | A &gt; 0</span></span><br><span class="line"><span class="comment">// &lt;=&gt; (A != 0) zext to iX</span></span><br><span class="line">Value *A;</span><br><span class="line">ICmpInst::Predicate Pred;</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> MatchOrZExtICmp = [&amp;](Value *Op0, Value *Op1) -&gt; <span class="type">bool</span> &#123;</span><br><span class="line"><span class="keyword">return</span> <span class="built_in">match</span>(Op0, <span class="built_in">m_LShr</span>(<span class="built_in">m_Value</span>(A), <span class="built_in">m_SpecificInt</span>(Op0-&gt;<span class="built_in">getType</span>()-&gt;<span class="built_in">getScalarSizeInBits</span>() - <span class="number">1</span>))) &amp;&amp;</span><br><span class="line">       <span class="built_in">match</span>(Op1, <span class="built_in">m_ZExt</span>(<span class="built_in">m_ICmp</span>(Pred, <span class="built_in">m_Specific</span>(A), <span class="built_in">m_Zero</span>())));</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (LogicOpc == Instruction::Or &amp;&amp;</span><br><span class="line">  (<span class="built_in">MatchOrZExtICmp</span>(Op0, Op1) || <span class="built_in">MatchOrZExtICmp</span>(Op1, Op0)) &amp;&amp;</span><br><span class="line">  Pred == ICmpInst::ICMP_SGT) &#123;</span><br><span class="line">  Value *Cmp =</span><br><span class="line">      Builder.<span class="built_in">CreateICmpNE</span>(A, Constant::<span class="built_in">getNullValue</span>(A-&gt;<span class="built_in">getType</span>()));</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">ZExtInst</span>(Cmp, A-&gt;<span class="built_in">getType</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这里我们定义了一个lambda：<code>MatchOrZExtICmp</code>，用于匹配左移与Zext运算，而<code>Op0</code>,<code>Op1</code>则是在<code>or</code>运算符的两个操作数。</p>
+<p><code>match</code>、<code>m_ZExt</code>等有关的函数、类则是LLVM的<strong>PatternMatching</strong>库。<br><strong>PatternMatching</strong>库提供一系列函数和模板类，用于匹配特定LLVM-IR的Pattern，类似<code>m_SpecificInt</code>则是匹配一个特定整数或者有相同整数元素的向量<br>(<strong>Splat Vector</strong>)。</p>
+<p>其中要注意的是<code>getScalarSizeInBits</code>函数在整数类型中返回整数的大小，而在vector中返回元素的大小。</p>
+<p>最后经过了实现，我们需要再次更新我们的testcases以确认优化的效果，故要再次运行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
+
+<p>这时我们可以发现我们的正例的<strong>CHECK</strong>发生了变化：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[TMP1:%.*]] = icmp ne i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = zext i1 [[TMP1]] to i32</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>且其他的testcases的变化也符合我们的期望，这里我们再commit一次。</p>
+<p>这时我们就可以进入patch的提交阶段了。</p>
+<h3 id="提交Patch"><a href="#提交Patch" class="headerlink" title="提交Patch"></a>提交Patch</h3><p>现在我们已经有了两个<strong>commit</strong>，可以通过以下指令生成test和impl的patch文件。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git show -U99999 HEAD^ &gt; patch_test</span><br><span class="line">git show -U99999 &gt; patch_transform</span><br></pre></td></tr></table></figure>
+
+<p>而LLVM暂时不接受Github的PR，只允许在<a href="https://reviews.llvm.org/">Phabricator</a>上提交patch。<br>故在这里我注册了Phabricator的帐号，并通过<a href="https://reviews.llvm.org/differential/diff/create/">Create Diff</a>分别上传我的两个patch。</p>
+<p>Patch的标题内容等格式可以博客开头的参考文章，机翻并改造如下：</p>
+<blockquote>
+<p>选择一个有意义的patch标题和摘要。对于我们的运行示例，第一个patch可能是这样的：</p>
+<p>title：[InstCombine] Add tests for (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold (NFC)</p>
+<p>summary：Tests for an upcoming (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold.。</p>
+<p>reviewer：（见下文）</p>
+<p>第二个patch可能是这样的：</p>
+<p>title：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold</p>
+<p>summary：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold</p>
+<p>This extends foldCastedBitwiseLogic to handle the similar cases.</p>
+<p>……你的分析……</p>
+<p>It’s proved by alive-tv:<strong>link</strong></p>
+<p>Depends on DNNNNNN（在此处放置第一个patch的ID）。<br>reviewer：（见下文）</p>
+<p>这里有几个值得强调的地方：</p>
+<p>标题开头应该有一个 [Category] 标签。通常，您可以只使用您要修改的文件的名称。例如，对 InstCombine 的更改通常带有[InstCombine]标记。<br>非功能性更改（如测试添加）的patch通常在标题中的某个地方带有 NFC 标记。<br>如果您有任何 alive2 证明，请在patch摘要中包含它们。<br>您可以使用“Depends on DNNNNNN”来创建堆叠的patch。也可以事后添加“子修订版”来实现此目的。</p>
+</blockquote>
+<hr>
+<p>现在我们还差<strong>Reviewers</strong>，在LLVM中，patch提交者负责选择适当的审阅者。虽然有人可能会根据patch标题（这就是分类标记如此重要的原因）来找到合适的审阅者，但您最好一开始就指定适当的审阅者。</p>
+<p>虽然LLVM有一个CODE_OWNERS.txt文件，用于指定不同领域的代码所有者，但不幸的是，<br>这个文件往往过时且不完整。找到审阅者的更好方法是查看您要修改的文件的Git历史记录，并添加一些最近commit或最近review diff revision的人员。</p>
+<p>对于InstCombine，主要的reviewer是spatel，但您也可以根据历史记录找到其他几个候选人（例如nikic，goldstein.w.n）。</p>
+<p>提交了patch后，就该等待review了。对于这样简单的更改，通常会有人很快处理。如果您在一周内没有得到回复，请发送“ping”评论，并每周发送一次。对于InstCombine来说等待数周才进行审阅是相当不寻常的，但如果您提交的更改是很长时间没有人真正工作的领域，则可能会发生。只需要不断“ping”。</p>
+<p>最后，一旦patch获得批准，审阅者通常会认为您已经拥有提交访问权限，并允许您自己提交更改。如果不是这种情况，则应该跟进一条评论，<br>例如“I don’t have commit access, can you please land this for me? Please use ‘Your Name &lt;your@email&gt;’ for the commit”。<br>最后一点很重要，因为Phabricator会丢失patch的作者信息，提交者必须将其添加回来。</p>
+<p>如果您计划对LLVM进行任何形式的常规贡献，建议请求提交访问权限。这方面的门槛非常低，因此可以尽早请求。如果不必创建堆叠的审查，则测试的预提交工作流程要方便得多。</p>
+<p>最后，有关CI的一些话：Phabricator上的patch会通过“pre-merge”测试运行。特别是如果您没有在本地运行完整的测试套件，则这些结果可能会有所帮助。不幸的是，这些测试运行有些不稳定，因此如果您看到与您的patch没有明显关系的失败，则通常可以忽略它们。</p>
+<p>一旦patch被提交，它将在更广泛的“buildbots”范围内运行，这些机器人在许多不同的架构和许多不同的配置上运行测试。<br>这些也相当不稳定，因此同样适用：如果您收到buildbots故障电子邮件，看起来与您的patch无关，则不必担心。如果最终发现是您的责任，buildbots所有者会让您知道。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><blockquote>
+<p>翻译参考文章的总结</p>
+</blockquote>
+<p>LLVM的贡献过程具有某些不同于其他开源项目的不寻常方面。其中一部分是使用Phabricator而不是GitHub进行审查，但大多数差异都集中在强调正确性方面，从正确性证明开始，到测试的预提交工作流程，以及最终往往是测试和代码更改之间非常大的比率。</p>
+<p>我希望本文对于想要进入LLVM开发的人有所帮助，但我想重申，第一次做不需要完全做得“正确”，如果遇到问题，人们会很乐意提供帮助。Discourse的初学者类别以及Discord聊天是提问的好地方。</p>
+<blockquote>
+<p>自己的总结</p>
+</blockquote>
+<p>第一次为大型开源项目Contribute是一次特别的经历，在不断与reviewer的沟通中，我也对LLVM的体系有了更深刻的了解，希望读者在看了本篇博客后也可以更活跃地参与开源活动。</p>
+]]></content>
       <categories>
         <category>LLVM</category>
       </categories>
