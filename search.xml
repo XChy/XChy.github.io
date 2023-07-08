@@ -493,13 +493,27 @@
 <p>预期执行决定了一个表达式可以放的有多靠前，而一个表达式越靠前，能消除的冗余就越多</p>
 </blockquote>
 </li>
-<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>我们称该表达式对该程序点*可用(Available)*，这个过程可以通过前向数据流分析完成。</p>
+<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>我们称该表达式对该程序点*可用(available)*，这个过程可以通过前向数据流分析完成。</p>
 </li>
 <li><p><em>后延</em>表达式，一个表达式可被<em>后延</em>到某个程序点的条件为：到该点的<strong>所有</strong>路径上，该表达式已经在程序点前<em>预期执行</em>，<br>但没有使用该表达式。该过程可以通过前向数据流分析完成。</p>
 </li>
 <li><p>最后使用简单的逆向数据流分析删除那些给程序中只使用一次的临时变量赋值语句。</p>
 </li>
 </ol>
+<h4 id="理论代码"><a href="#理论代码" class="headerlink" title="理论代码"></a>理论代码</h4><h5 id="预期执行-anticipated"><a href="#预期执行-anticipated" class="headerlink" title="预期执行(anticipated)"></a>预期执行(anticipated)</h5><p>方向：逆向</p>
+<p>传递函数：$f_B(x)&#x3D;use_B \cup (x-kill_B)$</p>
+<p>交汇运算：$\cap$</p>
+<h5 id="可用性-available"><a href="#可用性-available" class="headerlink" title="可用性(available)"></a>可用性(available)</h5><p>方向：正向</p>
+<p>传递函数：$f_B(x)&#x3D;(anticipated[B].in \cup x) - kill_B$</p>
+<p>交汇运算：$\cap$</p>
+<h5 id="可后延-postponable"><a href="#可后延-postponable" class="headerlink" title="可后延(postponable)"></a>可后延(postponable)</h5><p>方向：正向</p>
+<p>注意，这里定义$earliest[B]&#x3D;anticipated[B].in - available[B].in$</p>
+<p>传递函数：$f_B(x)&#x3D;(earliest[B] \cup x) - kill_B$</p>
+<p>交汇运算：$\cap$</p>
+<h5 id="被使用-used"><a href="#被使用-used" class="headerlink" title="被使用(used)"></a>被使用(used)</h5><p>方向：逆向</p>
+<p>注意，这里定义<br>$$ latest[B]&#x3D;(earliest[B] \cup postponable[B].in)<br>\cap (use_B \cup \neg(\bigcap_{S,succ(B)}{earliest[S]\cup postponable[S].in})) $$</p>
+<p>传递函数：$f_B(x)&#x3D;(use_B \cup x) - latest[B]$</p>
+<p>交汇运算：$\cup$</p>
 ]]></content>
       <categories>
         <category>Compiler Theory(编译原理)</category>
