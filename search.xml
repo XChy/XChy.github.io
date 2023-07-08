@@ -447,4 +447,62 @@
         <tag>OpenSource</tag>
       </tags>
   </entry>
+  <entry>
+    <title>编译原理-数据流分析-冗余消除</title>
+    <url>/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/</url>
+    <content><![CDATA[<p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 — <strong>懒惰代码移动算法</strong></p>
+<h2 id="什么是冗余消除"><a href="#什么是冗余消除" class="headerlink" title="什么是冗余消除"></a>什么是冗余消除</h2><p><strong>冗余消除</strong>就是要尽量减少表达式求值的次数，避免形如$x+y$的表达式在之后的代码中多次计算，影响性能。</p>
+<p>冗余的来源主要有以下三种：</p>
+<ol>
+<li>公共子表达式 (<em>Common Expression</em>)</li>
+<li>循环不变表达式 (<em>Loop Invariant</em>)</li>
+<li>部分冗余表达式 (<em>Partial Redundancy Expression</em>)</li>
+</ol>
+<span id="more"></span>
+
+<h3 id="全局公共子表达式"><a href="#全局公共子表达式" class="headerlink" title="全局公共子表达式"></a>全局公共子表达式</h3><p>若对于含有表达式如 $a+b$ 的基本块 $B$，任意到 $B$ 的路径都已经对 $a + b$ 求过值，则我们称这个表达式在 $B$ 中冗余，是公共的子表达式。<br>这样的表达式就不需要在 $B$ 中重新计算。</p>
+<p><strong>注意</strong>，此时在 $a+b$ 被计算后，表达式中的分量 $a,b$ 不能在 $B$ 之前被重新定值，否则这样的表达式不是一个可用表达式。</p>
+<h4 id="深层公共表达式"><a href="#深层公共表达式" class="headerlink" title="深层公共表达式"></a>深层公共表达式</h4><p>对于类似 $(a + b) ^ c + d$ 这样的更深层的子表达式，我们可以重复利用<strong>公共表达式消除技术</strong>直至没有新的公共表达式来找到这样的深层子表达式，<br>当然我们也可以参考常量传播框架来实现类似的搜索，当然也可以参考<strong>LLVM</strong>的模式匹配来达到同样的效果。</p>
+<h3 id="循环不变表达式"><a href="#循环不变表达式" class="headerlink" title="循环不变表达式"></a>循环不变表达式</h3><p>假设 $a$，$b$ 没有在循环 $L$ 中重新定值，那么 $a+b$ 就是对于 $L$ 循环不变的，这样的循环不变式可以提出循环，减少不必要的计算。<br>以下是一个循环不变式的例子：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(a + b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以转化为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">t = a + b</span><br><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(t)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了保证 while 循环中循环不变表达式可以被优化，编译器通常把：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> c &#123;</span><br><span class="line">    S;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>表示为：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> c &#123;</span><br><span class="line">    repeat</span><br><span class="line">        S;</span><br><span class="line">    until <span class="keyword">not</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样循环不变式可以放在 <em>repeat-util</em> 之前。</p>
+<h3 id="部分冗余表达式"><a href="#部分冗余表达式" class="headerlink" title="部分冗余表达式"></a>部分冗余表达式</h3><p>对于以下基本块结构：<br><img src="/images/PartialReductancyEx.png" alt="content"></p>
+<p>若 $B_2$ 中计算了 $a+b$ ，但 $B_3$ 中没有计算 $a+b$，$B_4$ 中计算了 $a+b$，那么</p>
+<p>可以说在 $B_1 \rightarrow B_2 \rightarrow B_4$ 上 $a+b$ 冗余，<br>在$B_1 \rightarrow B_3 \rightarrow B_4$上 $a+b$ 不冗余，<br>那么该表达式对 $B_4$ 就是部分冗余的</p>
+<p>对于这样部分冗余的表达式，我们需要在 $B_3$ 与 $B_4$ 之间插入新的基本块来计算 $a+b$ 。</p>
+<h3 id="懒惰代码移动算法"><a href="#懒惰代码移动算法" class="headerlink" title="懒惰代码移动算法"></a>懒惰代码移动算法</h3><h4 id="性质"><a href="#性质" class="headerlink" title="性质"></a>性质</h4><p>为了解决部分冗余的问题，我们设计了懒惰代码移动算法，它有以下性质：</p>
+<ol>
+<li>所有不复制代码就可以消除的表达式冗余计算都被消除了</li>
+<li>优化后的程序是正确的，不会执行原来程序不执行的任何计算</li>
+<li>表达式的计算时刻尽量<strong>靠后</strong>，尽量靠后计算一个表达式可以降低其生命周期，也减少了其使用寄存器的时间，<br>这也是其被称为 <em>懒惰代码移动算法</em> 的原因。</li>
+</ol>
+<h4 id="主要步骤"><a href="#主要步骤" class="headerlink" title="主要步骤"></a>主要步骤</h4><ol>
+<li><p>逆向数据流分析找到各个程序点上的 <em>预期执行(anticipated)</em> 的表达式。</p>
+<blockquote>
+<p><em>预期执行(anticipated)</em> 指的是：从程序点 $p$ 出发的所有路径都会计算 $a+b$ 的值，且 $b,c$ 的值就是他们在 $p$ 上的值</p>
+<p>预期执行决定了一个表达式可以放的有多靠前，而一个表达式越靠前，能消除的冗余就越多</p>
+</blockquote>
+</li>
+<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>我们称该表达式对该程序点*可用(Available)*，这个过程可以通过前向数据流分析完成。</p>
+</li>
+<li><p><em>后延</em>表达式，一个表达式可被<em>后延</em>到某个程序点的条件为：到该点的<strong>所有</strong>路径上，该表达式已经在程序点前<em>预期执行</em>，<br>但没有使用该表达式。该过程可以通过前向数据流分析完成。</p>
+</li>
+<li><p>最后使用简单的逆向数据流分析删除那些给程序中只使用一次的临时变量赋值语句。</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Compiler Theory(编译原理)</category>
+      </categories>
+  </entry>
 </search>
