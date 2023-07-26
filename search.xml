@@ -450,7 +450,7 @@
   <entry>
     <title>编译原理-数据流分析-冗余消除</title>
     <url>/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/</url>
-    <content><![CDATA[<p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 — <strong>懒惰代码移动算法</strong></p>
+    <content><![CDATA[<p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 —- <strong>懒惰代码移动算法</strong></p>
 <h2 id="什么是冗余消除"><a href="#什么是冗余消除" class="headerlink" title="什么是冗余消除"></a>什么是冗余消除</h2><p><strong>冗余消除</strong>就是要尽量减少表达式求值的次数，避免形如$x+y$的表达式在之后的代码中多次计算，影响性能。</p>
 <p>冗余的来源主要有以下三种：</p>
 <ol>
@@ -459,22 +459,17 @@
 <li>部分冗余表达式 (<em>Partial Redundancy Expression</em>)</li>
 </ol>
 <span id="more"></span>
-
 <h3 id="全局公共子表达式"><a href="#全局公共子表达式" class="headerlink" title="全局公共子表达式"></a>全局公共子表达式</h3><p>若对于含有表达式如 $a+b$ 的基本块 $B$，任意到 $B$ 的路径都已经对 $a + b$ 求过值，则我们称这个表达式在 $B$ 中冗余，是公共的子表达式。<br>这样的表达式就不需要在 $B$ 中重新计算。</p>
 <p><strong>注意</strong>，此时在 $a+b$ 被计算后，表达式中的分量 $a,b$ 不能在 $B$ 之前被重新定值，否则这样的表达式不是一个可用表达式。</p>
 <h4 id="深层公共表达式"><a href="#深层公共表达式" class="headerlink" title="深层公共表达式"></a>深层公共表达式</h4><p>对于类似 $(a + b) ^ c + d$ 这样的更深层的子表达式，我们可以重复利用<strong>公共表达式消除技术</strong>直至没有新的公共表达式来找到这样的深层子表达式，<br>当然我们也可以参考常量传播框架来实现类似的搜索，当然也可以参考<strong>LLVM</strong>的模式匹配来达到同样的效果。</p>
 <h3 id="循环不变表达式"><a href="#循环不变表达式" class="headerlink" title="循环不变表达式"></a>循环不变表达式</h3><p>假设 $a$，$b$ 没有在循环 $L$ 中重新定值，那么 $a+b$ 就是对于 $L$ 循环不变的，这样的循环不变式可以提出循环，减少不必要的计算。<br>以下是一个循环不变式的例子：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(a + b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>可以转化为：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">t = a + b</span><br><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(t)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>为了保证 while 循环中循环不变表达式可以被优化，编译器通常把：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> c &#123;</span><br><span class="line">    S;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>表示为：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> c &#123;</span><br><span class="line">    repeat</span><br><span class="line">        S;</span><br><span class="line">    until <span class="keyword">not</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>这样循环不变式可以放在 <em>repeat-util</em> 之前。</p>
 <h3 id="部分冗余表达式"><a href="#部分冗余表达式" class="headerlink" title="部分冗余表达式"></a>部分冗余表达式</h3><p>对于以下基本块结构：<br><img src="/images/PartialReductancyEx.png" alt="content"></p>
 <p>若 $B_2$ 中计算了 $a+b$ ，但 $B_3$ 中没有计算 $a+b$，$B_4$ 中计算了 $a+b$，那么</p>
@@ -493,7 +488,7 @@
 <p>预期执行决定了一个表达式可以放的有多靠前，而一个表达式越靠前，能消除的冗余就越多</p>
 </blockquote>
 </li>
-<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>我们称该表达式对该程序点*可用(available)*，这个过程可以通过前向数据流分析完成。</p>
+<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>同时我们称程序点<em>可用(available)</em>当所有到达该程序点的原有路径中该表达式都被预期执行，这个过程可以通过前向数据流分析完成。</p>
 </li>
 <li><p><em>后延</em>表达式，一个表达式可被<em>后延</em>到某个程序点的条件为：到该点的<strong>所有</strong>路径上，该表达式已经在程序点前<em>预期执行</em>，<br>但没有使用该表达式。该过程可以通过前向数据流分析完成。</p>
 </li>
@@ -501,22 +496,53 @@
 </li>
 </ol>
 <h4 id="理论代码"><a href="#理论代码" class="headerlink" title="理论代码"></a>理论代码</h4><h5 id="预期执行-anticipated"><a href="#预期执行-anticipated" class="headerlink" title="预期执行(anticipated)"></a>预期执行(anticipated)</h5><p>方向：逆向</p>
-<p>传递函数：$f_B(x)&#x3D;use_B \cup (x-kill_B)$</p>
+<p>传递函数：$f_B(x)=use_B \cup (x-kill_B)$</p>
 <p>交汇运算：$\cap$</p>
 <h5 id="可用性-available"><a href="#可用性-available" class="headerlink" title="可用性(available)"></a>可用性(available)</h5><p>方向：正向</p>
-<p>传递函数：$f_B(x)&#x3D;(anticipated[B].in \cup x) - kill_B$</p>
+<p>传递函数：$f_B(x)=(anticipated[B].in \cup x) - kill_B$</p>
 <p>交汇运算：$\cap$</p>
 <h5 id="可后延-postponable"><a href="#可后延-postponable" class="headerlink" title="可后延(postponable)"></a>可后延(postponable)</h5><p>方向：正向</p>
-<p>注意，这里定义$earliest[B]&#x3D;anticipated[B].in - available[B].in$</p>
-<p>传递函数：$f_B(x)&#x3D;(earliest[B] \cup x) - kill_B$</p>
+<p>注意，这里定义$earliest[B]=anticipated[B].in - available[B].in$</p>
+<p>传递函数：$f_B(x)=(earliest[B] \cup x) - kill_B$</p>
 <p>交汇运算：$\cap$</p>
 <h5 id="被使用-used"><a href="#被使用-used" class="headerlink" title="被使用(used)"></a>被使用(used)</h5><p>方向：逆向</p>
-<p>注意，这里定义<br>$$ latest[B]&#x3D;(earliest[B] \cup postponable[B].in)<br>\cap (use_B \cup \neg(\bigcap_{S,succ(B)}{earliest[S]\cup postponable[S].in})) $$</p>
-<p>传递函数：$f_B(x)&#x3D;(use_B \cup x) - latest[B]$</p>
+<p>注意，这里定义</p>
+<script type="math/tex; mode=display">latest[B]=(earliest[B] \cup postponable[B].in)
+\cap (use_B \cup \neg(\bigcap_{S,succ(B)}{earliest[S]\cup postponable[S].in}))</script><p>传递函数：$f_B(x)=(use_B \cup x) - latest[B]$</p>
 <p>交汇运算：$\cup$</p>
 ]]></content>
       <categories>
         <category>Compiler Theory(编译原理)</category>
       </categories>
+  </entry>
+  <entry>
+    <title>Sequential-Logic-Circuit</title>
+    <url>/2023/07/26/Sequential-Logic-Circuit/</url>
+    <content><![CDATA[<h2 id="Sequential-Clock-Circuit"><a href="#Sequential-Clock-Circuit" class="headerlink" title="Sequential Clock Circuit"></a>Sequential Clock Circuit</h2><p>There are multiple combinational logic circuits in a circuit. And sequential<br>logic circuit connects them into a single one, which is synchorized by a clock.</p>
+<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit.<br>The clock period must be longer be longer than this critical path, or the signal<br>will not propagate properly to that next register.</p>
+<p>So the max frequency of the circuit is limited by how much time needed to get<br>correct Next State to Register. ($t_{setup}$ constraint)</p>
+<p>The structure of circuit should like this:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
+<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency.<br>That’s unsafe and untable.</p>
+<p>You can:</p>
+<ul>
+<li>add extra register to shorten critical path. Meanwhile, it may require more period.<br>However, that’s fine for pipeline. More latency, but more throughtput too.</li>
+</ul>
+<p>Pipielining <strong>tends</strong> to improve performance.</p>
+<h2 id="Finite-State-Machine"><a href="#Finite-State-Machine" class="headerlink" title="Finite State Machine"></a>Finite State Machine</h2><p>State transitions are controlled by the clock,<br>On each clock cycle the machine checks, generate new state and new output.</p>
+<p>Register holds a representation of the FSM’s state</p>
+<ul>
+<li>Must assign a unique bit pattern for each state</li>
+<li>Output is present/current state (PS/CS)</li>
+<li>Input is next state (NS)</li>
+</ul>
+<p>Combinational Logic implements transition function here.</p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
   </entry>
 </search>
