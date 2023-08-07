@@ -590,4 +590,45 @@
         <tag>CS61C</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Cache Performance Analysis</title>
+    <url>/2023/08/07/Cache-Performance-Analysis/</url>
+    <content><![CDATA[<h2 id="Some-Concepts"><a href="#Some-Concepts" class="headerlink" title="Some Concepts"></a>Some Concepts</h2><p>AMAT: Average memory access time.<br>$AMAT &#x3D; t_{hit} + rate_{missed} * penalty_{missed}$</p>
+<h2 id="Cache-Miss"><a href="#Cache-Miss" class="headerlink" title="Cache Miss"></a>Cache Miss</h2><p>Sources of Cache Misses:</p>
+<ul>
+<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
+<li>Capacity</li>
+<li>Conflict (Collison)</li>
+</ul>
+<p>The Design Solutions:</p>
+<ul>
+<li>Compulsory:<ul>
+<li>Increase block size</li>
+</ul>
+</li>
+<li>Capacity:<ul>
+<li>Increase cache size</li>
+</ul>
+</li>
+<li>Conflict:<ul>
+<li>Increase associativity (may increase hit-time)</li>
+</ul>
+</li>
+</ul>
+<h2 id="Miss-Penalty"><a href="#Miss-Penalty" class="headerlink" title="Miss Penalty"></a>Miss Penalty</h2><p>Factors:</p>
+<ul>
+<li>How big is your memory architecture</li>
+<li>How big is your block size</li>
+</ul>
+<h2 id="Multiple-Cache-Levels"><a href="#Multiple-Cache-Levels" class="headerlink" title="Multiple Cache Levels"></a>Multiple Cache Levels</h2><p>To minimize AMAT, we need to adjust the type&#x2F;parameters of cache.<br>But it’s hard to reduce hit time, miss rate and miss penalty at once.</p>
+<p>Multiple Cache Levels resolves this.</p>
+<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate.<br>However, there is also big write back cost for such design.</p>
+<h2 id="The-Cache-Design-Space"><a href="#The-Cache-Design-Space" class="headerlink" title="The Cache Design Space"></a>The Cache Design Space</h2><ul>
+<li>Cache parameters</li>
+<li>Policy choices (Rewrite, Replacement)</li>
+<li>Optimal choice is a compromise</li>
+<li>Simplicity often wins</li>
+</ul>
+]]></content>
+  </entry>
 </search>
