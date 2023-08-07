@@ -580,6 +580,7 @@
 <p>Actually, from my perspective, Set Associative Cache is just a in-between of the two former.</p>
 <p>Fully associative requires 0 index bits.<br>Direct-mapped requires max index bits.<br>Set-associative requires somewhere in-between.</p>
 <p>Here is a screenshot from CS61C:<br><img src="/images/Set-Associative.png" alt="img"></p>
+<p>As you can see, it’s just the combination of Direct-Mapped and Fully-Associative.</p>
 ]]></content>
       <categories>
         <category>Architecture</category>
