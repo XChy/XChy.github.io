@@ -545,4 +545,48 @@
         <tag>CS61C</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Different Caches</title>
+    <url>/2023/08/07/Different-Caches/</url>
+    <content><![CDATA[<h2 id="Fully-Associative-Caches"><a href="#Fully-Associative-Caches" class="headerlink" title="Fully Associative Caches"></a>Fully Associative Caches</h2><p>Basic implementation of cache. Omit it here.<br>Note: The offset is determined by block size.</p>
+<h2 id="Direct-Mapped-Caches"><a href="#Direct-Mapped-Caches" class="headerlink" title="Direct Mapped Caches"></a>Direct Mapped Caches</h2><p>For normal fully associative cache, we break down the address into:<br><code>[Tag | 31 ~ X bits] [Offset | X-1 ~ 0 bits]</code><br>which requires multiple tag checks.</p>
+<p>So we design a direct-mapped cache inspired by hash table.<br>Currently, we break down the address into:<br><code>[Tag | 31 ~ X bits] [Index | X-1 ~ Y bits] [Offset | Y-1 ~ 0 bits]</code><br>And the <strong>Index</strong> serves as the hashcode for the address, <strong>Tag</strong> as a identifier.</p>
+<p>Here, for <em>Write-back Policy</em> cache, there are：</p>
+<ul>
+<li>Block of data</li>
+<li>Index field</li>
+<li>Tag field of address as identifier</li>
+<li>Valid bit</li>
+<li>Dirty bit</li>
+<li>No replacement management bit</li>
+</ul>
+<p>every slot.</p>
+<p>For example, for address 10010010, we can break it down into:</p>
+<ul>
+<li>Tag: 1001</li>
+<li>Index: 001</li>
+<li>Offset: 0</li>
+</ul>
+<p>Then look for something like <code>cache[Index] + Offset</code> to find avaliable data.</p>
+<p>There are also some worst-case for such design. Since the multiple address is mapped<br>into the same slot, We can consider the memory accsesses: 00000010, 00010010, 00000010, 00010010, …<br>And all of the accsesses will be missed.</p>
+<p>But for fully associative cache, it only miss twice.</p>
+<p>What <strong>direct-mapped</strong> outweighs <strong>fully-associative</strong> is its fast mapping.</p>
+<h2 id="Set-Associative-Caches"><a href="#Set-Associative-Caches" class="headerlink" title="Set Associative Caches"></a>Set Associative Caches</h2><p><strong>N-way set-associative</strong>: divide $ into sets, each of which consists of N slots.</p>
+<ul>
+<li>Memory block maps to a set determined by <strong>Index</strong> field and is placed in any of the N slots of that set.</li>
+<li>Call $N$ the associativity.</li>
+<li>Replcaement policy applies to every set.</li>
+</ul>
+<p>Actually, from my perspective, Set Associative Cache is just a in-between of the two former.</p>
+<p>Fully associative requires 0 index bits.<br>Direct-mapped requires max index bits.<br>Set-associative requires somewhere in-between.</p>
+<p>Here is a screenshot from CS61C:<br><img src="/images/Set-Associative.png" alt="img"></p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
 </search>
