@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Making routing scalable Here are some concepts to note: scale: billions of destinations:  can&#39;t store all destinations in routing tables. routing table exchange would swamp links.  administrative auto">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OSPF (Open Shortest Path First) &amp; BGP (Border Gateway Protocol)">
+<meta property="og:url" content="http://xchy.github.io/2023/08/19/OSPF_BGP/index.html">
+<meta property="og:site_name" content="XChy&#39;s Blog">
+<meta property="og:description" content="Making routing scalable Here are some concepts to note: scale: billions of destinations:  can&#39;t store all destinations in routing tables. routing table exchange would swamp links.  administrative auto">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-08-19T15:23:17.000Z">
+<meta property="article:modified_time" content="2023-08-19T16:20:54.587Z">
+<meta property="article:author" content="XChy">
+<meta property="article:tag" content="Algorithm">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://xchy.github.io/2023/08/19/OSPF_BGP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OSPF (Open Shortest Path First) & BGP (Border Gateway Protocol) | XChy's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">XChy's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">For life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/OSPF_BGP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OSPF (Open Shortest Path First) & BGP (Border Gateway Protocol)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-19 23:23:17" itemprop="dateCreated datePublished" datetime="2023-08-19T23:23:17+08:00">2023-08-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-20 00:20:54" itemprop="dateModified" datetime="2023-08-20T00:20:54+08:00">2023-08-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="making-routing-scalable">Making routing scalable</h2>
+<p>Here are some concepts to note:</p>
+<p>scale: billions of destinations:</p>
+<ul>
+<li>can't store all destinations in routing tables.</li>
+<li>routing table exchange would swamp links.</li>
+</ul>
+<p>administrative autonomy:</p>
+<ul>
+<li>Internet: a network of networks</li>
+<li>each network admin may want to control routing in its own network</li>
+</ul>
+<h2 id="approach-to-scalable-routing">Approach to scalable routing</h2>
+<p>We always aggregate routers into regions known as "autonomous systems" (a.k.a "domains").</p>
+<p>And <strong>intra-AS (intra-domain)</strong> is such routing among routers within same AS(network).</p>
+<ul>
+<li>all routers in AS must run same intra-domain protocol.</li>
+<li>routers in different AS can run different intra-domain protocols.</li>
+<li>gateway router: at edge of its own AS, has link(s) to router(s) in other AS'es</li>
+</ul>
+<p><strong>inter-AS</strong> routing among AS'es is the gateways perform inter-domain routing</p>
+<p>Both of them determine entries for destination of routers, while former is <em>within</em> AS and latter is for <em>external</em> destinations. Most common intra-AS routing protocols:</p>
+<ul>
+<li>RIP (Routing Information Protocol), which is no longer widely used.</li>
+<li>OSPF (Open Shortest Path First), which includes classic <strong>link-state</strong> routing.</li>
+<li>EIGRP: (Enhanced Interior Gateway Routing Protocol), which is <strong>DV</strong> based/</li>
+</ul>
+<h2 id="ospf">OSPF</h2>
+<p>OSPF is an intra-domain routing protocol.</p>
+<ul>
+<li><p>open: publicly available</p></li>
+<li><p>classic link-state:</p>
+<ul>
+<li>each router floods OSPF link-state advertisements (directly over IP) to all other routers in entire AS.</li>
+<li>multiple link costs metrics possible: bandwidth, delay.</li>
+<li>global (has full topology)</li>
+</ul>
+<p>There is two-level hierarchy: local <em>area</em> and <em>backbone</em>.</p>
+<ul>
+<li><strong>Local routers</strong> only know/compute detailed topology within its local area, and forwad information to <strong>area border routers</strong>.</li>
+<li>And <strong>area border routers</strong> are responsible for <em>summarizing</em> distances to destinations in own area, and advertising in backbone.</li>
+</ul></li>
+</ul>
+<h2 id="bgp">BGP</h2>
+<p>BGP is an inter-domain routing protocol ("glue that holds the Internet together").</p>
+<p>BGP provides each AS a means to:</p>
+<ul>
+<li>obtain destination network reachability information from neighboring ASes (<strong>eBGP</strong>).</li>
+<li>determine roues to other networks based on reachability information and policy.</li>
+<li>propagate reachability information to all AS-internal routers (<strong>iBGP</strong>).</li>
+<li>advertise destination reachability information.</li>
+</ul>
+<h3 id="bgp-basics">BGP Basics</h3>
+<p>BGP Session: two BGP routers exchange BGP messages over semi-permanent TCP connection:</p>
+<ul>
+<li>advertising paths to different destination network prefixes</li>
+<li>BGP is a "path vector" protocol</li>
+</ul>
+<p>BGP protocol messages [RFC 4371]:</p>
+<ul>
+<li>Open: opens <strong>TCP</strong> connection to peer and authenticates sending BGP peer</li>
+<li>Update: advertises new path (or withdraws old)</li>
+<li>Keepalive: keeps connection alive in absence of UPDATES; also ACKS OPEN request</li>
+<li>Notification: reports erros in previous msg; also used to close connection</li>
+</ul>
+<h3 id="bgp-path-advertisement">BGP: path advertisement</h3>
+<p>BGP advertised path: prefix + attributes</p>
+<ul>
+<li>path prefix: destination being advertised</li>
+<li>two important attributes:
+<ul>
+<li>AS-PATH: list of ASes through which prefix advertisement has passed</li>
+<li>NEXT-HOP: indicates specific internal-AS router to next-hop AS</li>
+</ul></li>
+</ul>
+<h3 id="bgp-policy">BGP policy</h3>
+<p>ISP only wants to route traffic to/from its customer networks (does not want to carry transit traffic between other ISPs – a typical “real world” policy)</p>
+<h3 id="bgp-populating-forwading-tables">BGP: populating forwading tables</h3>
+<p>Just popluate from boundary to internal and choose local gateway that has least intra-domain cost. Omit details here.</p>
+<h2 id="benefits">Benefits</h2>
+<p>Intra/Inter-AS routing scale the network, creating hierarchical routing, reducing forwarding table size. And seperate them can make:</p>
+<ul>
+<li>intra-AS focus on performance.</li>
+<li>inter-AS has policy dominates over performaance.</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Algorithm/" rel="tag"><i class="fa fa-tag"></i> Algorithm</a>
+              <a href="/tags/Network/" rel="tag"><i class="fa fa-tag"></i> Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/08/19/Routing-Algorithms/" rel="prev" title="Routing-Algorithms">
+      <i class="fa fa-chevron-left"></i> Routing-Algorithms
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/08/23/LeetCode-42/" rel="next" title="LeetCode 42 接雨水 题解">
+      LeetCode 42 接雨水 题解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#making-routing-scalable"><span class="nav-number">1.</span> <span class="nav-text">Making routing scalable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#approach-to-scalable-routing"><span class="nav-number">2.</span> <span class="nav-text">Approach to scalable routing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ospf"><span class="nav-number">3.</span> <span class="nav-text">OSPF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bgp"><span class="nav-number">4.</span> <span class="nav-text">BGP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp-basics"><span class="nav-number">4.1.</span> <span class="nav-text">BGP Basics</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp-path-advertisement"><span class="nav-number">4.2.</span> <span class="nav-text">BGP: path advertisement</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp-policy"><span class="nav-number">4.3.</span> <span class="nav-text">BGP policy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp-populating-forwading-tables"><span class="nav-number">4.4.</span> <span class="nav-text">BGP: populating forwading tables</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#benefits"><span class="nav-number">5.</span> <span class="nav-text">Benefits</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="XChy"
+      src="/images/doge.jpg">
+  <p class="site-author-name" itemprop="name">XChy</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/XChy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;XChy" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:xxs_chy@outlook.com" title="E-Mail → mailto:xxs_chy@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XChy</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

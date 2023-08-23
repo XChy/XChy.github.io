@@ -78,7 +78,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container">
@@ -123,17 +127,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">11</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">7</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">16</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -269,28 +273,23 @@
 <p>初始层级优先级为 0，给当前层级命名 <strong>initial</strong></p>
 <ul>
 <li><p>进入 initial 层，我们先读入 token <strong>a</strong></p>
-<p>发现 <strong>/</strong> 的优先级大于 0，于是结合 0 与/<br>并进入属于 <strong>‘/’</strong> 的层级，该层级优先级为 3，该层级求优先级大于 3 的 rhs</p>
+<p>发现 <strong>/</strong> 的优先级大于 0，于是结合 0 与/ 并进入属于 <strong>‘/’</strong> 的层级，该层级优先级为 3，该层级求优先级大于 3 的 rhs</p>
 <ul>
 <li><p>然后读入 token <strong>b</strong>, b 属于 <strong>‘/’</strong> 层级，又读入 operator <strong>=</strong> 发现其优先级&lt;=当前层级最小优先级</p>
-<p>于是结束 <strong>‘/’</strong> 层级， 确定其 rhs 为 b，得到一个整体 <code>(a / b)</code></p>
-</li>
-</ul>
-</li>
+<p>于是结束 <strong>‘/’</strong> 层级， 确定其 rhs 为 b，得到一个整体 <code>(a / b)</code></p></li>
+</ul></li>
 <li><p>回到 initial 层，且此时 lhs 为<code>a / b</code>，继续读入 operator <strong>=</strong> ，其优先级为 1&gt;=0，故进入 <strong>‘=’</strong> 层</p>
 <ul>
-<li><p>现在读入 token <strong>2</strong>，再读入 operator <strong>+</strong>，发现其优先级 2&gt;=1 故可作为 rhs，进入 <strong>‘+’</strong> 层</p>
+<li><p>现在读入 token <strong>2</strong>，再读入 operator <strong>+</strong>，发现其优先级 2&gt;=1 故可作为 rhs，进入 <strong>'+'</strong> 层</p>
 <ul>
-<li><p>继续求 <strong>‘+’</strong> 的 rhs，发现 token <strong>5</strong>，和 operator <strong>*</strong> ，<strong>*</strong> 的优先级 3&gt;=2，故进入<strong>‘*‘</strong>层</p>
+<li><p>继续求 <strong>'+'</strong> 的 rhs，发现 token <strong>5</strong>，和 operator <strong>*</strong> ，<strong>*</strong> 的优先级 3&gt;=2，故进入<strong>'*'</strong>层</p>
 <ul>
-<li>读入 <code>6</code> 表达式结束，将 6 作为 <strong>‘*‘</strong> 的 rhs，开始回溯</li>
+<li>读入 <code>6</code> 表达式结束，将 6 作为 <strong>'*'</strong> 的 rhs，开始回溯</li>
 </ul>
-<p>将 <code>5 * 6</code> 作为 <strong>‘+’</strong> 的 rhs，退出 <strong>‘+’</strong> 层</p>
-</li>
+<p>将 <code>5 * 6</code> 作为 <strong>‘+’</strong> 的 rhs，退出 <strong>‘+’</strong> 层</p></li>
 </ul>
-<p>得到 <code>2 + (5*6)</code> ，将其作为 <strong>‘=’</strong> 的 rhs，退出 <strong>‘=’</strong> 层</p>
-</li>
-</ul>
-</li>
+<p>得到 <code>2 + (5*6)</code> ，将其作为 <strong>'='</strong> 的 rhs，退出 <strong>‘='</strong> 层</p></li>
+</ul></li>
 </ul>
 <p>最后回到<strong>initial</strong>层，结合已有 lhs：<code>a / b</code>, op: <code>=</code>, rhs <code>2 + ( 5 * 6 )</code>，返回<code>(a / b) = ( 2 + ( 5 * 6 ) )</code></p>
 <p>至此基本算法结束，对于右结合的<strong>associativity</strong>可以通过降低其’右优先级‘来实现（如代码所示），其他高级特性可参考上面引用的文章</p>
@@ -395,20 +394,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -502,6 +501,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

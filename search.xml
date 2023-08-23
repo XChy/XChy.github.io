@@ -1,33 +1,299 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Cache Performance Analysis</title>
+    <url>/2023/08/07/Cache-Performance-Analysis/</url>
+    <content><![CDATA[<h2 id="some-concepts">Some Concepts</h2>
+<p>AMAT: Average memory access time. <span class="math inline">\(AMAT = t_{hit} + rate_{missed} * penalty_{missed}\)</span></p>
+<h2 id="cache-miss">Cache Miss</h2>
+<p>Sources of Cache Misses:</p>
+<ul>
+<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
+<li>Capacity</li>
+<li>Conflict (Collison)</li>
+</ul>
+<p>The Design Solutions:</p>
+<ul>
+<li>Compulsory:
+<ul>
+<li>Increase block size</li>
+</ul></li>
+<li>Capacity:
+<ul>
+<li>Increase cache size</li>
+</ul></li>
+<li>Conflict:
+<ul>
+<li>Increase associativity (may increase hit-time)</li>
+</ul></li>
+</ul>
+<h2 id="miss-penalty">Miss Penalty</h2>
+<p>Factors:</p>
+<ul>
+<li>How big is your memory architecture</li>
+<li>How big is your block size</li>
+</ul>
+<h2 id="multiple-cache-levels">Multiple Cache Levels</h2>
+<p>To minimize AMAT, we need to adjust the type/parameters of cache. But it's hard to reduce hit time, miss rate and miss penalty at once.</p>
+<p>Multiple Cache Levels resolves this.</p>
+<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate. However, there is also big write back cost for such design.</p>
+<h2 id="the-cache-design-space">The Cache Design Space</h2>
+<ul>
+<li>Cache parameters</li>
+<li>Policy choices (Rewrite, Replacement)</li>
+<li>Optimal choice is a compromise</li>
+<li>Simplicity often wins</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Direct Memory Access Mechanism</title>
+    <url>/2023/08/07/Direct-Memory-Access/</url>
+    <content><![CDATA[<p>DMA serves asa real solution for I/O problems.</p>
+<ul>
+<li>Device controller transfers data directly to/from memory without involving the processor.</li>
+<li>Only interrupts once per page (large) once transfer is complete.</li>
+</ul>
+<p>The incoming procedure:</p>
+<ul>
+<li>Receive interrupt from device</li>
+<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
+<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
+<li>Upon completion, Device/DMA engine interrupt the CPU again</li>
+</ul>
+<p>The outgoing procedure:</p>
+<ul>
+<li>CPU decides to initiate transfer, confirms that external device is ready.</li>
+<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
+<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
+<li>Device/DMA engine interrupt the CPU again to signal completion</li>
+</ul>
+<h2 id="cache-coherency">Cache-coherency</h2>
+<p>DMA writes to memory, leading to incoherency with cache. Here we can see DMA as another processor core, whose coherency has been solved by most modern multiprocessors.</p>
+<h2 id="dma-and-cpu-sharing-memory">DMA and CPU Sharing Memory</h2>
+<h3 id="cycle-stealing-mode">Cycle Stealing mode</h3>
+<ul>
+<li>DMA Engine transfers a byte, releases control, then repeats</li>
+</ul>
+<h3 id="transparent-mode-maybe-best">Transparent Mode (Maybe best)</h3>
+<ul>
+<li>DMA transfer only occurs when CPU is not using the system bus</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Different Caches</title>
+    <url>/2023/08/07/Different-Caches/</url>
+    <content><![CDATA[<h2 id="fully-associative-caches">Fully Associative Caches</h2>
+<p>Basic implementation of cache. Omit it here. Note: The offset is determined by block size.</p>
+<h2 id="direct-mapped-caches">Direct Mapped Caches</h2>
+<p>For normal fully associative cache, we break down the address into: <code>[Tag | 31 ~ X bits] [Offset | X-1 ~ 0 bits]</code> which requires multiple tag checks.</p>
+<p>So we design a direct-mapped cache inspired by hash table. Currently, we break down the address into: <code>[Tag | 31 ~ X bits] [Index | X-1 ~ Y bits] [Offset | Y-1 ~ 0 bits]</code> And the <strong>Index</strong> serves as the hashcode for the address, <strong>Tag</strong> as a identifier.</p>
+<p>Here, for <em>Write-back Policy</em> cache, there are：</p>
+<ul>
+<li>Block of data</li>
+<li>Index field</li>
+<li>Tag field of address as identifier</li>
+<li>Valid bit</li>
+<li>Dirty bit</li>
+<li>No replacement management bit</li>
+</ul>
+<p>every slot.</p>
+<p>For example, for address 10010010, we can break it down into:</p>
+<ul>
+<li>Tag: 1001</li>
+<li>Index: 001</li>
+<li>Offset: 0</li>
+</ul>
+<p>Then look for something like <code>cache[Index] + Offset</code> to find avaliable data.</p>
+<p>There are also some worst-case for such design. Since the multiple address is mapped into the same slot, We can consider the memory accesses: 00000010, 00010010, 00000010, 00010010, ... And all of the accesses will be missed.</p>
+<p>But for fully associative cache, it only miss twice.</p>
+<p>What <strong>direct-mapped</strong> outweighs <strong>fully-associative</strong> is its fast mapping.</p>
+<h2 id="set-associative-caches">Set Associative Caches</h2>
+<p><strong>N-way set-associative</strong>: divide $ into sets, each of which consists of N slots.</p>
+<ul>
+<li>Memory block maps to a set determined by <strong>Index</strong> field and is placed in any of the N slots of that set.</li>
+<li>Call <span class="math inline">\(N\)</span> the associativity.</li>
+<li>Replcaement policy applies to every set.</li>
+</ul>
+<p>Actually, from my perspective, Set Associative Cache is just a in-between of the two former.</p>
+<p>Fully associative requires 0 index bits. Direct-mapped requires max index bits. Set-associative requires somewhere in-between.</p>
+<p>Here is a screenshot from CS61C: <img src="/images/Set-Associative.png" alt="img" /></p>
+<p>As you can see, it's just the combination of Direct-Mapped and Fully-Associative.</p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>第一次给LLVM的Contribution</title>
+    <url>/2023/06/30/LLVM-First-Contribution/</url>
+    <content><![CDATA[<h2 id="为什么要参与llvm的开源">为什么要参与LLVM的开源？</h2>
+<p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译， 我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
+<p>于是我参考了一位LLVM Member的文章: <a href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
+<p>以下则是我从编译到提交patch的全流程。</p>
+<h3 id="编译">编译</h3>
+<p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
+<p>那么我们首先要clone LLVM的git仓库，或者自己fork了<strong>llvm-project</strong>后再clone到本地。二者区别不大，我按照github的开源习惯选了后者。</p>
+<p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。 以下是cmake的模板：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cmake -GNinja -Bbuild -Hllvm \</span><br><span class="line">    -DLLVM_ENABLE_PROJECTS=&quot;clang&quot; \</span><br><span class="line">    -DLLVM_TARGETS_TO_BUILD=&quot;all&quot; \</span><br><span class="line">    -DCMAKE_BUILD_TYPE=Release \</span><br><span class="line">    -DLLVM_ENABLE_ASSERTIONS=true \</span><br><span class="line">    -DLLVM_CCACHE_BUILD=true \</span><br><span class="line">    -DLLVM_USE_LINKER=lld</span><br></pre></td></tr></table></figure>
+<p>其中Debug可通过<code>-debug</code> flag来进行，你可以在对应的代码位置用<code>errs() &lt;&lt; something</code>进行输出。</p>
+<p>而ninja的编译速度相对较快，所以以下有构建和测试的shell：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Build LLVM</span></span><br><span class="line">ninja -Cbuild</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run all LLVM tests</span></span><br><span class="line">ninja -Cbuild check-llvm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run tests <span class="keyword">in</span> a specific directory.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v will <span class="built_in">print</span> additional information <span class="keyword">for</span> failures.</span></span><br><span class="line">build/bin/llvm-lit -v llvm/test/Transforms/InstCombine</span><br></pre></td></tr></table></figure>
+<h3 id="选issue">选Issue</h3>
+<p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。 <span id="more"></span> 而llvm-project包括许多子项目，包括LLVM本身、Clang编译器、LLD链接器、libc++标准库以及许多其他项目。即使在LLVM本身中也有不同的领域。主要分为与中端优化器与LLVM中间表示(IR)有关的项目，和与后端将IR转换为机器代码有关的项目。</p>
+<p>而我对中端的了解比较多，而且中端优化的代码有许多corner cases，可以通过简单的几行代码解决这些cases， 所以本博客主要针对中端IR优化的<strong>InstCombine</strong>进行讨论，挑选的也是<a href="https://github.com/llvm/llvm-project/issues?q=is%3Aopen+is%3Aissue+label%3Allvm%3Ainstcombine">InstCombine Issue</a>。 当然，LLVM还有许多其他容易解决的Issue，如：<a href="https://github.com/llvm/llvm-project/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22">good first issues</a>，Clang，Flang还有clang-tidy和clang-format等项目的Issue。</p>
+<p>在这里我将展示我的一次LLVM贡献经历：<a href="https://reviews.llvm.org/D154126/new/">D154126</a></p>
+<p>相关<a href="https://github.com/llvm/llvm-project/issues/62586">Issue</a>。</p>
+<h3 id="问题分析">问题分析</h3>
+<p>这篇Issue里提到的问题为: <code>(a &gt; b) | (a &lt; b)</code> 的优化会在 <code>b == 0</code> 时失效。</p>
+<p>而一般的 <code>(a &gt; b) | (a &lt; b)</code> 会折叠为 <code>ZExt(a != 0)</code>，对应的LLVM-IR如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = icmp slt i32 %A, %B</span><br><span class="line">  %5 = zext i1 %4 to i32</span><br><span class="line">  %6 = or i32 %3, %5</span><br><span class="line">  ret i32 %6</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但对于 <code>b == 0</code> 的case，其对应的InstCombine优化为： <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32 </span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %3, %4</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure> 也就是说在这种情况下 <code>A &lt; 0</code> 被优化成了 <code>A &lt;&lt; 31</code>，而之前对应的 <code>A &lt; B | A &gt; B</code> 的<strong>Pattern Matching</strong>被破坏掉了。</p>
+<p>在分析如何解决这个优化问题前，我们先了解LLVM的中端优化代码提交patch的特殊规则。</p>
+<p>LLVM的patch由两部分组成，第一部分是<strong>impl</strong>前的<strong>misoptimization tests</strong>，第二部分则是<strong>impl</strong>以及应用<strong>impl</strong>后的<strong>tests</strong>。 这样分解patch的好处有以下2点：</p>
+<ol type="1">
+<li>便于通过对tests的前后对比查看你实现的优化效果。</li>
+<li>可以把tests作为单独的patch提交，这样能简单提高LLVM的测试量。</li>
+</ol>
+<p>除此之外，在你提交patch前，你还要证明你优化的正确性。</p>
+<h4 id="证明transform的正确性">证明Transform的正确性</h4>
+<p>一般来讲，我们会使用 <a href="https://github.com/AliveToolkit/alive2">alive2</a> 验证不同<strong>LLVM-IR</strong>的正确性，<a href="https://alive2.llvm.org/ce/">online</a>版。 本篇的Issue的alive2结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %0, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br><span class="line">Transformation seems to be correct!</span><br></pre></td></tr></table></figure>
+<p>虽然<strong>alive2</strong>是确保LLVM转换正确性的非常重要的工具，但值得注意的是它可能会产生<strong>false negative</strong>结果（即有时它会声称一个不正确的转换是正确的）。这通常发生在循环优化的背景下，并且通常不会影响<strong>InstCombine</strong>优化。</p>
+<h4 id="测试">测试</h4>
+<p>在我们写<strong>impl</strong>之前，我们需要先完成所有testcases的构建。</p>
+<p>首先是基本成功转换的测试样例: <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[X_LOBIT:%.*]] = lshr i32 [[X]], 31</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i32</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i32 [[X_LOBIT]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>注意，其中的<strong>CHECK-LABEL</strong>后的是testcase的函数名，<strong>CHECK-NEXT</strong>后则是经过转换后期望的IR，在测试时若不满足期望，则会返回失败的测试报告。 这里的测试是未进行优化时的结果，故<strong>CHECK</strong>的结果也自然是未优化的。 当然这里<strong>CHECK</strong>的内容不用自己直接输入，可以用llvm的脚本自动生成，脚本如下：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
+<p>这段脚本会用<strong>InstCombine</strong>对<code>and-or-icmps</code>的每个testcase进行一次优化，并把优化结果作为<strong>CHECK</strong>的IR插入到<code>and-or-icmps</code>中。</p>
+<p>而上面的测试用例只考虑了i32的基本类型，这里我们再添加i64的测试类型:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64(i64 %x) &#123;</span><br><span class="line">  %A = icmp slt i64 %x, 0</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = zext i1 %A to i64</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除此之外，我们还需要一些反例(如改变左移的位数，把大于变为小于等)，防止我们的转换误优化，一例如下： <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64_fail2(i64 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i64_fail2(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i64 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[C:%.*]] = lshr i64 [[X]], 62</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i64</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i64 [[C]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i64 [[E]]</span><br><span class="line">;</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = lshr i64 %x, 62</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>最后，我们可能还要考虑向量化的测试如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define &lt;2 x i64&gt; @icmp_slt_0_or_icmp_sgt_0_i64x2(&lt;2 x i64&gt; %x) &#123;</span><br><span class="line">  %A = icmp slt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %B = icmp sgt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %C = zext &lt;2 x i1&gt; %A to &lt;2 x i64&gt;</span><br><span class="line">  %D = zext &lt;2 x i1&gt; %B to &lt;2 x i64&gt;</span><br><span class="line">  %E = or &lt;2 x i64&gt; %C, %D</span><br><span class="line">  ret &lt;2 x i64&gt; %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完成这些testcases后我们进行一次commit。</p>
+<h4 id="实现">实现</h4>
+<p>最终到了我们的实现部分，在实现之前，我们要进行有关的分析/debug的工作。</p>
+<p>我们在这里通过<code>build/bin/opt -passes=instcombine -S -debug src.ll</code>进行Debug，在不同函数中插入打印的函数，从而根据输出判断优化的代码位置。</p>
+<p>经过一系列排查，我们可以发现当<code>b == 0</code>时无法优化的原因是在 <strong>InstCombineAndOr.cpp</strong>中的<strong>transformZExtICmp</strong>函数会把<code>ZExt(a &lt; 0)</code>转化为<code>a &lt;&lt; 31</code>。</p>
+<p>而优化 <code>a &lt; b | a &gt; b</code> 的函数<strong>foldAndOrOfICmpsUsingRanges</strong>无法识别<code>a &lt;&lt; 31</code>这样的语句，自然就无法优化了。 由于笔者并不是特别清楚InstCombine优化的顺序，故笔者选择在<strong>foldCastedBitwiseLogic</strong>中增加对<code>Zext(a &gt; 0) | a &lt;&lt; 31</code>的匹配，并进行对应的优化。 代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ( A &lt;&lt; (X - 1) ) | ((A &gt; 0) zext to iX)</span></span><br><span class="line"><span class="comment">// &lt;=&gt; A &lt; 0 | A &gt; 0</span></span><br><span class="line"><span class="comment">// &lt;=&gt; (A != 0) zext to iX</span></span><br><span class="line">Value *A;</span><br><span class="line">ICmpInst::Predicate Pred;</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> MatchOrZExtICmp = [&amp;](Value *Op0, Value *Op1) -&gt; <span class="type">bool</span> &#123;</span><br><span class="line"><span class="keyword">return</span> <span class="built_in">match</span>(Op0, <span class="built_in">m_LShr</span>(<span class="built_in">m_Value</span>(A), <span class="built_in">m_SpecificInt</span>(Op0-&gt;<span class="built_in">getType</span>()-&gt;<span class="built_in">getScalarSizeInBits</span>() - <span class="number">1</span>))) &amp;&amp;</span><br><span class="line">       <span class="built_in">match</span>(Op1, <span class="built_in">m_ZExt</span>(<span class="built_in">m_ICmp</span>(Pred, <span class="built_in">m_Specific</span>(A), <span class="built_in">m_Zero</span>())));</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (LogicOpc == Instruction::Or &amp;&amp;</span><br><span class="line">  (<span class="built_in">MatchOrZExtICmp</span>(Op0, Op1) || <span class="built_in">MatchOrZExtICmp</span>(Op1, Op0)) &amp;&amp;</span><br><span class="line">  Pred == ICmpInst::ICMP_SGT) &#123;</span><br><span class="line">  Value *Cmp =</span><br><span class="line">      Builder.<span class="built_in">CreateICmpNE</span>(A, Constant::<span class="built_in">getNullValue</span>(A-&gt;<span class="built_in">getType</span>()));</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">ZExtInst</span>(Cmp, A-&gt;<span class="built_in">getType</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在这里我们定义了一个lambda：<code>MatchOrZExtICmp</code>，用于匹配左移与Zext运算，而<code>Op0</code>,<code>Op1</code>则是在<code>or</code>运算符的两个操作数。</p>
+<p><code>match</code>、<code>m_ZExt</code>等有关的函数、类则是LLVM的<strong>PatternMatching</strong>库。 <strong>PatternMatching</strong>库提供一系列函数和模板类，用于匹配特定LLVM-IR的Pattern，类似<code>m_SpecificInt</code>则是匹配一个特定整数或者有相同整数元素的向量 (<strong>Splat Vector</strong>)。</p>
+<p>其中要注意的是<code>getScalarSizeInBits</code>函数在整数类型中返回整数的大小，而在vector中返回元素的大小。</p>
+<p>最后经过了实现，我们需要再次更新我们的testcases以确认优化的效果，故要再次运行：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
+<p>这时我们可以发现我们的正例的<strong>CHECK</strong>发生了变化：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[TMP1:%.*]] = icmp ne i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = zext i1 [[TMP1]] to i32</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>且其他的testcases的变化也符合我们的期望，这里我们再commit一次。</p>
+<p>这时我们就可以进入patch的提交阶段了。</p>
+<h3 id="提交patch">提交Patch</h3>
+<p>现在我们已经有了两个<strong>commit</strong>，可以通过以下指令生成test和impl的patch文件。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git show -U99999 HEAD^ &gt; patch_test</span><br><span class="line">git show -U99999 &gt; patch_transform</span><br></pre></td></tr></table></figure>
+<p>而LLVM暂时不接受Github的PR，只允许在<a href="https://reviews.llvm.org/">Phabricator</a>上提交patch。 故在这里我注册了Phabricator的帐号，并通过<a href="https://reviews.llvm.org/differential/diff/create/">Create Diff</a>分别上传我的两个patch。</p>
+<p>Patch的标题内容等格式可以博客开头的参考文章，机翻并改造如下： &gt; 选择一个有意义的patch标题和摘要。对于我们的运行示例，第一个patch可能是这样的： &gt; &gt; title：[InstCombine] Add tests for (A &gt; 0) | (A &lt; 0) -&gt; zext (A != 0) fold (NFC) &gt; &gt; summary：Tests for an upcoming (A &gt; 0) | (A &lt; 0) -&gt; zext (A != 0) fold.。 &gt; &gt; reviewer：（见下文） &gt; &gt; 第二个patch可能是这样的： &gt; &gt; title：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A != 0) fold &gt; &gt; summary：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A != 0) fold &gt; &gt; This extends foldCastedBitwiseLogic to handle the similar cases. &gt; &gt; ......你的分析...... &gt; &gt; It's proved by alive-tv:<strong>link</strong> &gt; &gt; Depends on DNNNNNN（在此处放置第一个patch的ID）。 &gt; reviewer：（见下文） &gt; &gt; 这里有几个值得强调的地方： &gt; &gt; 标题开头应该有一个 [Category] 标签。通常，您可以只使用您要修改的文件的名称。例如，对 InstCombine 的更改通常带有[InstCombine]标记。 &gt; 非功能性更改（如测试添加）的patch通常在标题中的某个地方带有 NFC 标记。 &gt; 如果您有任何 alive2 证明，请在patch摘要中包含它们。 &gt; 您可以使用“Depends on DNNNNNN”来创建堆叠的patch。也可以事后添加“子修订版”来实现此目的。</p>
+<hr />
+<p>现在我们还差<strong>Reviewers</strong>，在LLVM中，patch提交者负责选择适当的审阅者。虽然有人可能会根据patch标题（这就是分类标记如此重要的原因）来找到合适的审阅者，但您最好一开始就指定适当的审阅者。</p>
+<p>虽然LLVM有一个CODE_OWNERS.txt文件，用于指定不同领域的代码所有者，但不幸的是， 这个文件往往过时且不完整。找到审阅者的更好方法是查看您要修改的文件的Git历史记录，并添加一些最近commit或最近review diff revision的人员。</p>
+<p>对于InstCombine，主要的reviewer是spatel，但您也可以根据历史记录找到其他几个候选人（例如nikic，goldstein.w.n）。</p>
+<p>提交了patch后，就该等待review了。对于这样简单的更改，通常会有人很快处理。如果您在一周内没有得到回复，请发送“ping”评论，并每周发送一次。对于InstCombine来说等待数周才进行审阅是相当不寻常的，但如果您提交的更改是很长时间没有人真正工作的领域，则可能会发生。只需要不断“ping”。</p>
+<p>最后，一旦patch获得批准，审阅者通常会认为您已经拥有提交访问权限，并允许您自己提交更改。如果不是这种情况，则应该跟进一条评论， 例如“I don't have commit access, can you please land this for me? Please use 'Your Name <a href="mailto:your@email" class="email">your@email</a>' for the commit”。 最后一点很重要，因为Phabricator会丢失patch的作者信息，提交者必须将其添加回来。</p>
+<p>如果您计划对LLVM进行任何形式的常规贡献，建议请求提交访问权限。这方面的门槛非常低，因此可以尽早请求。如果不必创建堆叠的审查，则测试的预提交工作流程要方便得多。</p>
+<p>最后，有关CI的一些话：Phabricator上的patch会通过“pre-merge”测试运行。特别是如果您没有在本地运行完整的测试套件，则这些结果可能会有所帮助。不幸的是，这些测试运行有些不稳定，因此如果您看到与您的patch没有明显关系的失败，则通常可以忽略它们。</p>
+<p>一旦patch被提交，它将在更广泛的“buildbots”范围内运行，这些机器人在许多不同的架构和许多不同的配置上运行测试。 这些也相当不稳定，因此同样适用：如果您收到buildbots故障电子邮件，看起来与您的patch无关，则不必担心。如果最终发现是您的责任，buildbots所有者会让您知道。</p>
+<h3 id="总结">总结</h3>
+<blockquote>
+<p>翻译参考文章的总结</p>
+</blockquote>
+<p>LLVM的贡献过程具有某些不同于其他开源项目的不寻常方面。其中一部分是使用Phabricator而不是GitHub进行审查，但大多数差异都集中在强调正确性方面，从正确性证明开始，到测试的预提交工作流程，以及最终往往是测试和代码更改之间非常大的比率。</p>
+<p>我希望本文对于想要进入LLVM开发的人有所帮助，但我想重申，第一次做不需要完全做得“正确”，如果遇到问题，人们会很乐意提供帮助。Discourse的初学者类别以及Discord聊天是提问的好地方。</p>
+<blockquote>
+<p>自己的总结</p>
+</blockquote>
+<p>第一次为大型开源项目Contribute是一次特别的经历，在不断与reviewer的沟通中，我也对LLVM的体系有了更深刻的了解，希望读者在看了本篇博客后也可以更活跃地参与开源活动。</p>
+]]></content>
+      <categories>
+        <category>LLVM</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>OpenSource</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>LeetCode 42 接雨水 题解</title>
+    <url>/2023/08/23/LeetCode-42/</url>
+    <content><![CDATA[<p>题目描述： <img src="/images/leetcode42.png" alt="img" /></p>
+<p>基本想法：</p>
+<p>对于每个方格索引 <span class="math inline">\(x\)</span>，其容量<span class="math inline">\(c(x)\)</span>取决于其左边最高的格子和右边最高的格子，也就是说令：</p>
+<p><span class="math display">\[t(x) = \min(\max_{y&lt;x}{\{h(y)\}} , \max_{y&gt;x}{\{h(y)\}})\]</span></p>
+<p>则</p>
+<p><span class="math display">\[
+c(x) =
+\begin{cases}
+t(x) - h(x), &amp; \text{if } y &gt; x \\
+0, &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<p>故我们可以有代码：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">int</span> <span class="title">trap</span><span class="params">(vector&lt;<span class="type">int</span>&gt; &amp;height)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = height.<span class="built_in">size</span>();</span><br><span class="line">    <span class="type">int</span> *maxLessThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    <span class="type">int</span> *maxGreaterThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    maxLessThan[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">    maxGreaterThan[n - <span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i - <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i - <span class="number">1</span>];</span><br><span class="line">      maxLessThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line">    curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">2</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i + <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i + <span class="number">1</span>];</span><br><span class="line">      maxGreaterThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="type">int</span> t = std::<span class="built_in">min</span>(maxLessThan[i], maxGreaterThan[i]);</span><br><span class="line">      <span class="type">int</span> capa = t &gt; height[i] ? t - height[i] : <span class="number">0</span>;</span><br><span class="line">      ret += capa;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>当然还有同样思想的双指针法，此处不表。</p>
+]]></content>
+      <categories>
+        <category>LeetCode</category>
+      </categories>
+      <tags>
+        <tag>LeetCode</tag>
+        <tag>Algorithm</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Mathematica微积分常用命令</title>
     <url>/2023/02/06/Mathematica%E5%BE%AE%E7%A7%AF%E5%88%86%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
     <content><![CDATA[<p>作为大一新生,每天都要为了数学作业焦头烂额，为了解决这个问题，聪慧的我想到了利用数学工具 Mathematica 来解决这个问题</p>
 <p>于是我先用南大邮箱获得了 mma，并在 Ubuntu 上安装了 mma 及其依赖</p>
 <p>下面记录有关求极限，求微分，以及求积分的几个模板</p>
 <span id="more"></span>
-
-<h2 id="极限-Limit"><a href="#极限-Limit" class="headerlink" title="极限(Limit)"></a>极限(Limit)</h2><p>我们要求得下列式子的极限：</p>
-<p>$Assume {\quad} f’(a)&#x3D;\sqrt{2} {\quad} f’’(a)&#x3D;2$</p>
-<p>$\lim_{x \rightarrow a} \frac{1}{f(x)-f(a)} - \frac{1}{(x-a)f’(x)} $</p>
+<h2 id="极限limit">极限(Limit)</h2>
+<p>我们要求得下列式子的极限：</p>
+<p><span class="math inline">\(Assume {\quad} f&#39;(a)=\sqrt{2} {\quad} f&#39;&#39;(a)=2\)</span></p>
+<p>$_{x a}  -  $</p>
 <p>我们在 mma 可以输入以下代码</p>
 <figure class="highlight mathematica"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Limit</span><span class="punctuation">[</span><span class="number">1</span><span class="operator">/</span><span class="punctuation">(</span><span class="variable">f</span><span class="punctuation">[</span><span class="variable">x</span><span class="punctuation">]</span> <span class="operator">-</span> <span class="variable">f</span><span class="punctuation">[</span><span class="variable">a</span><span class="punctuation">]</span><span class="punctuation">)</span> <span class="operator">-</span> <span class="number">1</span><span class="operator">/</span><span class="punctuation">(</span><span class="punctuation">(</span><span class="variable">x</span> <span class="operator">-</span> <span class="variable">a</span><span class="punctuation">)</span> <span class="variable">f</span><span class="operator">&#x27;</span><span class="punctuation">[</span><span class="variable">x</span><span class="punctuation">]</span><span class="punctuation">)</span><span class="operator">,</span> <span class="variable">x</span> <span class="operator">-&gt;</span> <span class="variable">a</span><span class="operator">,</span></span><br><span class="line"> <span class="built_in">Assumptions</span> <span class="operator">-&gt;</span> <span class="punctuation">&#123;</span><span class="built_in">D</span><span class="punctuation">[</span><span class="variable">f</span><span class="punctuation">[</span><span class="variable">a</span><span class="punctuation">]</span><span class="operator">,</span> <span class="variable">a</span><span class="punctuation">]</span> <span class="operator">=</span> <span class="built_in">Sqrt</span><span class="punctuation">[</span><span class="number">2</span><span class="punctuation">]</span><span class="operator">,</span> <span class="built_in">D</span><span class="punctuation">[</span><span class="built_in">D</span><span class="punctuation">[</span><span class="variable">f</span><span class="punctuation">[</span><span class="variable">a</span><span class="punctuation">]</span><span class="operator">,</span> <span class="variable">a</span><span class="punctuation">]</span><span class="operator">,</span> <span class="variable">a</span><span class="punctuation">]</span> <span class="operator">=</span> <span class="number">2</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="微分-x2F-导数-Derivative"><a href="#微分-x2F-导数-Derivative" class="headerlink" title="微分&#x2F;导数(Derivative)"></a>微分&#x2F;导数(Derivative)</h2><p>我们要求得下列函数的导数：</p>
-<p>$f(x)&#x3D;\sin{x}^{\sin{x}}+\ln{\int_0^x{\sqrt{\tan{x}}dx}}$</p>
+<hr />
+<h2 id="微分导数derivative">微分/导数(Derivative)</h2>
+<p>我们要求得下列函数的导数：</p>
+<p><span class="math inline">\(f(x)=\sin{x}^{\sin{x}}+\ln{\int_0^x{\sqrt{\tan{x}}dx}}\)</span></p>
 <p>我们在 mma 可以输入以下代码</p>
 <figure class="highlight mathematica"><table><tr><td class="code"><pre><span class="line"><span class="variable">f</span><span class="punctuation">[</span><span class="type">_x</span><span class="punctuation">]</span><span class="operator">=...</span></span><br><span class="line"><span class="built_in">D</span><span class="punctuation">[</span><span class="variable">f</span><span class="punctuation">(</span><span class="variable">x</span><span class="punctuation">)</span><span class="operator">,</span><span class="variable">x</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
-
-<hr>
-<h2 id="积分-x2F-定积分-Integration"><a href="#积分-x2F-定积分-Integration" class="headerlink" title="积分&#x2F;定积分(Integration)"></a>积分&#x2F;定积分(Integration)</h2><p>我们要求得以下积分</p>
-<p>$\int{\frac{1}{\cos^2{x}}dx}$</p>
-<p>$\int_0^{\pi&#x2F;2}{\frac{1}{\cos^2{x}}dx}$</p>
+<hr />
+<h2 id="积分定积分integration">积分/定积分(Integration)</h2>
+<p>我们要求得以下积分</p>
+<p><span class="math inline">\(\int{\frac{1}{\cos^2{x}}dx}\)</span></p>
+<p><span class="math inline">\(\int_0^{\pi/2}{\frac{1}{\cos^2{x}}dx}\)</span></p>
 <p>我们可以分别在 mma 输入以下代码</p>
 <figure class="highlight mathematica"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Integrate</span><span class="punctuation">[</span><span class="number">1</span><span class="operator">/</span><span class="punctuation">(</span><span class="built_in">Cos</span><span class="punctuation">[</span><span class="variable">x</span><span class="punctuation">]</span><span class="operator">^</span><span class="number">2</span><span class="punctuation">)</span><span class="operator">,</span><span class="variable">x</span><span class="punctuation">]</span></span><br><span class="line"><span class="built_in">Integrate</span><span class="punctuation">[</span><span class="number">1</span><span class="operator">/</span><span class="punctuation">(</span><span class="built_in">Cos</span><span class="punctuation">[</span><span class="variable">x</span><span class="punctuation">]</span><span class="operator">^</span><span class="number">2</span><span class="punctuation">)</span><span class="operator">,</span><span class="punctuation">&#123;</span><span class="variable">x</span><span class="operator">,</span><span class="number">0</span><span class="operator">,</span><span class="built_in">Pi</span><span class="operator">/</span><span class="number">2</span><span class="punctuation">&#125;</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
-
-<hr>
+<hr />
 ]]></content>
       <categories>
         <category>Math</category>
@@ -43,39 +309,34 @@
     <content><![CDATA[<p>网上有关Neovim API的中文资料实在稀缺，在此特意整理一部分</p>
 <p>若英文水平过关，可以直接输入指令 <code>:h lua guide</code> 获得Neovim的Lua API相关英文文档</p>
 <span id="more"></span>
-
-<h2 id="Neovim’s-Lua-API"><a href="#Neovim’s-Lua-API" class="headerlink" title="Neovim’s Lua API"></a>Neovim’s Lua API</h2><ul>
+<h2 id="neovims-lua-api">Neovim's Lua API</h2>
+<ul>
 <li><p><code>vim.keymap.set(mode , from_keys, to_expr, opts)</code></p>
-<p> <em>作用:创建一个键位映射</em></p>
-<p> <strong>mode</strong>：类型：<strong>string</strong>，映射作用的模式，”n”代表normal，”i”代表insert,”v”代表visual</p>
-<p> <strong>from_keys</strong>：类型：<strong>string</strong>，则指被映射的按键</p>
-<p> <strong>to_expr</strong>：类型：<strong>any</strong>，指映射得到的键位，vim表达式，或者Lua函数</p>
-<p> <strong>opts</strong>：类型：<strong>table</strong>，键位映射有关的设置</p>
-</li>
+<p><em>作用:创建一个键位映射</em></p>
+<p><strong>mode</strong>：类型：<strong>string</strong>，映射作用的模式，"n"代表normal，"i"代表insert,"v"代表visual</p>
+<p><strong>from_keys</strong>：类型：<strong>string</strong>，则指被映射的按键</p>
+<p><strong>to_expr</strong>：类型：<strong>any</strong>，指映射得到的键位，vim表达式，或者Lua函数</p>
+<p><strong>opts</strong>：类型：<strong>table</strong>，键位映射有关的设置</p></li>
 </ul>
-<hr>
+<hr />
 <ul>
 <li><p><code>vim.api.nvim_create_user_command(commandName, expr)</code></p>
-<p> <em>作用:创建一个用户命令</em></p>
-<p> <strong>commandName</strong>：类型：<strong>string</strong>， 命令名(必须首字母大写)</p>
-<p> <strong>expr</strong>：类型：<strong>any</strong>，命令执行的键位，表达式或者Lua函数</p>
-</li>
+<p><em>作用:创建一个用户命令</em></p>
+<p><strong>commandName</strong>：类型：<strong>string</strong>， 命令名(必须首字母大写)</p>
+<p><strong>expr</strong>：类型：<strong>any</strong>，命令执行的键位，表达式或者Lua函数</p></li>
 </ul>
-<hr>
+<hr />
 <ul>
 <li><p><code>vim.api.nvim_create_autocmd(event, opts)</code></p>
-<p>  <em>作用:创建一个自动命令</em></p>
-<p>  <strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
-<p>  <strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
+<p><em>作用:创建一个自动命令</em></p>
+<p><strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
+<p><strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
 <ul>
-<li><p><strong>pattern</strong>: 文件名的pattern</p>
-</li>
-<li><p><strong>callback</strong>: 自动命令的回调函数，可以是键位，vim表达式，或者Lua函数</p>
-</li>
+<li><p><strong>pattern</strong>: 文件名的pattern</p></li>
+<li><p><strong>callback</strong>: 自动命令的回调函数，可以是键位，vim表达式，或者Lua函数</p></li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<hr>
+<hr />
 ]]></content>
       <categories>
         <category>Tools</category>
@@ -87,20 +348,20 @@
   <entry>
     <title>Neovim常用配置(2)</title>
     <url>/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/</url>
-    <content><![CDATA[<h3 id="使用-Lua-配置-Neovim，并设置自己的-workflow"><a href="#使用-Lua-配置-Neovim，并设置自己的-workflow" class="headerlink" title="使用 Lua 配置 Neovim，并设置自己的 workflow"></a>使用 Lua 配置 Neovim，并设置自己的 workflow</h3><h4 id="结合命令行工具"><a href="#结合命令行工具" class="headerlink" title="结合命令行工具"></a>结合命令行工具</h4><p>我在编码时常常有使用 git 的需求，但又不想总是在命令行中敲命令</p>
+    <content><![CDATA[<h3 id="使用-lua-配置-neovim并设置自己的-workflow">使用 Lua 配置 Neovim，并设置自己的 workflow</h3>
+<h4 id="结合命令行工具">结合命令行工具</h4>
+<p>我在编码时常常有使用 git 的需求，但又不想总是在命令行中敲命令</p>
 <p>于是我利用与 ToggleTerm 把命令行工具 lazygit 嵌入至 Neovim 中</p>
 <figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> Terminal = <span class="built_in">require</span>(<span class="string">&#x27;toggleterm.terminal&#x27;</span>).Terminal</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> lazygit = Terminal:new(&#123; cmd = <span class="string">&quot;lazygit&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"><span class="keyword">local</span> top = Terminal:new(&#123; cmd = <span class="string">&quot;top&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- lazygit</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;LazyGit&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        lazygit:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- top</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;Top&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        top:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br></pre></td></tr></table></figure>
-
 <span id="more"></span>
-
 <p>同样类似的，还可以通过命令行工具 trans 进行翻译，并通过 neovim 的 api 将翻译结果显示出来.</p>
 <figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">translate_terminal</span><span class="params">()</span></span></span><br><span class="line">    <span class="keyword">local</span> mode = vim.api.nvim_get_mode()[<span class="string">&#x27;mode&#x27;</span>]</span><br><span class="line">    <span class="keyword">local</span> to_translate</span><br><span class="line">    <span class="keyword">if</span> mode == <span class="string">&#x27;n&#x27;</span> <span class="keyword">then</span></span><br><span class="line">        to_translate = vim.fn.expand(<span class="string">&#x27;&lt;cword&gt;&#x27;</span>)</span><br><span class="line">    <span class="keyword">elseif</span> mode == <span class="string">&#x27;v&#x27;</span> <span class="keyword">then</span></span><br><span class="line">        to_translate = <span class="built_in">require</span>(<span class="string">&#x27;basic&#x27;</span>).get_visual_selection()</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">local</span> command = <span class="built_in">string</span>.<span class="built_in">format</span>(<span class="string">&#x27;trans &quot;%s&quot;&#x27;</span>, to_translate)</span><br><span class="line"></span><br><span class="line">    async.run(<span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        <span class="keyword">local</span> translated_content = vim.fn.systemlist(command)</span><br><span class="line">        utils.show_term_content(translated_content)</span><br><span class="line">    <span class="keyword">end</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h4 id="设置-Layout"><a href="#设置-Layout" class="headerlink" title="设置 Layout"></a>设置 Layout</h4><figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">vim.api.nvim_create_user_command(</span><br><span class="line">    <span class="string">&quot;BufferDelete&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        <span class="comment">---@diagnostic disable-next-line: missing-parameter</span></span><br><span class="line">        <span class="keyword">local</span> file_exists = vim.fn.filereadable(vim.fn.expand(<span class="string">&quot;%p&quot;</span>))</span><br><span class="line">        <span class="keyword">local</span> modified = vim.api.nvim_buf_get_option(<span class="number">0</span>, <span class="string">&quot;modified&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> file_exists == <span class="number">0</span> <span class="keyword">and</span> modified <span class="keyword">then</span></span><br><span class="line">            <span class="keyword">local</span> user_choice = vim.fn.<span class="built_in">input</span>(</span><br><span class="line">                    <span class="string">&quot;The file is not saved, whether to force delete? Press enter or input [y/n]:&quot;</span>)</span><br><span class="line">            <span class="keyword">if</span> user_choice == <span class="string">&quot;y&quot;</span> <span class="keyword">or</span> <span class="built_in">string</span>.<span class="built_in">len</span>(user_choice) == <span class="number">0</span> <span class="keyword">then</span></span><br><span class="line">                vim.cmd(<span class="string">&quot;bd!&quot;</span>)</span><br><span class="line">            <span class="keyword">end</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">local</span> force = <span class="keyword">not</span> vim.bo.buflisted <span class="keyword">or</span> vim.bo.buftype == <span class="string">&quot;nofile&quot;</span></span><br><span class="line"></span><br><span class="line">        vim.cmd(force <span class="keyword">and</span> <span class="string">&quot;bd!&quot;</span> <span class="keyword">or</span> <span class="built_in">string</span>.<span class="built_in">format</span>(<span class="string">&quot;bp | bd! %s&quot;</span>, vim.api.nvim_get_current_buf()))</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; desc = <span class="string">&quot;Delete the current Buffer while maintaining the window layout&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
-
-<h4 id="在-Neovim-中编辑-Hexo-blog"><a href="#在-Neovim-中编辑-Hexo-blog" class="headerlink" title="在 Neovim 中编辑 Hexo blog"></a>在 Neovim 中编辑 Hexo blog</h4><figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> blog_path = <span class="string">&quot;~/Documents/Hexo-Blog&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogNew</span><span class="params">(input)</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&#x27;nvim-tree.api&#x27;</span>).tree.change_root(blog_path)</span><br><span class="line">    <span class="keyword">local</span> <span class="built_in">output</span> = vim.fn.system(<span class="string">&quot;hexo n &quot;</span> .. <span class="string">&#x27;\&quot;&#x27;</span> .. <span class="built_in">input</span>.args .. <span class="string">&#x27;\&quot;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vim.v.shell_error == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">        <span class="keyword">local</span> <span class="built_in">path</span> = <span class="built_in">string</span>.<span class="built_in">sub</span>(<span class="built_in">output</span>, <span class="built_in">string</span>.<span class="built_in">find</span>(<span class="built_in">output</span>, <span class="string">&#x27;~&#x27;</span>, <span class="number">1</span>, <span class="literal">true</span>), <span class="number">-1</span>)</span><br><span class="line">        vim.cmd(<span class="string">&quot;:e &quot;</span> .. <span class="built_in">path</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Failed creating new blog post&quot;</span> .. <span class="built_in">input</span>.args, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogNewDraft</span><span class="params">(input)</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&#x27;nvim-tree.api&#x27;</span>).tree.change_root(blog_path)</span><br><span class="line">    <span class="keyword">local</span> <span class="built_in">output</span> = vim.fn.system(<span class="string">&quot;hexo new draft &quot;</span> .. <span class="string">&#x27;\&quot;&#x27;</span> .. <span class="built_in">input</span>.args .. <span class="string">&#x27;\&quot;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vim.v.shell_error == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">        <span class="keyword">local</span> <span class="built_in">path</span> = <span class="built_in">string</span>.<span class="built_in">sub</span>(<span class="built_in">output</span>, <span class="built_in">string</span>.<span class="built_in">find</span>(<span class="built_in">output</span>, <span class="string">&#x27;~&#x27;</span>, <span class="number">1</span>, <span class="literal">true</span>), <span class="number">-1</span>)</span><br><span class="line">        vim.cmd(<span class="string">&quot;:e &quot;</span> .. <span class="built_in">path</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Failed creating new blog post&quot;</span> .. <span class="built_in">input</span>.args, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogGenerateAndDeploy</span><span class="params">()</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">os</span>.<span class="built_in">execute</span>(<span class="string">&quot;hexo g &amp;&amp; hexo s&quot;</span>)) <span class="keyword">then</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Deploy the blog successfully&quot;</span>, <span class="string">&quot;info&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Deployment of blog failed&quot;</span>, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h4 id="取消下一行注释"><a href="#取消下一行注释" class="headerlink" title="取消下一行注释"></a>取消下一行注释</h4><figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- avoid comment when enter the new line</span></span><br><span class="line">vim.api.nvim_create_autocmd(&#123; <span class="string">&quot;BufEnter&quot;</span> &#125;, &#123;</span><br><span class="line">    pattern = <span class="string">&quot;*&quot;</span>,</span><br><span class="line">    callback = <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        vim.opt.formatoptions = vim.opt.formatoptions - &#123; <span class="string">&quot;c&quot;</span>, <span class="string">&quot;r&quot;</span>, <span class="string">&quot;o&quot;</span> &#125;</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<h4 id="设置-layout">设置 Layout</h4>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">vim.api.nvim_create_user_command(</span><br><span class="line">    <span class="string">&quot;BufferDelete&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        <span class="comment">---@diagnostic disable-next-line: missing-parameter</span></span><br><span class="line">        <span class="keyword">local</span> file_exists = vim.fn.filereadable(vim.fn.expand(<span class="string">&quot;%p&quot;</span>))</span><br><span class="line">        <span class="keyword">local</span> modified = vim.api.nvim_buf_get_option(<span class="number">0</span>, <span class="string">&quot;modified&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> file_exists == <span class="number">0</span> <span class="keyword">and</span> modified <span class="keyword">then</span></span><br><span class="line">            <span class="keyword">local</span> user_choice = vim.fn.<span class="built_in">input</span>(</span><br><span class="line">                    <span class="string">&quot;The file is not saved, whether to force delete? Press enter or input [y/n]:&quot;</span>)</span><br><span class="line">            <span class="keyword">if</span> user_choice == <span class="string">&quot;y&quot;</span> <span class="keyword">or</span> <span class="built_in">string</span>.<span class="built_in">len</span>(user_choice) == <span class="number">0</span> <span class="keyword">then</span></span><br><span class="line">                vim.cmd(<span class="string">&quot;bd!&quot;</span>)</span><br><span class="line">            <span class="keyword">end</span></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">local</span> force = <span class="keyword">not</span> vim.bo.buflisted <span class="keyword">or</span> vim.bo.buftype == <span class="string">&quot;nofile&quot;</span></span><br><span class="line"></span><br><span class="line">        vim.cmd(force <span class="keyword">and</span> <span class="string">&quot;bd!&quot;</span> <span class="keyword">or</span> <span class="built_in">string</span>.<span class="built_in">format</span>(<span class="string">&quot;bp | bd! %s&quot;</span>, vim.api.nvim_get_current_buf()))</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; desc = <span class="string">&quot;Delete the current Buffer while maintaining the window layout&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
+<h4 id="在-neovim-中编辑-hexo-blog">在 Neovim 中编辑 Hexo blog</h4>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> blog_path = <span class="string">&quot;~/Documents/Hexo-Blog&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogNew</span><span class="params">(input)</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&#x27;nvim-tree.api&#x27;</span>).tree.change_root(blog_path)</span><br><span class="line">    <span class="keyword">local</span> <span class="built_in">output</span> = vim.fn.system(<span class="string">&quot;hexo n &quot;</span> .. <span class="string">&#x27;\&quot;&#x27;</span> .. <span class="built_in">input</span>.args .. <span class="string">&#x27;\&quot;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vim.v.shell_error == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">        <span class="keyword">local</span> <span class="built_in">path</span> = <span class="built_in">string</span>.<span class="built_in">sub</span>(<span class="built_in">output</span>, <span class="built_in">string</span>.<span class="built_in">find</span>(<span class="built_in">output</span>, <span class="string">&#x27;~&#x27;</span>, <span class="number">1</span>, <span class="literal">true</span>), <span class="number">-1</span>)</span><br><span class="line">        vim.cmd(<span class="string">&quot;:e &quot;</span> .. <span class="built_in">path</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Failed creating new blog post&quot;</span> .. <span class="built_in">input</span>.args, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogNewDraft</span><span class="params">(input)</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="built_in">require</span>(<span class="string">&#x27;nvim-tree.api&#x27;</span>).tree.change_root(blog_path)</span><br><span class="line">    <span class="keyword">local</span> <span class="built_in">output</span> = vim.fn.system(<span class="string">&quot;hexo new draft &quot;</span> .. <span class="string">&#x27;\&quot;&#x27;</span> .. <span class="built_in">input</span>.args .. <span class="string">&#x27;\&quot;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (vim.v.shell_error == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">        <span class="keyword">local</span> <span class="built_in">path</span> = <span class="built_in">string</span>.<span class="built_in">sub</span>(<span class="built_in">output</span>, <span class="built_in">string</span>.<span class="built_in">find</span>(<span class="built_in">output</span>, <span class="string">&#x27;~&#x27;</span>, <span class="number">1</span>, <span class="literal">true</span>), <span class="number">-1</span>)</span><br><span class="line">        vim.cmd(<span class="string">&quot;:e &quot;</span> .. <span class="built_in">path</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Failed creating new blog post&quot;</span> .. <span class="built_in">input</span>.args, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">blogGenerateAndDeploy</span><span class="params">()</span></span></span><br><span class="line">    vim.api.nvim_set_current_dir(blog_path)</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">os</span>.<span class="built_in">execute</span>(<span class="string">&quot;hexo g &amp;&amp; hexo s&quot;</span>)) <span class="keyword">then</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Deploy the blog successfully&quot;</span>, <span class="string">&quot;info&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        vim.notify(<span class="string">&quot;Deployment of blog failed&quot;</span>, <span class="string">&quot;error&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="取消下一行注释">取消下一行注释</h4>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- avoid comment when enter the new line</span></span><br><span class="line">vim.api.nvim_create_autocmd(&#123; <span class="string">&quot;BufEnter&quot;</span> &#125;, &#123;</span><br><span class="line">    pattern = <span class="string">&quot;*&quot;</span>,</span><br><span class="line">    callback = <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        vim.opt.formatoptions = vim.opt.formatoptions - &#123; <span class="string">&quot;c&quot;</span>, <span class="string">&quot;r&quot;</span>, <span class="string">&quot;o&quot;</span> &#125;</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>Tools</category>
@@ -112,17 +373,15 @@
   <entry>
     <title>Neovim常用配置(3) (clangd &amp; CMake)</title>
     <url>/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/</url>
-    <content><![CDATA[<p>在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮&#x2F;重构等语言服务</p>
+    <content><![CDATA[<p>在使用 Neovim 进行 C/C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮/重构等语言服务</p>
 <p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
 <p>下面提供简要的集成 clangd 与 cmake 的方法</p>
 <p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
 <p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
-
 <p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
 <p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
-
 <p>构建时只需要输入 build.sh</p>
 ]]></content>
       <categories>
@@ -133,52 +392,345 @@
       </tags>
   </entry>
   <entry>
-    <title>XSharp开发思路-Mutable Variable的LLVM IR生成</title>
-    <url>/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/</url>
-    <content><![CDATA[<h3 id="为什么需要-Mutable-Variable"><a href="#为什么需要-Mutable-Variable" class="headerlink" title="为什么需要 Mutable Variable?"></a>为什么需要 Mutable Variable?</h3><p>由于 LLVM 内部优化等原因，LLVM IR 中的寄存器必须遵循<strong>SSA</strong>原则，即每个寄存器在 SSA 中仅被赋值一次。</p>
-<p>但由于 XSharp 需要支持同个变量的多次引用，我们不能直接使用寄存器作为变量的存储单元。</p>
-<p>幸运的是，LLVM 并不强制要求栈上的变量保持<strong>SSA</strong>，所以我们可以考虑将所有变量存放在栈上，</p>
-<p>然后再通过 LLVM 提供的 Mem2Reg 工具或者 Pass 进行栈上内存的数据流分析，尽可能地将栈上的变量转换至寄存器上。</p>
-<p>原文档在此:<a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Mutable Variable</a></p>
-<p>而针对 XSharp,我们可以写出如下代码</p>
-<span id="more"></span>
-
-<p>首先，LLVM 通过<strong>AllocaInst</strong>分配栈上的变量</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">VariableDeclarationNode* varNode = <span class="built_in">get</span>();</span><br><span class="line">TypeNode* typenode = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> xsharpType = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"><span class="keyword">auto</span> llvmValue =</span><br><span class="line">builder.<span class="built_in">CreateAlloca</span>(</span><br><span class="line">    <span class="built_in">llvmTypeFor</span>(xsharpType, context), <span class="literal">nullptr</span>,</span><br><span class="line">    varNode-&gt;<span class="built_in">name</span>().<span class="built_in">toStdString</span>());</span><br></pre></td></tr></table></figure>
-
-<p>同时，也可以把函数的参数存在栈上，以下复制自 <a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Tutorial</a></p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function">Function *<span class="title">FunctionAST::codegen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  Builder-&gt;<span class="built_in">SetInsertPoint</span>(BB);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Record the function arguments in the NamedValues map.</span></span><br><span class="line">  NamedValues.<span class="built_in">clear</span>();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">auto</span> &amp;Arg : TheFunction-&gt;<span class="built_in">args</span>()) &#123;</span><br><span class="line">    <span class="comment">// Create an alloca for this variable.</span></span><br><span class="line">    AllocaInst *Alloca = <span class="built_in">CreateEntryBlockAlloca</span>(TheFunction, Arg.<span class="built_in">getName</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Store the initial value into the alloca.</span></span><br><span class="line">    Builder-&gt;<span class="built_in">CreateStore</span>(&amp;Arg, Alloca);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Add arguments to variable symbol table.</span></span><br><span class="line">    NamedValues[std::<span class="built_in">string</span>(Arg.<span class="built_in">getName</span>())] = Alloca;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Value *RetVal = Body-&gt;<span class="built_in">codegen</span>()) &#123;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
-
-<p>并用<strong>PromoteMemoryToRegisterPass</strong>实现 Mem2Reg 的优化</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Promote allocas to registers.</span></span><br><span class="line">functionPassManager-&gt;<span class="built_in">add</span>(<span class="built_in">createPromoteMemoryToRegisterPass</span>());</span><br></pre></td></tr></table></figure>
-
-<p>LLVM 也对性能等问题做了解释<br><img src="/images/Mem2RegLLVM.png" alt="content"></p>
+    <title>OS Boot</title>
+    <url>/2023/08/07/OS-Boot/</url>
+    <content><![CDATA[<p>The 1st period: the CPU executes instructions from some start address (stored in Flash ROM)</p>
+<ol type="1">
+<li>BIOS: FInd a storage device and load first sector.</li>
+<li>Bootloader: Load the OS kernel from disk into a location in memory and jump into it.</li>
+<li>OS Boot: Initialize services, drivers, etc.</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OSPF (Open Shortest Path First) &amp; BGP (Border Gateway Protocol)</title>
+    <url>/2023/08/19/OSPF_BGP/</url>
+    <content><![CDATA[<h2 id="making-routing-scalable">Making routing scalable</h2>
+<p>Here are some concepts to note:</p>
+<p>scale: billions of destinations:</p>
+<ul>
+<li>can't store all destinations in routing tables.</li>
+<li>routing table exchange would swamp links.</li>
+</ul>
+<p>administrative autonomy:</p>
+<ul>
+<li>Internet: a network of networks</li>
+<li>each network admin may want to control routing in its own network</li>
+</ul>
+<h2 id="approach-to-scalable-routing">Approach to scalable routing</h2>
+<p>We always aggregate routers into regions known as "autonomous systems" (a.k.a "domains").</p>
+<p>And <strong>intra-AS (intra-domain)</strong> is such routing among routers within same AS(network).</p>
+<ul>
+<li>all routers in AS must run same intra-domain protocol.</li>
+<li>routers in different AS can run different intra-domain protocols.</li>
+<li>gateway router: at edge of its own AS, has link(s) to router(s) in other AS'es</li>
+</ul>
+<p><strong>inter-AS</strong> routing among AS'es is the gateways perform inter-domain routing</p>
+<p>Both of them determine entries for destination of routers, while former is <em>within</em> AS and latter is for <em>external</em> destinations. Most common intra-AS routing protocols:</p>
+<ul>
+<li>RIP (Routing Information Protocol), which is no longer widely used.</li>
+<li>OSPF (Open Shortest Path First), which includes classic <strong>link-state</strong> routing.</li>
+<li>EIGRP: (Enhanced Interior Gateway Routing Protocol), which is <strong>DV</strong> based/</li>
+</ul>
+<h2 id="ospf">OSPF</h2>
+<p>OSPF is an intra-domain routing protocol.</p>
+<ul>
+<li><p>open: publicly available</p></li>
+<li><p>classic link-state:</p>
+<ul>
+<li>each router floods OSPF link-state advertisements (directly over IP) to all other routers in entire AS.</li>
+<li>multiple link costs metrics possible: bandwidth, delay.</li>
+<li>global (has full topology)</li>
+</ul>
+<p>There is two-level hierarchy: local <em>area</em> and <em>backbone</em>.</p>
+<ul>
+<li><strong>Local routers</strong> only know/compute detailed topology within its local area, and forwad information to <strong>area border routers</strong>.</li>
+<li>And <strong>area border routers</strong> are responsible for <em>summarizing</em> distances to destinations in own area, and advertising in backbone.</li>
+</ul></li>
+</ul>
+<h2 id="bgp">BGP</h2>
+<p>BGP is an inter-domain routing protocol ("glue that holds the Internet together").</p>
+<p>BGP provides each AS a means to:</p>
+<ul>
+<li>obtain destination network reachability information from neighboring ASes (<strong>eBGP</strong>).</li>
+<li>determine roues to other networks based on reachability information and policy.</li>
+<li>propagate reachability information to all AS-internal routers (<strong>iBGP</strong>).</li>
+<li>advertise destination reachability information.</li>
+</ul>
+<h3 id="bgp-basics">BGP Basics</h3>
+<p>BGP Session: two BGP routers exchange BGP messages over semi-permanent TCP connection:</p>
+<ul>
+<li>advertising paths to different destination network prefixes</li>
+<li>BGP is a "path vector" protocol</li>
+</ul>
+<p>BGP protocol messages [RFC 4371]:</p>
+<ul>
+<li>Open: opens <strong>TCP</strong> connection to peer and authenticates sending BGP peer</li>
+<li>Update: advertises new path (or withdraws old)</li>
+<li>Keepalive: keeps connection alive in absence of UPDATES; also ACKS OPEN request</li>
+<li>Notification: reports erros in previous msg; also used to close connection</li>
+</ul>
+<h3 id="bgp-path-advertisement">BGP: path advertisement</h3>
+<p>BGP advertised path: prefix + attributes</p>
+<ul>
+<li>path prefix: destination being advertised</li>
+<li>two important attributes:
+<ul>
+<li>AS-PATH: list of ASes through which prefix advertisement has passed</li>
+<li>NEXT-HOP: indicates specific internal-AS router to next-hop AS</li>
+</ul></li>
+</ul>
+<h3 id="bgp-policy">BGP policy</h3>
+<p>ISP only wants to route traffic to/from its customer networks (does not want to carry transit traffic between other ISPs – a typical “real world” policy)</p>
+<h3 id="bgp-populating-forwading-tables">BGP: populating forwading tables</h3>
+<p>Just popluate from boundary to internal and choose local gateway that has least intra-domain cost. Omit details here.</p>
+<h2 id="benefits">Benefits</h2>
+<p>Intra/Inter-AS routing scale the network, creating hierarchical routing, reducing forwarding table size. And seperate them can make:</p>
+<ul>
+<li>intra-AS focus on performance.</li>
+<li>inter-AS has policy dominates over performaance.</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Network</category>
+      </categories>
+      <tags>
+        <tag>Algorithm</tag>
+        <tag>Network</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Routing-Algorithms</title>
+    <url>/2023/08/19/Routing-Algorithms/</url>
+    <content><![CDATA[<p>Routing algorithm goal: determine <strong>good</strong> paths from sending hosts to receiving host. So what is a good path? Here "good" means least cost, fastest and least congested. Cost is defined by network operator: related to bandwidth, related to congestion, etc.</p>
+<p>For the characterisitics of network, We apply <strong>graph abstraction</strong> to solve this problem. Let routers be vertices, connections be edges and the "cost" of connection be weights of edges.</p>
+<p>There is routing algorithm classification:</p>
+<ul>
+<li>global: all routers have complete topology, link cost info</li>
+<li>decentralized: iterative process of computation, exchange of info with neighbors</li>
+<li>dynamic: routes change more quickly</li>
+<li>static: routes change slowly over time</li>
+</ul>
+<h2 id="link-state">Link State</h2>
+<p><strong>Link State Algorithm</strong> is iterative and centralized/global, which knows network topology, link costs needed. And it computes least cost paths from one node to all other nodes.</p>
+<p>Notation: <span class="math inline">\(C_{a,b}\)</span> is the cost from <span class="math inline">\(a\)</span> to <span class="math inline">\(b\)</span>. <span class="math inline">\(D(a)\)</span> is the cost of least-cost-path from source to destination <span class="math inline">\(a\)</span>. <span class="math inline">\(p(a)\)</span> is the predecessor node along path from source to <span class="math inline">\(a\)</span>. And <span class="math inline">\(N&#39;\)</span> is set of nodes whose least-cost-path definitively known.</p>
+<p>And it's mostly the same as <strong>Dijkstra's Algorithm</strong> or <strong>Prim Algorithm</strong> in Graph Theory. Omit details here.</p>
+<p>Optimized algorithm complexity: <span class="math inline">\(O(nlogn)\)</span></p>
+<p>Message Complexity: Each router must broadcast its link state information to other <span class="math inline">\(n\)</span> routers, so complexity is <span class="math inline">\(O(n^2)\)</span></p>
+<h2 id="distance-vector">Distance Vector</h2>
+<p><strong>Distance Vector</strong> is an application of <strong>Bellman Ford Algorithm</strong>, which is decentralized, iterative and asynchronous. In this algorithm, each node propagates its cost(distance vector) to its neighbors, so that they can update their own distance vectors.</p>
+<p>The process for each node is: - wait for change in local link cost or msg from neighbor - recompute its own DV estimates with DV received from neighbor - if its own DV changed, send it to its neightbors</p>
+<p>Such thing is like state information diffusion. <strong>As a compiler learner, I think it's the same as what MFP(Maximum FixedPoint) implements</strong></p>
+<p>However, there's difference where one of the costs increase. For example, with path x-4-y-1-z, when <span class="math inline">\(C_{x,y}\)</span> updates to 60, <span class="math inline">\(y\)</span> will update <span class="math inline">\(D_y(x)\)</span> to 6 because <span class="math display">\[D_y(x) = min(D_y(x), C_{y,z} + D_z(x))\]</span>, while <span class="math inline">\(D_z(x)\)</span> is out-of-date. Such count-to-infinity problem is tricky to solve.</p>
+<p>Message complexity: exchange between neighbors; convergence time varies.</p>
+<h2 id="comparsion-of-ls-and-dv-algorithms">Comparsion of LS and DV algorithms</h2>
+<p>robustness: - LS: - router can advertise incorrect link cost. - each router computes only its own table.</p>
+<ul>
+<li>DV:
+<ul>
+<li>DV router can advertise incorrect path cost:black-holing.</li>
+<li>each router;s DV is used by others: error propagate through network.</li>
+</ul></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Network</category>
+      </categories>
+      <tags>
+        <tag>Algorithm</tag>
+        <tag>Network</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Sequential-Logic-Circuit</title>
+    <url>/2023/07/26/Sequential-Logic-Circuit/</url>
+    <content><![CDATA[<h2 id="sequential-clock-circuit">Sequential Clock Circuit</h2>
+<p>There are multiple combinational logic circuits in a circuit. And sequential logic circuit connects them into a single one, which is synchorized by a clock.</p>
+<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit. The clock period must be longer be longer than this critical path, or the signal will not propagate properly to that next register.</p>
+<p>So the max frequency of the circuit is limited by how much time needed to get correct Next State to Register. (<span class="math inline">\(t_{setup}\)</span> constraint)</p>
+<p>The structure of circuit should like this: <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
+<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency. That's unsafe and untable.</p>
+<p>You can: - add extra register to shorten critical path. Meanwhile, it may require more period. However, that's fine for pipeline. More latency, but more throughtput too.</p>
+<p>Pipielining <strong>tends</strong> to improve performance.</p>
+<h2 id="finite-state-machine">Finite State Machine</h2>
+<p>State transitions are controlled by the clock, On each clock cycle the machine checks, generate new state and new output.</p>
+<p>Register holds a representation of the FSM's state - Must assign a unique bit pattern for each state - Output is present/current state (PS/CS) - Input is next state (NS)</p>
+<p>Combinational Logic implements transition function here.</p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>TCP Congestion Control</title>
+    <url>/2023/08/17/TCP-Congestion-Control/</url>
+    <content><![CDATA[<h1 id="classic-tcp">Classic TCP</h1>
+<h2 id="aimd">AIMD</h2>
+<p><strong>A</strong>I<strong>M</strong>D - a distributed, asynchronous algorithm - has been shown to:</p>
+<ul>
+<li>optimize congested flow rates network wide.</li>
+<li>have desirable stability properties.</li>
+</ul>
+<p>Approach: senders can <strong>increase</strong> sending rate until packet loss occurs, then <strong>decrease</strong> sending rate on loss event.</p>
+<p>Additive Increase: Increase sending rate by 1 maximum segment size every RTT until loss detected.</p>
+<p>Multiplicative Decrease: Cut sending rate in half at each loss event by triple duplicate ACK (TCP Reno). Or cut to 1 maximum segment size when loss is detected by timeout (TCP Tahoe)</p>
+<h2 id="tcp-congestion-control-details">TCP Congestion Control Details</h2>
+<p>sender sequence number space:</p>
+<figure>
+<img src="/images/SenderSequenceSpace.png" alt="" /><figcaption>/images/SenderSequenceSpace.png</figcaption>
+</figure>
+<p>TCP rate ~= <span class="math inline">\(\frac{cwnd}{RTT}\)</span> bytes/sec</p>
+<ul>
+<li>TCP sender limits transmission : LastByteSent - LastByteAcked &lt;= cwnd</li>
+<li><em>cwnd</em> is dynamically adjusted in response to observed network congestion</li>
+</ul>
+<h3 id="tcp-slow-start">TCP slow start</h3>
+<p>initially cwnd = 1 MSS. double cwnd every RTT. done by incrementing cwnd for every ACK received.</p>
+<p>When cwnd gets to 1/2 of its value before, we should switch to linear</p>
+<h2 id="cubic">CUBIC</h2>
+<figure>
+<img src="/images/TCPCUBIC.png" alt="" /><figcaption>CUBIC</figcaption>
+</figure>
+<p>TCP CUBIC is default in Linux, most popular TCP for popular Web servers.</p>
+<h1 id="enhanced-tcps">Enhanced TCPs</h1>
+<h2 id="delay-based-tcp-congestion-control">Delay-based TCP congestion control</h2>
+<p>"Just full enough, but not fuller": keep bottleneck link busy transmitting, but avoid high delays/buffering</p>
+<h2 id="explicit-congestion-notification-ecn">Explicit congestion notification (ECN)</h2>
+<p>TCP deployments often implement network-assisted congestion control.</p>
+<ul>
+<li>two bits in IP header (ToS field) marked by network router to indicate congestion
+<ul>
+<li>policy to determine marking chosen by network operator</li>
+</ul></li>
+<li>congestion indication carried to destination</li>
+<li>destination sets ECE bit on ACK segment to notify sender of congestion</li>
+<li>involves both IP (IP header ECN bit marking) and TCP (TCP header C,E bit marking)</li>
+</ul>
+<h2 id="tcp-fairness">TCP fairness</h2>
+<p>Goal: Multiple TCP sessions share the equal resource of network.</p>
+<p>However, there is no Internet police policing use of congestion control.</p>
+]]></content>
+      <categories>
+        <category>Network</category>
+      </categories>
+      <tags>
+        <tag>Network</tag>
+        <tag>TCP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Virtual-Memory</title>
+    <url>/2023/08/07/Virtual-Memory/</url>
+    <content><![CDATA[<h2 id="address-translation">Address Translation</h2>
+<p>Assuming the virtual memory has 1024B, a page has 256B, then the index of page should be: <span class="math display">\[\log_2{\frac{1024}{256}} = 2 bit\]</span> So for an 32-bit address, the first 2 bits is the index, while the remaining 30 bits serve as offset.</p>
+<h2 id="page-table">Page Table</h2>
+<p>Consist of: [Valid] [Access Rights] [VPN] [PPN]</p>
+<p>Valid bit determines whether this virtual page is mapped to a physical page. The mapping VPN to PPN is by looking up the table. The offset from virtual to physical is invariant.</p>
+<p>Page Tables are always saved in main memory. And we always create hierarchical page table since page tables is too big. <img src="/images/HierachicalPageTable.png" alt="pagetable" /></p>
+<h2 id="problems">Problems</h2>
+<p>2+ Physical memory accesses per data access is too slow. Since locality in pages of data, there must be locality in the translations of those pages, we could build a separate cache for the page table.</p>
+<p>For historical reasons, cache is called a Translation Lookaside Buffer (TLB)</p>
+<p>VPN -&gt; TLB -&gt; PPN -&gt; Data (Access Page Table in main memory if messed)</p>
+<h2 id="performance-analysis">Performance Analysis</h2>
+<h3 id="vm-performance">VM Performance</h3>
+<p>Similar to cache. But here, though the rate of page miss is much smaller, page miss will lead to much slower performance. Page fault(Loading page from disk) requires about 20,000,000 cycles, which is destructive. The corresponding miss rate must be quite small to match it.</p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp开发思路-数组设计</title>
+    <url>/2023/04/17/XSharp-3-Array-Design-0/</url>
+    <content><![CDATA[<p>参考了 Java 中的对象模型 我决定把 XSharp 中的 <strong>数组(Array)</strong> 的模型设计为以下形式： [ <strong>8</strong> bytes ] object header as <strong>length of array</strong> [ <strong>4 or 8</strong> bytes ] pointer <strong><em>p</em></strong> to a sequential memory (<strong>for elements</strong>)</p>
+<p>故对以下 XSharp 代码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">i64[] a = new i64[100]</span><br></pre></td></tr></table></figure>
+<p>在 64 位系统上，我们将会在栈上分配 8 + 4 字节的内存，由于 align 的要求我们再加上 4 字节的 padding， 一共 16 字节，并为 100 个 i64 元素在堆上分配 100 * 8 字节的内存</p>
+<p>而每次执行<code>a[i]</code>这样的操作时，我们会对取 a 的地址 并加上 8，得到指向对应连续内存的指针 <strong><em>p</em></strong> ， 再对 <strong>p + i _ sizeof(i64)</strong> 对应的地址指向读/写操作</p>
+<p>对应到 LLVM 的 CodeGen，我们则需要定义形如<code>StructType&lt;i64,PointerTo&lt;xxx&gt;&gt;</code>这样的类型， 并用<strong>getelementptr inbound</strong>和<strong>getelementptr</strong>指令获得某个元素的地址</p>
+<p>这样设计的好处则是将长度 length 放到栈上，不需要在堆分配和取元素时进行额外的计算， 也不需要 align 来保证 cache friendly，同时也方便优化。</p>
+<p>而相较于 C 语言风格的数组，我们的数组主体始终放在堆上，故内存的管理不够精细， 但经过了封装，其易用性更胜一筹，基于这些限制，其优化也更容易实现。</p>
 ]]></content>
       <categories>
         <category>XSharp</category>
       </categories>
       <tags>
         <tag>Compiler</tag>
-        <tag>XSharp</tag>
         <tag>LLVM</tag>
+        <tag>XSharp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp-4-Class-Design</title>
+    <url>/2023/05/18/XSharp-4-Class-Design/</url>
+    <content><![CDATA[<p>Waiting to complete</p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>XSharp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp开发思路-Mutable Variable的LLVM IR生成</title>
+    <url>/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/</url>
+    <content><![CDATA[<h3 id="为什么需要-mutable-variable">为什么需要 Mutable Variable?</h3>
+<p>由于 LLVM 内部优化等原因，LLVM IR 中的寄存器必须遵循<strong>SSA</strong>原则，即每个寄存器在 SSA 中仅被赋值一次。</p>
+<p>但由于 XSharp 需要支持同个变量的多次引用，我们不能直接使用寄存器作为变量的存储单元。</p>
+<p>幸运的是，LLVM 并不强制要求栈上的变量保持<strong>SSA</strong>，所以我们可以考虑将所有变量存放在栈上，</p>
+<p>然后再通过 LLVM 提供的 Mem2Reg 工具或者 Pass 进行栈上内存的数据流分析，尽可能地将栈上的变量转换至寄存器上。</p>
+<p>原文档在此:<a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Mutable Variable</a></p>
+<p>而针对 XSharp,我们可以写出如下代码</p>
+<span id="more"></span>
+<p>首先，LLVM 通过<strong>AllocaInst</strong>分配栈上的变量</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">VariableDeclarationNode* varNode = <span class="built_in">get</span>();</span><br><span class="line">TypeNode* typenode = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> xsharpType = varNode-&gt;<span class="built_in">type</span>();</span><br><span class="line"><span class="keyword">auto</span> llvmValue =</span><br><span class="line">builder.<span class="built_in">CreateAlloca</span>(</span><br><span class="line">    <span class="built_in">llvmTypeFor</span>(xsharpType, context), <span class="literal">nullptr</span>,</span><br><span class="line">    varNode-&gt;<span class="built_in">name</span>().<span class="built_in">toStdString</span>());</span><br></pre></td></tr></table></figure>
+<p>同时，也可以把函数的参数存在栈上，以下复制自 <a href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Tutorial</a></p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function">Function *<span class="title">FunctionAST::codegen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  Builder-&gt;<span class="built_in">SetInsertPoint</span>(BB);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Record the function arguments in the NamedValues map.</span></span><br><span class="line">  NamedValues.<span class="built_in">clear</span>();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">auto</span> &amp;Arg : TheFunction-&gt;<span class="built_in">args</span>()) &#123;</span><br><span class="line">    <span class="comment">// Create an alloca for this variable.</span></span><br><span class="line">    AllocaInst *Alloca = <span class="built_in">CreateEntryBlockAlloca</span>(TheFunction, Arg.<span class="built_in">getName</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Store the initial value into the alloca.</span></span><br><span class="line">    Builder-&gt;<span class="built_in">CreateStore</span>(&amp;Arg, Alloca);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Add arguments to variable symbol table.</span></span><br><span class="line">    NamedValues[std::<span class="built_in">string</span>(Arg.<span class="built_in">getName</span>())] = Alloca;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Value *RetVal = Body-&gt;<span class="built_in">codegen</span>()) &#123;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+<p>并用<strong>PromoteMemoryToRegisterPass</strong>实现 Mem2Reg 的优化</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Promote allocas to registers.</span></span><br><span class="line">functionPassManager-&gt;<span class="built_in">add</span>(<span class="built_in">createPromoteMemoryToRegisterPass</span>());</span><br></pre></td></tr></table></figure>
+<p>LLVM 也对性能等问题做了解释 <img src="/images/Mem2RegLLVM.png" alt="content" /></p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>XSharp</tag>
       </tags>
   </entry>
   <entry>
     <title>XSharp开发思路-Type</title>
     <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
-    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统"><a href="#一个好的编程语言需要有一个好的类型系统" class="headerlink" title="一个好的编程语言需要有一个好的类型系统"></a>一个好的编程语言需要有一个好的类型系统</h3><p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
+    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统">一个好的编程语言需要有一个好的类型系统</h3>
+<p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
 <p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
 <p>于是<strong>TypeNode</strong>出现了</p>
 <p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
 <span id="more"></span>
-
 <p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
 <p>从而确定 TypeNode 的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
 <p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析 variant 类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
 <p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的 typeID，并通过 typeID 实现运行时反射</p>
 <p>在 TypeSystem 中我们将实现这一功能</p>
 ]]></content>
@@ -188,47 +740,6 @@
       <tags>
         <tag>Compiler</tag>
         <tag>XSharp</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hello World</title>
-    <url>/2023/02/06/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<span id="more"></span>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<p>&lt;–more&gt;</p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-]]></content>
-      <categories>
-        <category>Blog&#39;s configuration</category>
-      </categories>
-      <tags>
-        <tag>Helloworld</tag>
-        <tag>Blog&#39;s configuration</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第一篇博客文章</title>
-    <url>/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/</url>
-    <content><![CDATA[<p>奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。<br>本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong><a href="mailto:&#120;&#x78;&#115;&#x5f;&#99;&#104;&#x79;&#x40;&#x6f;&#x75;&#x74;&#x6c;&#x6f;&#x6f;&#107;&#x2e;&#99;&#111;&#109;">&#120;&#x78;&#115;&#x5f;&#99;&#104;&#x79;&#x40;&#x6f;&#x75;&#x74;&#x6c;&#x6f;&#x6f;&#107;&#x2e;&#99;&#111;&#109;</a></strong>联系我</p>
-]]></content>
-      <categories>
-        <category>Blog&#39;s configuration</category>
-      </categories>
-      <tags>
-        <tag>Helloworld</tag>
-        <tag>Blog&#39;s configuration</tag>
       </tags>
   </entry>
   <entry>
@@ -254,28 +765,23 @@
 <p>初始层级优先级为 0，给当前层级命名 <strong>initial</strong></p>
 <ul>
 <li><p>进入 initial 层，我们先读入 token <strong>a</strong></p>
-<p>发现 <strong>/</strong> 的优先级大于 0，于是结合 0 与/<br>并进入属于 <strong>‘/’</strong> 的层级，该层级优先级为 3，该层级求优先级大于 3 的 rhs</p>
+<p>发现 <strong>/</strong> 的优先级大于 0，于是结合 0 与/ 并进入属于 <strong>‘/’</strong> 的层级，该层级优先级为 3，该层级求优先级大于 3 的 rhs</p>
 <ul>
 <li><p>然后读入 token <strong>b</strong>, b 属于 <strong>‘/’</strong> 层级，又读入 operator <strong>=</strong> 发现其优先级&lt;=当前层级最小优先级</p>
-<p>于是结束 <strong>‘/’</strong> 层级， 确定其 rhs 为 b，得到一个整体 <code>(a / b)</code></p>
-</li>
-</ul>
-</li>
+<p>于是结束 <strong>‘/’</strong> 层级， 确定其 rhs 为 b，得到一个整体 <code>(a / b)</code></p></li>
+</ul></li>
 <li><p>回到 initial 层，且此时 lhs 为<code>a / b</code>，继续读入 operator <strong>=</strong> ，其优先级为 1&gt;=0，故进入 <strong>‘=’</strong> 层</p>
 <ul>
-<li><p>现在读入 token <strong>2</strong>，再读入 operator <strong>+</strong>，发现其优先级 2&gt;=1 故可作为 rhs，进入 <strong>‘+’</strong> 层</p>
+<li><p>现在读入 token <strong>2</strong>，再读入 operator <strong>+</strong>，发现其优先级 2&gt;=1 故可作为 rhs，进入 <strong>'+'</strong> 层</p>
 <ul>
-<li><p>继续求 <strong>‘+’</strong> 的 rhs，发现 token <strong>5</strong>，和 operator <strong>*</strong> ，<strong>*</strong> 的优先级 3&gt;=2，故进入<strong>‘*‘</strong>层</p>
+<li><p>继续求 <strong>'+'</strong> 的 rhs，发现 token <strong>5</strong>，和 operator <strong>*</strong> ，<strong>*</strong> 的优先级 3&gt;=2，故进入<strong>'*'</strong>层</p>
 <ul>
-<li>读入 <code>6</code> 表达式结束，将 6 作为 <strong>‘*‘</strong> 的 rhs，开始回溯</li>
+<li>读入 <code>6</code> 表达式结束，将 6 作为 <strong>'*'</strong> 的 rhs，开始回溯</li>
 </ul>
-<p>将 <code>5 * 6</code> 作为 <strong>‘+’</strong> 的 rhs，退出 <strong>‘+’</strong> 层</p>
-</li>
+<p>将 <code>5 * 6</code> 作为 <strong>‘+’</strong> 的 rhs，退出 <strong>‘+’</strong> 层</p></li>
 </ul>
-<p>得到 <code>2 + (5*6)</code> ，将其作为 <strong>‘=’</strong> 的 rhs，退出 <strong>‘=’</strong> 层</p>
-</li>
-</ul>
-</li>
+<p>得到 <code>2 + (5*6)</code> ，将其作为 <strong>'='</strong> 的 rhs，退出 <strong>‘='</strong> 层</p></li>
+</ul></li>
 </ul>
 <p>最后回到<strong>initial</strong>层，结合已有 lhs：<code>a / b</code>, op: <code>=</code>, rhs <code>2 + ( 5 * 6 )</code>，返回<code>(a / b) = ( 2 + ( 5 * 6 ) )</code></p>
 <p>至此基本算法结束，对于右结合的<strong>associativity</strong>可以通过降低其’右优先级‘来实现（如代码所示），其他高级特性可参考上面引用的文章</p>
@@ -290,179 +796,66 @@
       </tags>
   </entry>
   <entry>
-    <title>XSharp-4-Class-Design</title>
-    <url>/2023/05/18/XSharp-4-Class-Design/</url>
-    <content><![CDATA[<p>Waiting to complete</p>
-]]></content>
-      <categories>
-        <category>XSharp</category>
-      </categories>
-      <tags>
-        <tag>Compiler</tag>
-        <tag>XSharp</tag>
-        <tag>LLVM</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>XSharp开发思路-数组设计</title>
-    <url>/2023/04/17/XSharp-3-Array-Design-0/</url>
-    <content><![CDATA[<p>参考了 Java 中的对象模型<br>我决定把 XSharp 中的 <strong>数组(Array)</strong> 的模型设计为以下形式：<br>[ <strong>8</strong> bytes ] object header as <strong>length of array</strong><br>[ <strong>4 or 8</strong> bytes ] pointer <strong><em>p</em></strong> to a sequential memory (<strong>for elements</strong>)</p>
-<p>故对以下 XSharp 代码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">i64[] a = new i64[100]</span><br></pre></td></tr></table></figure>
-
-<p>在 64 位系统上，我们将会在栈上分配 8 + 4 字节的内存，由于 align 的要求我们再加上 4 字节的 padding，<br>一共 16 字节，并为 100 个 i64 元素在堆上分配 100 * 8 字节的内存</p>
-<p>而每次执行<code>a[i]</code>这样的操作时，我们会对取 a 的地址 并加上 8，得到指向对应连续内存的指针 <strong><em>p</em></strong> ，<br>再对 <strong>p + i _ sizeof(i64)</strong> 对应的地址指向读&#x2F;写操作</p>
-<p>对应到 LLVM 的 CodeGen，我们则需要定义形如<code>StructType&lt;i64,PointerTo&lt;xxx&gt;&gt;</code>这样的类型，<br>并用<strong>getelementptr inbound</strong>和<strong>getelementptr</strong>指令获得某个元素的地址</p>
-<p>这样设计的好处则是将长度 length 放到栈上，不需要在堆分配和取元素时进行额外的计算，<br>也不需要 align 来保证 cache friendly，同时也方便优化。</p>
-<p>而相较于 C 语言风格的数组，我们的数组主体始终放在堆上，故内存的管理不够精细，<br>但经过了封装，其易用性更胜一筹，基于这些限制，其优化也更容易实现。</p>
-]]></content>
-      <categories>
-        <category>XSharp</category>
-      </categories>
-      <tags>
-        <tag>Compiler</tag>
-        <tag>XSharp</tag>
-        <tag>LLVM</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第一次给LLVM的Contribution</title>
-    <url>/2023/06/30/LLVM-First-Contribution/</url>
-    <content><![CDATA[<h2 id="为什么要参与LLVM的开源？"><a href="#为什么要参与LLVM的开源？" class="headerlink" title="为什么要参与LLVM的开源？"></a>为什么要参与LLVM的开源？</h2><p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译，<br>我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
-<p>于是我参考了一位LLVM Member的文章:<br><a href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
-<p>以下则是我从编译到提交patch的全流程。</p>
-<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
-<p>那么我们首先要clone LLVM的git仓库，或者自己fork了<strong>llvm-project</strong>后再clone到本地。二者区别不大，我按照github的开源习惯选了后者。</p>
-<p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。<br>以下是cmake的模板：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cmake -GNinja -Bbuild -Hllvm \</span><br><span class="line">    -DLLVM_ENABLE_PROJECTS=&quot;clang&quot; \</span><br><span class="line">    -DLLVM_TARGETS_TO_BUILD=&quot;all&quot; \</span><br><span class="line">    -DCMAKE_BUILD_TYPE=Release \</span><br><span class="line">    -DLLVM_ENABLE_ASSERTIONS=true \</span><br><span class="line">    -DLLVM_CCACHE_BUILD=true \</span><br><span class="line">    -DLLVM_USE_LINKER=lld</span><br></pre></td></tr></table></figure>
-
-<p>其中Debug可通过<code>-debug</code> flag来进行，你可以在对应的代码位置用<code>errs() &lt;&lt; something</code>进行输出。</p>
-<p>而ninja的编译速度相对较快，所以以下有构建和测试的shell：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Build LLVM</span></span><br><span class="line">ninja -Cbuild</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run all LLVM tests</span></span><br><span class="line">ninja -Cbuild check-llvm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run tests <span class="keyword">in</span> a specific directory.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v will <span class="built_in">print</span> additional information <span class="keyword">for</span> failures.</span></span><br><span class="line">build/bin/llvm-lit -v llvm/test/Transforms/InstCombine</span><br></pre></td></tr></table></figure>
-
-<h3 id="选Issue"><a href="#选Issue" class="headerlink" title="选Issue"></a>选Issue</h3><p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。</p>
+    <title>Hello World</title>
+    <url>/2023/02/06/hello-world/</url>
+    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="create-a-new-post">Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
 <span id="more"></span>
-<p>而llvm-project包括许多子项目，包括LLVM本身、Clang编译器、LLD链接器、libc++标准库以及许多其他项目。即使在LLVM本身中也有不同的领域。主要分为与中端优化器与LLVM中间表示(IR)有关的项目，和与后端将IR转换为机器代码有关的项目。</p>
-<p>而我对中端的了解比较多，而且中端优化的代码有许多corner cases，可以通过简单的几行代码解决这些cases，<br>所以本博客主要针对中端IR优化的<strong>InstCombine</strong>进行讨论，挑选的也是<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:llvm:instcombine">InstCombine Issue</a>。<br>当然，LLVM还有许多其他容易解决的Issue，如：<a href="https://github.com/llvm/llvm-project/issues?q=is:open+is:issue+label:%22good+first+issue%22">good first issues</a>，Clang，Flang还有clang-tidy和clang-format等项目的Issue。</p>
-<p>在这里我将展示我的一次LLVM贡献经历：<a href="https://reviews.llvm.org/D154126/new/">D154126</a></p>
-<p>相关<a href="https://github.com/llvm/llvm-project/issues/62586">Issue</a>。</p>
-<h3 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h3><p>这篇Issue里提到的问题为: <code>(a &gt; b) | (a &lt; b)</code> 的优化会在 <code>b == 0</code> 时失效。</p>
-<p>而一般的 <code>(a &gt; b) | (a &lt; b)</code> 会折叠为 <code>ZExt(a != 0)</code>，对应的LLVM-IR如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = icmp slt i32 %A, %B</span><br><span class="line">  %5 = zext i1 %4 to i32</span><br><span class="line">  %6 = or i32 %3, %5</span><br><span class="line">  ret i32 %6</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A, i32 %B) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %A, %B</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>但对于 <code>b == 0</code> 的case，其对应的InstCombine优化为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %A) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %A, 0</span><br><span class="line">  %3 = zext i1 %2 to i32 </span><br><span class="line">  %4 = lshr i32 %A, 31</span><br><span class="line">  %5 = or i32 %3, %4</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>也就是说在这种情况下 <code>A &lt; 0</code> 被优化成了 <code>A &lt;&lt; 31</code>，而之前对应的 <code>A &lt; B | A &gt; B</code> 的<strong>Pattern Matching</strong>被破坏掉了。</p>
-<p>在分析如何解决这个优化问题前，我们先了解LLVM的中端优化代码提交patch的特殊规则。</p>
-<p>LLVM的patch由两部分组成，第一部分是<strong>impl</strong>前的<strong>misoptimization tests</strong>，第二部分则是<strong>impl</strong>以及应用<strong>impl</strong>后的<strong>tests</strong>。<br>这样分解patch的好处有以下2点：</p>
-<ol>
-<li>便于通过对tests的前后对比查看你实现的优化效果。</li>
-<li>可以把tests作为单独的patch提交，这样能简单提高LLVM的测试量。</li>
-</ol>
-<p>除此之外，在你提交patch前，你还要证明你优化的正确性。</p>
-<h4 id="证明Transform的正确性"><a href="#证明Transform的正确性" class="headerlink" title="证明Transform的正确性"></a>证明Transform的正确性</h4><p>一般来讲，我们会使用 <a href="https://github.com/AliveToolkit/alive2">alive2</a> 验证不同<strong>LLVM-IR</strong>的正确性，<a href="https://alive2.llvm.org/ce/">online</a>版。<br>本篇的Issue的alive2结果如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @src(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp sgt i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  %4 = lshr i32 %0, 31</span><br><span class="line">  %5 = or i32 %4, %3</span><br><span class="line">  ret i32 %5</span><br><span class="line">&#125;</span><br><span class="line">=&gt;</span><br><span class="line">define i32 @tgt(i32 %0) &#123;</span><br><span class="line">%1:</span><br><span class="line">  %2 = icmp ne i32 %0, 0</span><br><span class="line">  %3 = zext i1 %2 to i32</span><br><span class="line">  ret i32 %3</span><br><span class="line">&#125;</span><br><span class="line">Transformation seems to be correct!</span><br></pre></td></tr></table></figure>
-
-<p>虽然<strong>alive2</strong>是确保LLVM转换正确性的非常重要的工具，但值得注意的是它可能会产生<strong>false negative</strong>结果（即有时它会声称一个不正确的转换是正确的）。这通常发生在循环优化的背景下，并且通常不会影响<strong>InstCombine</strong>优化。</p>
-<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>在我们写<strong>impl</strong>之前，我们需要先完成所有testcases的构建。</p>
-<p>首先是基本成功转换的测试样例:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[X_LOBIT:%.*]] = lshr i32 [[X]], 31</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i32</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i32 [[X_LOBIT]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>注意，其中的<strong>CHECK-LABEL</strong>后的是testcase的函数名，<strong>CHECK-NEXT</strong>后则是经过转换后期望的IR，在测试时若不满足期望，则会返回失败的测试报告。<br>这里的测试是未进行优化时的结果，故<strong>CHECK</strong>的结果也自然是未优化的。<br>当然这里<strong>CHECK</strong>的内容不用自己直接输入，可以用llvm的脚本自动生成，脚本如下：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
-
-<p>这段脚本会用<strong>InstCombine</strong>对<code>and-or-icmps</code>的每个testcase进行一次优化，并把优化结果作为<strong>CHECK</strong>的IR插入到<code>and-or-icmps</code>中。</p>
-<p>而上面的测试用例只考虑了i32的基本类型，这里我们再添加i64的测试类型:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64(i64 %x) &#123;</span><br><span class="line">  %A = icmp slt i64 %x, 0</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = zext i1 %A to i64</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>除此之外，我们还需要一些反例(如改变左移的位数，把大于变为小于等)，防止我们的转换误优化，一例如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i64 @icmp_slt_0_or_icmp_sgt_0_i64_fail2(i64 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i64_fail2(</span><br><span class="line">; CHECK-NEXT:    [[B:%.*]] = icmp sgt i64 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[C:%.*]] = lshr i64 [[X]], 62</span><br><span class="line">; CHECK-NEXT:    [[D:%.*]] = zext i1 [[B]] to i64</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = or i64 [[C]], [[D]]</span><br><span class="line">; CHECK-NEXT:    ret i64 [[E]]</span><br><span class="line">;</span><br><span class="line">  %B = icmp sgt i64 %x, 0</span><br><span class="line">  %C = lshr i64 %x, 62</span><br><span class="line">  %D = zext i1 %B to i64</span><br><span class="line">  %E = or i64 %C, %D</span><br><span class="line">  ret i64 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>最后，我们可能还要考虑向量化的测试如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define &lt;2 x i64&gt; @icmp_slt_0_or_icmp_sgt_0_i64x2(&lt;2 x i64&gt; %x) &#123;</span><br><span class="line">  %A = icmp slt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %B = icmp sgt &lt;2 x i64&gt; %x, &lt;i64 0,i64 0&gt;</span><br><span class="line">  %C = zext &lt;2 x i1&gt; %A to &lt;2 x i64&gt;</span><br><span class="line">  %D = zext &lt;2 x i1&gt; %B to &lt;2 x i64&gt;</span><br><span class="line">  %E = or &lt;2 x i64&gt; %C, %D</span><br><span class="line">  ret &lt;2 x i64&gt; %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>完成这些testcases后我们进行一次commit。</p>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p>最终到了我们的实现部分，在实现之前，我们要进行有关的分析&#x2F;debug的工作。</p>
-<p>我们在这里通过<code>build/bin/opt -passes=instcombine -S -debug src.ll</code>进行Debug，在不同函数中插入打印的函数，从而根据输出判断优化的代码位置。</p>
-<p>经过一系列排查，我们可以发现当<code>b == 0</code>时无法优化的原因是在<br><strong>InstCombineAndOr.cpp</strong>中的<strong>transformZExtICmp</strong>函数会把<code>ZExt(a &lt; 0)</code>转化为<code>a &lt;&lt; 31</code>。</p>
-<p>而优化 <code>a &lt; b | a &gt; b</code> 的函数<strong>foldAndOrOfICmpsUsingRanges</strong>无法识别<code>a &lt;&lt; 31</code>这样的语句，自然就无法优化了。<br>由于笔者并不是特别清楚InstCombine优化的顺序，故笔者选择在<strong>foldCastedBitwiseLogic</strong>中增加对<code>Zext(a &gt; 0) | a &lt;&lt; 31</code>的匹配，并进行对应的优化。<br>代码如下：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ( A &lt;&lt; (X - 1) ) | ((A &gt; 0) zext to iX)</span></span><br><span class="line"><span class="comment">// &lt;=&gt; A &lt; 0 | A &gt; 0</span></span><br><span class="line"><span class="comment">// &lt;=&gt; (A != 0) zext to iX</span></span><br><span class="line">Value *A;</span><br><span class="line">ICmpInst::Predicate Pred;</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> MatchOrZExtICmp = [&amp;](Value *Op0, Value *Op1) -&gt; <span class="type">bool</span> &#123;</span><br><span class="line"><span class="keyword">return</span> <span class="built_in">match</span>(Op0, <span class="built_in">m_LShr</span>(<span class="built_in">m_Value</span>(A), <span class="built_in">m_SpecificInt</span>(Op0-&gt;<span class="built_in">getType</span>()-&gt;<span class="built_in">getScalarSizeInBits</span>() - <span class="number">1</span>))) &amp;&amp;</span><br><span class="line">       <span class="built_in">match</span>(Op1, <span class="built_in">m_ZExt</span>(<span class="built_in">m_ICmp</span>(Pred, <span class="built_in">m_Specific</span>(A), <span class="built_in">m_Zero</span>())));</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (LogicOpc == Instruction::Or &amp;&amp;</span><br><span class="line">  (<span class="built_in">MatchOrZExtICmp</span>(Op0, Op1) || <span class="built_in">MatchOrZExtICmp</span>(Op1, Op0)) &amp;&amp;</span><br><span class="line">  Pred == ICmpInst::ICMP_SGT) &#123;</span><br><span class="line">  Value *Cmp =</span><br><span class="line">      Builder.<span class="built_in">CreateICmpNE</span>(A, Constant::<span class="built_in">getNullValue</span>(A-&gt;<span class="built_in">getType</span>()));</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">ZExtInst</span>(Cmp, A-&gt;<span class="built_in">getType</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这里我们定义了一个lambda：<code>MatchOrZExtICmp</code>，用于匹配左移与Zext运算，而<code>Op0</code>,<code>Op1</code>则是在<code>or</code>运算符的两个操作数。</p>
-<p><code>match</code>、<code>m_ZExt</code>等有关的函数、类则是LLVM的<strong>PatternMatching</strong>库。<br><strong>PatternMatching</strong>库提供一系列函数和模板类，用于匹配特定LLVM-IR的Pattern，类似<code>m_SpecificInt</code>则是匹配一个特定整数或者有相同整数元素的向量<br>(<strong>Splat Vector</strong>)。</p>
-<p>其中要注意的是<code>getScalarSizeInBits</code>函数在整数类型中返回整数的大小，而在vector中返回元素的大小。</p>
-<p>最后经过了实现，我们需要再次更新我们的testcases以确认优化的效果，故要再次运行：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">llvm/utils/update_test_checks.py --opt-bin build/bin/opt \</span><br><span class="line">    llvm/test/Transforms/InstCombine/and-or-icmps.ll</span><br></pre></td></tr></table></figure>
-
-<p>这时我们可以发现我们的正例的<strong>CHECK</strong>发生了变化：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">define i32 @icmp_slt_0_or_icmp_sgt_0_i32(i32 %x) &#123;</span><br><span class="line">; CHECK-LABEL: @icmp_slt_0_or_icmp_sgt_0_i32(</span><br><span class="line">; CHECK-NEXT:    [[TMP1:%.*]] = icmp ne i32 [[X:%.*]], 0</span><br><span class="line">; CHECK-NEXT:    [[E:%.*]] = zext i1 [[TMP1]] to i32</span><br><span class="line">; CHECK-NEXT:    ret i32 [[E]]</span><br><span class="line">;</span><br><span class="line">  %A = icmp slt i32 %x, 0</span><br><span class="line">  %B = icmp sgt i32 %x, 0</span><br><span class="line">  %C = zext i1 %A to i32</span><br><span class="line">  %D = zext i1 %B to i32</span><br><span class="line">  %E = or i32 %C, %D</span><br><span class="line">  ret i32 %E</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>且其他的testcases的变化也符合我们的期望，这里我们再commit一次。</p>
-<p>这时我们就可以进入patch的提交阶段了。</p>
-<h3 id="提交Patch"><a href="#提交Patch" class="headerlink" title="提交Patch"></a>提交Patch</h3><p>现在我们已经有了两个<strong>commit</strong>，可以通过以下指令生成test和impl的patch文件。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git show -U99999 HEAD^ &gt; patch_test</span><br><span class="line">git show -U99999 &gt; patch_transform</span><br></pre></td></tr></table></figure>
-
-<p>而LLVM暂时不接受Github的PR，只允许在<a href="https://reviews.llvm.org/">Phabricator</a>上提交patch。<br>故在这里我注册了Phabricator的帐号，并通过<a href="https://reviews.llvm.org/differential/diff/create/">Create Diff</a>分别上传我的两个patch。</p>
-<p>Patch的标题内容等格式可以博客开头的参考文章，机翻并改造如下：</p>
-<blockquote>
-<p>选择一个有意义的patch标题和摘要。对于我们的运行示例，第一个patch可能是这样的：</p>
-<p>title：[InstCombine] Add tests for (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold (NFC)</p>
-<p>summary：Tests for an upcoming (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold.。</p>
-<p>reviewer：（见下文）</p>
-<p>第二个patch可能是这样的：</p>
-<p>title：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold</p>
-<p>summary：[InstCombine] Transform (A &gt; 0) | (A &lt; 0) -&gt; zext (A !&#x3D; 0) fold</p>
-<p>This extends foldCastedBitwiseLogic to handle the similar cases.</p>
-<p>……你的分析……</p>
-<p>It’s proved by alive-tv:<strong>link</strong></p>
-<p>Depends on DNNNNNN（在此处放置第一个patch的ID）。<br>reviewer：（见下文）</p>
-<p>这里有几个值得强调的地方：</p>
-<p>标题开头应该有一个 [Category] 标签。通常，您可以只使用您要修改的文件的名称。例如，对 InstCombine 的更改通常带有[InstCombine]标记。<br>非功能性更改（如测试添加）的patch通常在标题中的某个地方带有 NFC 标记。<br>如果您有任何 alive2 证明，请在patch摘要中包含它们。<br>您可以使用“Depends on DNNNNNN”来创建堆叠的patch。也可以事后添加“子修订版”来实现此目的。</p>
-</blockquote>
-<hr>
-<p>现在我们还差<strong>Reviewers</strong>，在LLVM中，patch提交者负责选择适当的审阅者。虽然有人可能会根据patch标题（这就是分类标记如此重要的原因）来找到合适的审阅者，但您最好一开始就指定适当的审阅者。</p>
-<p>虽然LLVM有一个CODE_OWNERS.txt文件，用于指定不同领域的代码所有者，但不幸的是，<br>这个文件往往过时且不完整。找到审阅者的更好方法是查看您要修改的文件的Git历史记录，并添加一些最近commit或最近review diff revision的人员。</p>
-<p>对于InstCombine，主要的reviewer是spatel，但您也可以根据历史记录找到其他几个候选人（例如nikic，goldstein.w.n）。</p>
-<p>提交了patch后，就该等待review了。对于这样简单的更改，通常会有人很快处理。如果您在一周内没有得到回复，请发送“ping”评论，并每周发送一次。对于InstCombine来说等待数周才进行审阅是相当不寻常的，但如果您提交的更改是很长时间没有人真正工作的领域，则可能会发生。只需要不断“ping”。</p>
-<p>最后，一旦patch获得批准，审阅者通常会认为您已经拥有提交访问权限，并允许您自己提交更改。如果不是这种情况，则应该跟进一条评论，<br>例如“I don’t have commit access, can you please land this for me? Please use ‘Your Name &lt;your@email&gt;’ for the commit”。<br>最后一点很重要，因为Phabricator会丢失patch的作者信息，提交者必须将其添加回来。</p>
-<p>如果您计划对LLVM进行任何形式的常规贡献，建议请求提交访问权限。这方面的门槛非常低，因此可以尽早请求。如果不必创建堆叠的审查，则测试的预提交工作流程要方便得多。</p>
-<p>最后，有关CI的一些话：Phabricator上的patch会通过“pre-merge”测试运行。特别是如果您没有在本地运行完整的测试套件，则这些结果可能会有所帮助。不幸的是，这些测试运行有些不稳定，因此如果您看到与您的patch没有明显关系的失败，则通常可以忽略它们。</p>
-<p>一旦patch被提交，它将在更广泛的“buildbots”范围内运行，这些机器人在许多不同的架构和许多不同的配置上运行测试。<br>这些也相当不稳定，因此同样适用：如果您收到buildbots故障电子邮件，看起来与您的patch无关，则不必担心。如果最终发现是您的责任，buildbots所有者会让您知道。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><blockquote>
-<p>翻译参考文章的总结</p>
-</blockquote>
-<p>LLVM的贡献过程具有某些不同于其他开源项目的不寻常方面。其中一部分是使用Phabricator而不是GitHub进行审查，但大多数差异都集中在强调正确性方面，从正确性证明开始，到测试的预提交工作流程，以及最终往往是测试和代码更改之间非常大的比率。</p>
-<p>我希望本文对于想要进入LLVM开发的人有所帮助，但我想重申，第一次做不需要完全做得“正确”，如果遇到问题，人们会很乐意提供帮助。Discourse的初学者类别以及Discord聊天是提问的好地方。</p>
-<blockquote>
-<p>自己的总结</p>
-</blockquote>
-<p>第一次为大型开源项目Contribute是一次特别的经历，在不断与reviewer的沟通中，我也对LLVM的体系有了更深刻的了解，希望读者在看了本篇博客后也可以更活跃地参与开源活动。</p>
+<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<p>&lt;--more&gt;</p>
+<h3 id="run-server">Run server</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="generate-static-files">Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="deploy-to-remote-sites">Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 ]]></content>
       <categories>
-        <category>LLVM</category>
+        <category>Blog&#39;s configuration</category>
       </categories>
       <tags>
-        <tag>Compiler</tag>
-        <tag>LLVM</tag>
-        <tag>OpenSource</tag>
+        <tag>Helloworld</tag>
+        <tag>Blog&#39;s configuration</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>第一篇博客文章</title>
+    <url>/2023/02/06/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/</url>
+    <content><![CDATA[<p>奋战了 2 个小时后，终于成功用 Hexo 搭建了一个小博客。 本博客仅用于个人生活学习的记录，并无商业用途，若有友链或者交流需要，请通过我的邮箱<strong>xxs_chy@outlook.com</strong>联系我</p>
+]]></content>
+      <categories>
+        <category>Blog&#39;s configuration</category>
+      </categories>
+      <tags>
+        <tag>Helloworld</tag>
+        <tag>Blog&#39;s configuration</tag>
       </tags>
   </entry>
   <entry>
     <title>编译原理-数据流分析-冗余消除</title>
     <url>/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/</url>
-    <content><![CDATA[<p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 —- <strong>懒惰代码移动算法</strong></p>
-<h2 id="什么是冗余消除"><a href="#什么是冗余消除" class="headerlink" title="什么是冗余消除"></a>什么是冗余消除</h2><p><strong>冗余消除</strong>就是要尽量减少表达式求值的次数，避免形如$x+y$的表达式在之后的代码中多次计算，影响性能。</p>
+    <content><![CDATA[<p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 --- <strong>懒惰代码移动算法</strong></p>
+<h2 id="什么是冗余消除">什么是冗余消除</h2>
+<p><strong>冗余消除</strong>就是要尽量减少表达式求值的次数，避免形如<span class="math inline">\(x+y\)</span>的表达式在之后的代码中多次计算，影响性能。</p>
 <p>冗余的来源主要有以下三种：</p>
-<ol>
+<ol type="1">
 <li>公共子表达式 (<em>Common Expression</em>)</li>
 <li>循环不变表达式 (<em>Loop Invariant</em>)</li>
 <li>部分冗余表达式 (<em>Partial Redundancy Expression</em>)</li>
 </ol>
 <span id="more"></span>
-<h3 id="全局公共子表达式"><a href="#全局公共子表达式" class="headerlink" title="全局公共子表达式"></a>全局公共子表达式</h3><p>若对于含有表达式如 $a+b$ 的基本块 $B$，任意到 $B$ 的路径都已经对 $a + b$ 求过值，则我们称这个表达式在 $B$ 中冗余，是公共的子表达式。<br>这样的表达式就不需要在 $B$ 中重新计算。</p>
-<p><strong>注意</strong>，此时在 $a+b$ 被计算后，表达式中的分量 $a,b$ 不能在 $B$ 之前被重新定值，否则这样的表达式不是一个可用表达式。</p>
-<h4 id="深层公共表达式"><a href="#深层公共表达式" class="headerlink" title="深层公共表达式"></a>深层公共表达式</h4><p>对于类似 $(a + b) ^ c + d$ 这样的更深层的子表达式，我们可以重复利用<strong>公共表达式消除技术</strong>直至没有新的公共表达式来找到这样的深层子表达式，<br>当然我们也可以参考常量传播框架来实现类似的搜索，当然也可以参考<strong>LLVM</strong>的模式匹配来达到同样的效果。</p>
-<h3 id="循环不变表达式"><a href="#循环不变表达式" class="headerlink" title="循环不变表达式"></a>循环不变表达式</h3><p>假设 $a$，$b$ 没有在循环 $L$ 中重新定值，那么 $a+b$ 就是对于 $L$ 循环不变的，这样的循环不变式可以提出循环，减少不必要的计算。<br>以下是一个循环不变式的例子：</p>
+<h3 id="全局公共子表达式">全局公共子表达式</h3>
+<p>若对于含有表达式如 <span class="math inline">\(a+b\)</span> 的基本块 <span class="math inline">\(B\)</span>，任意到 <span class="math inline">\(B\)</span> 的路径都已经对 <span class="math inline">\(a + b\)</span> 求过值，则我们称这个表达式在 <span class="math inline">\(B\)</span> 中冗余，是公共的子表达式。 这样的表达式就不需要在 <span class="math inline">\(B\)</span> 中重新计算。</p>
+<p><strong>注意</strong>，此时在 <span class="math inline">\(a+b\)</span> 被计算后，表达式中的分量 <span class="math inline">\(a,b\)</span> 不能在 <span class="math inline">\(B\)</span> 之前被重新定值，否则这样的表达式不是一个可用表达式。</p>
+<h4 id="深层公共表达式">深层公共表达式</h4>
+<p>对于类似 <span class="math inline">\((a + b) ^ c + d\)</span> 这样的更深层的子表达式，我们可以重复利用<strong>公共表达式消除技术</strong>直至没有新的公共表达式来找到这样的深层子表达式， 当然我们也可以参考常量传播框架来实现类似的搜索，当然也可以参考<strong>LLVM</strong>的模式匹配来达到同样的效果。</p>
+<h3 id="循环不变表达式">循环不变表达式</h3>
+<p>假设 <span class="math inline">\(a\)</span>，<span class="math inline">\(b\)</span> 没有在循环 <span class="math inline">\(L\)</span> 中重新定值，那么 <span class="math inline">\(a+b\)</span> 就是对于 <span class="math inline">\(L\)</span> 循环不变的，这样的循环不变式可以提出循环，减少不必要的计算。 以下是一个循环不变式的例子：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(a + b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>可以转化为：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">t = a + b</span><br><span class="line"><span class="keyword">while</span> (c)&#123;</span><br><span class="line">    print(t)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -471,164 +864,49 @@
 <p>表示为：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> c &#123;</span><br><span class="line">    repeat</span><br><span class="line">        S;</span><br><span class="line">    until <span class="keyword">not</span> c</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这样循环不变式可以放在 <em>repeat-util</em> 之前。</p>
-<h3 id="部分冗余表达式"><a href="#部分冗余表达式" class="headerlink" title="部分冗余表达式"></a>部分冗余表达式</h3><p>对于以下基本块结构：<br><img src="/images/PartialReductancyEx.png" alt="content"></p>
-<p>若 $B_2$ 中计算了 $a+b$ ，但 $B_3$ 中没有计算 $a+b$，$B_4$ 中计算了 $a+b$，那么</p>
-<p>可以说在 $B_1 \rightarrow B_2 \rightarrow B_4$ 上 $a+b$ 冗余，<br>在$B_1 \rightarrow B_3 \rightarrow B_4$上 $a+b$ 不冗余，<br>那么该表达式对 $B_4$ 就是部分冗余的</p>
-<p>对于这样部分冗余的表达式，我们需要在 $B_3$ 与 $B_4$ 之间插入新的基本块来计算 $a+b$ 。</p>
-<h3 id="懒惰代码移动算法"><a href="#懒惰代码移动算法" class="headerlink" title="懒惰代码移动算法"></a>懒惰代码移动算法</h3><h4 id="性质"><a href="#性质" class="headerlink" title="性质"></a>性质</h4><p>为了解决部分冗余的问题，我们设计了懒惰代码移动算法，它有以下性质：</p>
-<ol>
+<h3 id="部分冗余表达式">部分冗余表达式</h3>
+<p>对于以下基本块结构： <img src="/images/PartialReductancyEx.png" alt="content" /></p>
+<p>若 <span class="math inline">\(B_2\)</span> 中计算了 <span class="math inline">\(a+b\)</span> ，但 <span class="math inline">\(B_3\)</span> 中没有计算 <span class="math inline">\(a+b\)</span>，<span class="math inline">\(B_4\)</span> 中计算了 <span class="math inline">\(a+b\)</span>，那么</p>
+<p>可以说在 <span class="math inline">\(B_1 \rightarrow B_2 \rightarrow B_4\)</span> 上 <span class="math inline">\(a+b\)</span> 冗余， 在<span class="math inline">\(B_1 \rightarrow B_3 \rightarrow B_4\)</span>上 <span class="math inline">\(a+b\)</span> 不冗余， 那么该表达式对 <span class="math inline">\(B_4\)</span> 就是部分冗余的</p>
+<p>对于这样部分冗余的表达式，我们需要在 <span class="math inline">\(B_3\)</span> 与 <span class="math inline">\(B_4\)</span> 之间插入新的基本块来计算 <span class="math inline">\(a+b\)</span> 。</p>
+<h3 id="懒惰代码移动算法">懒惰代码移动算法</h3>
+<h4 id="性质">性质</h4>
+<p>为了解决部分冗余的问题，我们设计了懒惰代码移动算法，它有以下性质：</p>
+<ol type="1">
 <li>所有不复制代码就可以消除的表达式冗余计算都被消除了</li>
 <li>优化后的程序是正确的，不会执行原来程序不执行的任何计算</li>
-<li>表达式的计算时刻尽量<strong>靠后</strong>，尽量靠后计算一个表达式可以降低其生命周期，也减少了其使用寄存器的时间，<br>这也是其被称为 <em>懒惰代码移动算法</em> 的原因。</li>
+<li>表达式的计算时刻尽量<strong>靠后</strong>，尽量靠后计算一个表达式可以降低其生命周期，也减少了其使用寄存器的时间， 这也是其被称为 <em>懒惰代码移动算法</em> 的原因。</li>
 </ol>
-<h4 id="主要步骤"><a href="#主要步骤" class="headerlink" title="主要步骤"></a>主要步骤</h4><ol>
-<li><p>逆向数据流分析找到各个程序点上的 <em>预期执行(anticipated)</em> 的表达式。</p>
-<blockquote>
-<p><em>预期执行(anticipated)</em> 指的是：从程序点 $p$ 出发的所有路径都会计算 $a+b$ 的值，且 $b,c$ 的值就是他们在 $p$ 上的值</p>
-<p>预期执行决定了一个表达式可以放的有多靠前，而一个表达式越靠前，能消除的冗余就越多</p>
-</blockquote>
-</li>
-<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。<br>同时我们称程序点<em>可用(available)</em>当所有到达该程序点的原有路径中该表达式都被预期执行，这个过程可以通过前向数据流分析完成。</p>
-</li>
-<li><p><em>后延</em>表达式，一个表达式可被<em>后延</em>到某个程序点的条件为：到该点的<strong>所有</strong>路径上，该表达式已经在程序点前<em>预期执行</em>，<br>但没有使用该表达式。该过程可以通过前向数据流分析完成。</p>
-</li>
-<li><p>最后使用简单的逆向数据流分析删除那些给程序中只使用一次的临时变量赋值语句。</p>
-</li>
+<h4 id="主要步骤">主要步骤</h4>
+<ol type="1">
+<li><p>逆向数据流分析找到各个程序点上的 <em>预期执行(anticipated)</em> 的表达式。 &gt; <em>预期执行(anticipated)</em> 指的是：从程序点 <span class="math inline">\(p\)</span> 出发的所有路径都会计算 <span class="math inline">\(a+b\)</span> 的值，且 <span class="math inline">\(b,c\)</span> 的值就是他们在 <span class="math inline">\(p\)</span> 上的值 &gt; &gt; 预期执行决定了一个表达式可以放的有多靠前，而一个表达式越靠前，能消除的冗余就越多</p></li>
+<li><p>将对表达式的计算放在满足下面条件的程序点上：总存在路径使得该点是此路径第一个<em>预期执行</em>该表达式的点。 同时我们称程序点<em>可用(available)</em>当所有到达该程序点的原有路径中该表达式都被预期执行，这个过程可以通过前向数据流分析完成。</p></li>
+<li><p><em>后延</em>表达式，一个表达式可被<em>后延</em>到某个程序点的条件为：到该点的<strong>所有</strong>路径上，该表达式已经在程序点前<em>预期执行</em>， 但没有使用该表达式。该过程可以通过前向数据流分析完成。</p></li>
+<li><p>最后使用简单的逆向数据流分析删除那些给程序中只使用一次的临时变量赋值语句。</p></li>
 </ol>
-<h4 id="理论代码"><a href="#理论代码" class="headerlink" title="理论代码"></a>理论代码</h4><h5 id="预期执行-anticipated"><a href="#预期执行-anticipated" class="headerlink" title="预期执行(anticipated)"></a>预期执行(anticipated)</h5><p>方向：逆向</p>
-<p>传递函数：$f_B(x)=use_B \cup (x-kill_B)$</p>
-<p>交汇运算：$\cap$</p>
-<h5 id="可用性-available"><a href="#可用性-available" class="headerlink" title="可用性(available)"></a>可用性(available)</h5><p>方向：正向</p>
-<p>传递函数：$f_B(x)=(anticipated[B].in \cup x) - kill_B$</p>
-<p>交汇运算：$\cap$</p>
-<h5 id="可后延-postponable"><a href="#可后延-postponable" class="headerlink" title="可后延(postponable)"></a>可后延(postponable)</h5><p>方向：正向</p>
-<p>注意，这里定义$earliest[B]=anticipated[B].in - available[B].in$</p>
-<p>传递函数：$f_B(x)=(earliest[B] \cup x) - kill_B$</p>
-<p>交汇运算：$\cap$</p>
-<h5 id="被使用-used"><a href="#被使用-used" class="headerlink" title="被使用(used)"></a>被使用(used)</h5><p>方向：逆向</p>
-<p>注意，这里定义</p>
-<script type="math/tex; mode=display">latest[B]=(earliest[B] \cup postponable[B].in)
-\cap (use_B \cup \neg(\bigcap_{S,succ(B)}{earliest[S]\cup postponable[S].in}))</script><p>传递函数：$f_B(x)=(use_B \cup x) - latest[B]$</p>
-<p>交汇运算：$\cup$</p>
+<h4 id="理论代码">理论代码</h4>
+<h5 id="预期执行anticipated">预期执行(anticipated)</h5>
+<p>方向：逆向</p>
+<p>传递函数：<span class="math inline">\(f_B(x)=use_B \cup (x-kill_B)\)</span></p>
+<p>交汇运算：<span class="math inline">\(\cap\)</span></p>
+<h5 id="可用性available">可用性(available)</h5>
+<p>方向：正向</p>
+<p>传递函数：<span class="math inline">\(f_B(x)=(anticipated[B].in \cup x) - kill_B\)</span></p>
+<p>交汇运算：<span class="math inline">\(\cap\)</span></p>
+<h5 id="可后延postponable">可后延(postponable)</h5>
+<p>方向：正向</p>
+<p>注意，这里定义<span class="math inline">\(earliest[B]=anticipated[B].in - available[B].in\)</span></p>
+<p>传递函数：<span class="math inline">\(f_B(x)=(earliest[B] \cup x) - kill_B\)</span></p>
+<p>交汇运算：<span class="math inline">\(\cap\)</span></p>
+<h5 id="被使用used">被使用(used)</h5>
+<p>方向：逆向</p>
+<p>注意，这里定义 <span class="math display">\[ latest[B]=(earliest[B] \cup postponable[B].in)
+\cap (use_B \cup \neg(\bigcap_{S,succ(B)}{earliest[S]\cup postponable[S].in})) \]</span></p>
+<p>传递函数：<span class="math inline">\(f_B(x)=(use_B \cup x) - latest[B]\)</span></p>
+<p>交汇运算：<span class="math inline">\(\cup\)</span></p>
 ]]></content>
       <categories>
         <category>Compiler Theory(编译原理)</category>
       </categories>
-  </entry>
-  <entry>
-    <title>Sequential-Logic-Circuit</title>
-    <url>/2023/07/26/Sequential-Logic-Circuit/</url>
-    <content><![CDATA[<h2 id="Sequential-Clock-Circuit"><a href="#Sequential-Clock-Circuit" class="headerlink" title="Sequential Clock Circuit"></a>Sequential Clock Circuit</h2><p>There are multiple combinational logic circuits in a circuit. And sequential<br>logic circuit connects them into a single one, which is synchorized by a clock.</p>
-<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit.<br>The clock period must be longer be longer than this critical path, or the signal<br>will not propagate properly to that next register.</p>
-<p>So the max frequency of the circuit is limited by how much time needed to get<br>correct Next State to Register. ($t_{setup}$ constraint)</p>
-<p>The structure of circuit should like this:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
-<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency.<br>That’s unsafe and untable.</p>
-<p>You can:</p>
-<ul>
-<li>add extra register to shorten critical path. Meanwhile, it may require more period.<br>However, that’s fine for pipeline. More latency, but more throughtput too.</li>
-</ul>
-<p>Pipielining <strong>tends</strong> to improve performance.</p>
-<h2 id="Finite-State-Machine"><a href="#Finite-State-Machine" class="headerlink" title="Finite State Machine"></a>Finite State Machine</h2><p>State transitions are controlled by the clock,<br>On each clock cycle the machine checks, generate new state and new output.</p>
-<p>Register holds a representation of the FSM’s state</p>
-<ul>
-<li>Must assign a unique bit pattern for each state</li>
-<li>Output is present/current state (PS/CS)</li>
-<li>Input is next state (NS)</li>
-</ul>
-<p>Combinational Logic implements transition function here.</p>
-]]></content>
-      <categories>
-        <category>Architecture</category>
-      </categories>
-      <tags>
-        <tag>Architecture</tag>
-        <tag>CS61C</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Different Caches</title>
-    <url>/2023/08/07/Different-Caches/</url>
-    <content><![CDATA[<h2 id="Fully-Associative-Caches"><a href="#Fully-Associative-Caches" class="headerlink" title="Fully Associative Caches"></a>Fully Associative Caches</h2><p>Basic implementation of cache. Omit it here.<br>Note: The offset is determined by block size.</p>
-<h2 id="Direct-Mapped-Caches"><a href="#Direct-Mapped-Caches" class="headerlink" title="Direct Mapped Caches"></a>Direct Mapped Caches</h2><p>For normal fully associative cache, we break down the address into:<br><code>[Tag | 31 ~ X bits] [Offset | X-1 ~ 0 bits]</code><br>which requires multiple tag checks.</p>
-<p>So we design a direct-mapped cache inspired by hash table.<br>Currently, we break down the address into:<br><code>[Tag | 31 ~ X bits] [Index | X-1 ~ Y bits] [Offset | Y-1 ~ 0 bits]</code><br>And the <strong>Index</strong> serves as the hashcode for the address, <strong>Tag</strong> as a identifier.</p>
-<p>Here, for <em>Write-back Policy</em> cache, there are：</p>
-<ul>
-<li>Block of data</li>
-<li>Index field</li>
-<li>Tag field of address as identifier</li>
-<li>Valid bit</li>
-<li>Dirty bit</li>
-<li>No replacement management bit</li>
-</ul>
-<p>every slot.</p>
-<p>For example, for address 10010010, we can break it down into:</p>
-<ul>
-<li>Tag: 1001</li>
-<li>Index: 001</li>
-<li>Offset: 0</li>
-</ul>
-<p>Then look for something like <code>cache[Index] + Offset</code> to find avaliable data.</p>
-<p>There are also some worst-case for such design. Since the multiple address is mapped<br>into the same slot, We can consider the memory accsesses: 00000010, 00010010, 00000010, 00010010, …<br>And all of the accsesses will be missed.</p>
-<p>But for fully associative cache, it only miss twice.</p>
-<p>What <strong>direct-mapped</strong> outweighs <strong>fully-associative</strong> is its fast mapping.</p>
-<h2 id="Set-Associative-Caches"><a href="#Set-Associative-Caches" class="headerlink" title="Set Associative Caches"></a>Set Associative Caches</h2><p><strong>N-way set-associative</strong>: divide $ into sets, each of which consists of N slots.</p>
-<ul>
-<li>Memory block maps to a set determined by <strong>Index</strong> field and is placed in any of the N slots of that set.</li>
-<li>Call $N$ the associativity.</li>
-<li>Replcaement policy applies to every set.</li>
-</ul>
-<p>Actually, from my perspective, Set Associative Cache is just a in-between of the two former.</p>
-<p>Fully associative requires 0 index bits.<br>Direct-mapped requires max index bits.<br>Set-associative requires somewhere in-between.</p>
-<p>Here is a screenshot from CS61C:<br><img src="/images/Set-Associative.png" alt="img"></p>
-<p>As you can see, it’s just the combination of Direct-Mapped and Fully-Associative.</p>
-]]></content>
-      <categories>
-        <category>Architecture</category>
-      </categories>
-      <tags>
-        <tag>Architecture</tag>
-        <tag>CS61C</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Cache Performance Analysis</title>
-    <url>/2023/08/07/Cache-Performance-Analysis/</url>
-    <content><![CDATA[<h2 id="Some-Concepts"><a href="#Some-Concepts" class="headerlink" title="Some Concepts"></a>Some Concepts</h2><p>AMAT: Average memory access time.<br>$AMAT &#x3D; t_{hit} + rate_{missed} * penalty_{missed}$</p>
-<h2 id="Cache-Miss"><a href="#Cache-Miss" class="headerlink" title="Cache Miss"></a>Cache Miss</h2><p>Sources of Cache Misses:</p>
-<ul>
-<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
-<li>Capacity</li>
-<li>Conflict (Collison)</li>
-</ul>
-<p>The Design Solutions:</p>
-<ul>
-<li>Compulsory:<ul>
-<li>Increase block size</li>
-</ul>
-</li>
-<li>Capacity:<ul>
-<li>Increase cache size</li>
-</ul>
-</li>
-<li>Conflict:<ul>
-<li>Increase associativity (may increase hit-time)</li>
-</ul>
-</li>
-</ul>
-<h2 id="Miss-Penalty"><a href="#Miss-Penalty" class="headerlink" title="Miss Penalty"></a>Miss Penalty</h2><p>Factors:</p>
-<ul>
-<li>How big is your memory architecture</li>
-<li>How big is your block size</li>
-</ul>
-<h2 id="Multiple-Cache-Levels"><a href="#Multiple-Cache-Levels" class="headerlink" title="Multiple Cache Levels"></a>Multiple Cache Levels</h2><p>To minimize AMAT, we need to adjust the type&#x2F;parameters of cache.<br>But it’s hard to reduce hit time, miss rate and miss penalty at once.</p>
-<p>Multiple Cache Levels resolves this.</p>
-<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate.<br>However, there is also big write back cost for such design.</p>
-<h2 id="The-Cache-Design-Space"><a href="#The-Cache-Design-Space" class="headerlink" title="The Cache Design Space"></a>The Cache Design Space</h2><ul>
-<li>Cache parameters</li>
-<li>Policy choices (Rewrite, Replacement)</li>
-<li>Optimal choice is a compromise</li>
-<li>Simplicity often wins</li>
-</ul>
-]]></content>
   </entry>
 </search>

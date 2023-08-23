@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Sequential Clock CircuitThere are multiple combinational logic circuits in a circuit. And sequentiallogic circuit connects them into a single one, which is synchorized by a clock. The critical path is">
+  <meta name="description" content="Sequential Clock Circuit There are multiple combinational logic circuits in a circuit. And sequential logic circuit connects them into a single one, which is synchorized by a clock. The critical path">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Sequential-Logic-Circuit">
 <meta property="og:url" content="http://xchy.github.io/2023/07/26/Sequential-Logic-Circuit/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
-<meta property="og:description" content="Sequential Clock CircuitThere are multiple combinational logic circuits in a circuit. And sequentiallogic circuit connects them into a single one, which is synchorized by a clock. The critical path is">
+<meta property="og:description" content="Sequential Clock Circuit There are multiple combinational logic circuits in a circuit. And sequential logic circuit connects them into a single one, which is synchorized by a clock. The critical path">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-07-26T09:15:33.000Z">
 <meta property="article:modified_time" content="2023-07-26T15:15:42.573Z">
@@ -78,7 +78,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container">
@@ -123,17 +127,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">11</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">7</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">16</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -243,23 +247,17 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="Sequential-Clock-Circuit"><a href="#Sequential-Clock-Circuit" class="headerlink" title="Sequential Clock Circuit"></a>Sequential Clock Circuit</h2><p>There are multiple combinational logic circuits in a circuit. And sequential<br>logic circuit connects them into a single one, which is synchorized by a clock.</p>
-<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit.<br>The clock period must be longer be longer than this critical path, or the signal<br>will not propagate properly to that next register.</p>
-<p>So the max frequency of the circuit is limited by how much time needed to get<br>correct Next State to Register. ($t_{setup}$ constraint)</p>
-<p>The structure of circuit should like this:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
-<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency.<br>That’s unsafe and untable.</p>
-<p>You can:</p>
-<ul>
-<li>add extra register to shorten critical path. Meanwhile, it may require more period.<br>However, that’s fine for pipeline. More latency, but more throughtput too.</li>
-</ul>
+        <h2 id="sequential-clock-circuit">Sequential Clock Circuit</h2>
+<p>There are multiple combinational logic circuits in a circuit. And sequential logic circuit connects them into a single one, which is synchorized by a clock.</p>
+<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit. The clock period must be longer be longer than this critical path, or the signal will not propagate properly to that next register.</p>
+<p>So the max frequency of the circuit is limited by how much time needed to get correct Next State to Register. (<span class="math inline">\(t_{setup}\)</span> constraint)</p>
+<p>The structure of circuit should like this: <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
+<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency. That's unsafe and untable.</p>
+<p>You can: - add extra register to shorten critical path. Meanwhile, it may require more period. However, that's fine for pipeline. More latency, but more throughtput too.</p>
 <p>Pipielining <strong>tends</strong> to improve performance.</p>
-<h2 id="Finite-State-Machine"><a href="#Finite-State-Machine" class="headerlink" title="Finite State Machine"></a>Finite State Machine</h2><p>State transitions are controlled by the clock,<br>On each clock cycle the machine checks, generate new state and new output.</p>
-<p>Register holds a representation of the FSM’s state</p>
-<ul>
-<li>Must assign a unique bit pattern for each state</li>
-<li>Output is present/current state (PS/CS)</li>
-<li>Input is next state (NS)</li>
-</ul>
+<h2 id="finite-state-machine">Finite State Machine</h2>
+<p>State transitions are controlled by the clock, On each clock cycle the machine checks, generate new state and new output.</p>
+<p>Register holds a representation of the FSM's state - Must assign a unique bit pattern for each state - Output is present/current state (PS/CS) - Input is next state (NS)</p>
 <p>Combinational Logic implements transition function here.</p>
 
     </div>
@@ -346,7 +344,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Sequential-Clock-Circuit"><span class="nav-number">1.</span> <span class="nav-text">Sequential Clock Circuit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Finite-State-Machine"><span class="nav-number">2.</span> <span class="nav-text">Finite State Machine</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#sequential-clock-circuit"><span class="nav-number">1.</span> <span class="nav-text">Sequential Clock Circuit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#finite-state-machine"><span class="nav-number">2.</span> <span class="nav-text">Finite State Machine</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -362,20 +360,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -469,6 +467,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

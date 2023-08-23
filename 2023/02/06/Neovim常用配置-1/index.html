@@ -77,7 +77,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container">
@@ -122,17 +126,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">11</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">7</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">16</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -251,39 +255,34 @@
         <p>网上有关Neovim API的中文资料实在稀缺，在此特意整理一部分</p>
 <p>若英文水平过关，可以直接输入指令 <code>:h lua guide</code> 获得Neovim的Lua API相关英文文档</p>
 <span id="more"></span>
-
-<h2 id="Neovim’s-Lua-API"><a href="#Neovim’s-Lua-API" class="headerlink" title="Neovim’s Lua API"></a>Neovim’s Lua API</h2><ul>
+<h2 id="neovims-lua-api">Neovim's Lua API</h2>
+<ul>
 <li><p><code>vim.keymap.set(mode , from_keys, to_expr, opts)</code></p>
-<p> <em>作用:创建一个键位映射</em></p>
-<p> <strong>mode</strong>：类型：<strong>string</strong>，映射作用的模式，”n”代表normal，”i”代表insert,”v”代表visual</p>
-<p> <strong>from_keys</strong>：类型：<strong>string</strong>，则指被映射的按键</p>
-<p> <strong>to_expr</strong>：类型：<strong>any</strong>，指映射得到的键位，vim表达式，或者Lua函数</p>
-<p> <strong>opts</strong>：类型：<strong>table</strong>，键位映射有关的设置</p>
-</li>
+<p><em>作用:创建一个键位映射</em></p>
+<p><strong>mode</strong>：类型：<strong>string</strong>，映射作用的模式，"n"代表normal，"i"代表insert,"v"代表visual</p>
+<p><strong>from_keys</strong>：类型：<strong>string</strong>，则指被映射的按键</p>
+<p><strong>to_expr</strong>：类型：<strong>any</strong>，指映射得到的键位，vim表达式，或者Lua函数</p>
+<p><strong>opts</strong>：类型：<strong>table</strong>，键位映射有关的设置</p></li>
 </ul>
-<hr>
+<hr />
 <ul>
 <li><p><code>vim.api.nvim_create_user_command(commandName, expr)</code></p>
-<p> <em>作用:创建一个用户命令</em></p>
-<p> <strong>commandName</strong>：类型：<strong>string</strong>， 命令名(必须首字母大写)</p>
-<p> <strong>expr</strong>：类型：<strong>any</strong>，命令执行的键位，表达式或者Lua函数</p>
-</li>
+<p><em>作用:创建一个用户命令</em></p>
+<p><strong>commandName</strong>：类型：<strong>string</strong>， 命令名(必须首字母大写)</p>
+<p><strong>expr</strong>：类型：<strong>any</strong>，命令执行的键位，表达式或者Lua函数</p></li>
 </ul>
-<hr>
+<hr />
 <ul>
 <li><p><code>vim.api.nvim_create_autocmd(event, opts)</code></p>
-<p>  <em>作用:创建一个自动命令</em></p>
-<p>  <strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
-<p>  <strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
+<p><em>作用:创建一个自动命令</em></p>
+<p><strong>event</strong>：类型：<strong>string</strong>， 自动命令组(autogroup)</p>
+<p><strong>opts</strong>：类型：<strong>table</strong>，相关设置：</p>
 <ul>
-<li><p><strong>pattern</strong>: 文件名的pattern</p>
-</li>
-<li><p><strong>callback</strong>: 自动命令的回调函数，可以是键位，vim表达式，或者Lua函数</p>
-</li>
+<li><p><strong>pattern</strong>: 文件名的pattern</p></li>
+<li><p><strong>callback</strong>: 自动命令的回调函数，可以是键位，vim表达式，或者Lua函数</p></li>
+</ul></li>
 </ul>
-</li>
-</ul>
-<hr>
+<hr />
 
     </div>
 
@@ -368,7 +367,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Neovim%E2%80%99s-Lua-API"><span class="nav-number">1.</span> <span class="nav-text">Neovim’s Lua API</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#neovims-lua-api"><span class="nav-number">1.</span> <span class="nav-text">Neovim&#39;s Lua API</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -384,20 +383,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">23</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -491,6 +490,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
