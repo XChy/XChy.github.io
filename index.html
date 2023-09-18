@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">31</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -193,6 +193,756 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/17/CS144-Lab3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/17/CS144-Lab3/" class="post-title-link" itemprop="url">CS144-Lab3</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-17 20:23:55" itemprop="dateCreated datePublished" datetime="2023-09-17T20:23:55+08:00">2023-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-18 23:23:41" itemprop="dateModified" datetime="2023-09-18T23:23:41+08:00">2023-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Lab3 接续 Lab2，要完成<strong>Sender</strong>的角色。<br>TCP 的任务主要为：</p>
+<ul>
+<li>Keep track of the receiver’s window (acknos and window size)</li>
+<li>Fill the window when possible, by reading from the <em>ByteStream</em>, creating new TCP<br>segments (including <em>SYN</em> and <em>FIN</em> flags if needed), and sending them.</li>
+<li>Keep track of which segments have been sent but not yet acknowledged by the receiver —<br>we call these “<strong>outstanding</strong>” segments</li>
+<li>Re-send <strong>outstanding</strong> segments if <strong>enough time passes</strong> since they were sent, and they<br>haven’t been acknowledged yet</li>
+</ul>
+<blockquote>
+<p>Why am I doing this? The basic principle is to send whatever the receiver will allow</p>
+<p>us to send (filling the window), and keep retransmitting until the receiver acknowledges</p>
+<p>each segment. This is called “automatic repeat request” (ARQ).</p>
+</blockquote>
+<h2 id="那么TCPSender是怎么时候知道一段segment丢失了呢？"><a href="#那么TCPSender是怎么时候知道一段segment丢失了呢？" class="headerlink" title="那么TCPSender是怎么时候知道一段segment丢失了呢？"></a>那么TCPSender是怎么时候知道一段segment丢失了呢？</h2><p>Sender会记录每一个outstanding segment直到收到receiver的ackno。而如果一个segment outstand了太久的话，<br>我们就需要将其重新发送一遍。</p>
+<p>当然，这里有些关于”outstanding for too long”的原则，但Lab3不会让我们解决一些tricky或者过于文字游戏的问题<br>（留在Lab4）。</p>
+<p>这里有几个要点：</p>
+<ul>
+<li>Sender的<strong>tick</strong>函数是唯一一个你可以用的，关于时间的函数。其他对于CPU/OS的调用都是被禁止的。</li>
+<li>Sender会被设置一个<strong>retransmission timeout (RTO)</strong>。这个就是我们resend segment的时长了。</li>
+<li>我们需要自己实现retransmission timer，<strong>基于tick</strong>。</li>
+<li>每个包含数据的segment被发送时，若timer没有运行，就启动timer。</li>
+<li>当所有outstanding data被acknowledged了，停止timer。</li>
+</ul>
+<p>在这里我们可以讨论一下RTO和Retransmission timer。<br>首先，当有带数据的segment被发送时，我们要让timer run起来。<br>当tick时若timer超时，则：</p>
+<ul>
+<li>把segno最低的重发一遍</li>
+<li>若window大小不为0,则：<ul>
+<li>retransmission num ++ (timer stop的时候置零)</li>
+<li>RTO *= 2, 这是根据流量调整速率的</li>
+</ul>
+</li>
+<li>reset timer and start it</li>
+</ul>
+<p>除此之外$FIN$的处理也有点dirty，实现的时候要注意一下。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/15/LeetCode-89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/15/LeetCode-89/" class="post-title-link" itemprop="url">LeetCode 89 格雷编码</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-09-15 15:26:07 / Modified: 15:38:36" itemprop="dateCreated datePublished" datetime="2023-09-15T15:26:07+08:00">2023-09-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>题目如下：</p>
+<p>n 位格雷码序列 是一个由 <span class="math inline">\(2^n\)</span> 个整数组成的序列，其中：</p>
+<p>每个整数都在范围 <span class="math inline">\([0, 2^n - 1]\)</span> 内, 要求：</p>
+<ul>
+<li>第一个整数是 0</li>
+<li>一个整数在序列中出现 不超过一次</li>
+<li>每对 相邻 整数的二进制表示 恰好一位不同 ，且</li>
+<li>第一个 和 最后一个 整数的二进制表示 恰好一位不同</li>
+</ul>
+<p>给你一个整数 n ，返回任一有效的 n 位格雷码序列 。</p>
+<blockquote>
+<p>说实话我一开始想的简单了，直接暴力搜索，最后发现不行，只能 refer 一下官方题解了</p>
+</blockquote>
+<h2 id="方法一">方法一</h2>
+<p>我们可以用归纳法，从 <span class="math inline">\(n-1\)</span>推到<span class="math inline">\(n\)</span>，设序列 <span class="math inline">\(G_n\)</span> 为<span class="math inline">\(n\)</span> 位的格雷码序列, 我们可以从 <span class="math inline">\(G_{n-1}\)</span> 推到 <span class="math inline">\(G_n\)</span>。</p>
+<p>首先把 <span class="math inline">\(G_{n-1}\)</span> 中所有元素的<span class="math inline">\(n-1\)</span>位设为 1，得到<span class="math inline">\(G_{n-1}^T\)</span>, 然后拼接 <span class="math inline">\(G_{n-1}\)</span>和<span class="math inline">\(G_{n-1}^T\)</span>就得到了我们想要的结果。</p>
+<p>为什么呢？其实很简单，<span class="math inline">\(G_{n-1}^T\)</span> 中每个数字都与<span class="math inline">\(G_{n-1}\)</span> <strong>有且仅有</strong>一位不同, 且 <span class="math inline">\(G_{n-1}\)</span>是<span class="math inline">\([0,2^{n-1}]\)</span>的一个排列，<span class="math inline">\(G_{n-1}^T\)</span>则是<span class="math inline">\([2^{n-1}, 2^{n}-1]\)</span>上的排列。 二者组合后自然就得到了<span class="math inline">\([0,2^n-1]\)</span>上的排列，且依次穿插后二进制位恰有一位不同。</p>
+<h2 id="方法二">方法二</h2>
+<p>这个方法是纯粹的找规律，如下： <img src="/images/leetcode89.png" alt="a" /></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/12/CS144-Lab2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/12/CS144-Lab2/" class="post-title-link" itemprop="url">CS144-Lab2</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-12 10:37:55" itemprop="dateCreated datePublished" datetime="2023-09-12T10:37:55+08:00">2023-09-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-17 20:24:21" itemprop="dateModified" datetime="2023-09-17T20:24:21+08:00">2023-09-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>CS144 Lab2的主要任务是完成一个TCP Receiver，在TCP协议中每一个端系统都会有两个角色： <strong>Sender</strong>和<strong>Receiver</strong>，这个Lab的主要研究对象就是后者了。</p>
+<p>而Receiver要完成几个任务： - 从Sender接受数据 - Reassemble 这些数据（在Lab1已经完成） - 决定是否把<strong>Acknowledgement</strong>和<strong>Flow-Control</strong>的数据send back</p>
+<p>注意， <strong>Acknowledgement</strong> 表示的是Receiver所需要下一个byte的index， <strong>Flow-Control</strong> 表示的则是Receiver想获取多少数据。</p>
+<h2 id="转换64位和32位的seqnos">转换64位和32位的seqnos</h2>
+<p>众所周知，64位非常大，以至于可以认为其永远不会溢出，但32位最大只有4GB，这意味着32位的地址可能会不够用。 而TCP header中，seqno是用32位来表示，也就是说为了节省空间，每份sequence的地址都是32位寻址的。</p>
+<p>这导致了TCP的一些机制： - 一旦32位的sequence number积累到 <span class="math inline">\(2^{32} - 1\)</span>，下一字节的index就变成了0。 - 为了提高TCP的健壮性并避免在同一端点之间的早期连接中混淆旧的数据段，TCP试图确保序列号不易被猜测并且不太可能重复。 因此，流的TCP sequences number不从零开始。流中的第一个序列号是一个随机的32位数字，称为初始序列号(<span class="math inline">\(ISN\)</span>）。 这是表示“零点”或<span class="math inline">\(SYN\)</span>（流的开始）的序列号。之后的序列号行为与正常情况下相同： 数据的第一个字节将具有<span class="math inline">\(ISN + 1\mod 2^{32}\)</span>的序列号，第二个字节将具有<span class="math inline">\(ISN + 2\mod 2^{32}\)</span>的序列号，依此类推。 - (懒得翻译直接粘贴了)The logical beginning and ending each occupy one sequence number: In addition to ensuring the receipt of all bytes of data, TCP makes sure that the beginning and ending of the stream are received reliably. Thus, in TCP the SYN (beginning-ofstream) and FIN (end-of-stream) control flags are assigned sequence numbers. Each of these occupies one sequence number. (The sequence number occupied by the SYN flag is the ISN.) Each byte of data in the stream also occupies one sequence number. Keep in mind that SYN and FIN aren’t part of the stream itself and aren’t “bytes”—they represent the beginning and ending of the byte stream itself.</p>
+<p>总之我们要实现一个<code>Wrap32</code>类来进行有关转换，基本代码如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Wrap32 <span class="title">Wrap32::wrap</span><span class="params">( <span class="type">uint64_t</span> n, Wrap32 zero_point )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> zero_point + n;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Wrap32::unwrap</span><span class="params">( Wrap32 zero_point, <span class="type">uint64_t</span> checkpoint )</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">uint64_t</span> cycle = <span class="number">1ll</span> &lt;&lt; <span class="number">32</span>;</span><br><span class="line">  <span class="type">uint64_t</span> n_cycle = checkpoint / cycle;</span><br><span class="line">  <span class="type">uint64_t</span> diff = raw_value_ - zero_point.raw_value_;</span><br><span class="line">  <span class="type">uint64_t</span> upper = ( n_cycle + <span class="number">1ll</span> ) * cycle + diff;</span><br><span class="line">  <span class="type">uint64_t</span> middle = n_cycle * cycle + diff;</span><br><span class="line">  <span class="type">uint64_t</span> lower = ( n_cycle - <span class="number">1ll</span> ) * cycle + diff;</span><br><span class="line">  <span class="keyword">if</span> ( ( ( n_cycle == <span class="number">0</span> &amp;&amp; cycle &lt;= diff ) || n_cycle != <span class="number">0</span> ) &amp;&amp; checkpoint &lt;= ( lower + middle ) / <span class="number">2</span> )</span><br><span class="line">    <span class="keyword">return</span> lower;</span><br><span class="line">  <span class="keyword">if</span> ( checkpoint &lt;= ( middle + upper ) / <span class="number">2</span> )</span><br><span class="line">    <span class="keyword">return</span> middle;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    <span class="keyword">return</span> upper;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>说实话这里我debug了很久，主要是没有考虑 <span class="math inline">\(lower &lt; 0\)</span> 的情况。</p>
+<p>然后是receiver的代码： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">TCPReceiver::<span class="built_in">TCPReceiver</span>() : <span class="built_in">ISN</span>( <span class="literal">nullopt</span> ), <span class="built_in">FIN</span>( <span class="literal">false</span> ) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TCPReceiver::receive</span><span class="params">( TCPSenderMessage message, Reassembler&amp; reassembler, Writer&amp; inbound_stream )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">if</span> ( message.SYN )</span><br><span class="line">    ISN = message.seqno;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( !ISN.<span class="built_in">has_value</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( message.FIN )</span><br><span class="line">    FIN = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">  reassembler.<span class="built_in">insert</span>( message.seqno.<span class="built_in">unwrap</span>( ISN.<span class="built_in">value</span>(), reassembler.<span class="built_in">bytes_pending</span>() ) + message.SYN - <span class="number">1ll</span>,</span><br><span class="line">                      message.payload,</span><br><span class="line">                      message.FIN,</span><br><span class="line">                      inbound_stream );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">TCPReceiverMessage <span class="title">TCPReceiver::send</span><span class="params">( <span class="type">const</span> Writer&amp; inbound_stream )</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  (<span class="type">void</span>)inbound_stream;</span><br><span class="line">  TCPReceiverMessage ret;</span><br><span class="line">  <span class="keyword">if</span> ( !ISN.<span class="built_in">has_value</span>() )</span><br><span class="line">    ret.ackno = <span class="literal">nullopt</span>;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    <span class="comment">// +1 for the SYN flag, and finish only when FIN flag reached and stream is closed.</span></span><br><span class="line">    ret.ackno</span><br><span class="line">      = Wrap32::<span class="built_in">wrap</span>( inbound_stream.<span class="built_in">bytes_pushed</span>() + <span class="number">1</span> + ( FIN &amp;&amp; inbound_stream.<span class="built_in">is_closed</span>() ), ISN.<span class="built_in">value</span>() );</span><br><span class="line"></span><br><span class="line">  ret.window_size = <span class="built_in">min</span>( inbound_stream.<span class="built_in">available_capacity</span>(), (<span class="type">uint64_t</span>)UINT16_MAX );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>逻辑很简单，就是要处理 <span class="math inline">\(SYN\)</span> 和 <span class="math inline">\(FIN\)</span> 的情况。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/12/CS144-Lab1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/12/CS144-Lab1/" class="post-title-link" itemprop="url">CS144-Lab1</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-09-12 10:07:39 / Modified: 10:30:04" itemprop="dateCreated datePublished" datetime="2023-09-12T10:07:39+08:00">2023-09-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>CS144 Lab1的主要任务是完成<strong>TCP</strong>的<strong>Reassembler</strong>，其主要功能为： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span>;</span><br></pre></td></tr></table></figure> 其中<code>first_index</code>是数据的逻辑下标，也就是数据到达的顺序，<code>is_last_substring</code>标识了该数据是否代表了最后一份数据。 而<code>output</code>明显就是输出的字节流。</p>
+<p>TCP的数据流一般由以下部分组成：</p>
+<p><code>| popped data | unpopped-and-pushed data | arrived-and-unpushed data |</code></p>
+<p>其中<strong>popped data</strong>已经被Reader获取，而<strong>unpopped-and-pushed data</strong>已经被Writer写进缓存， 但Reader暂时还未读取，最后的<strong>arrived-and-unpushed data</strong>是从网络接收，尚未组装传入Writer，非连续的数据， 是本Lab的核心工作对象。</p>
+<p>计算机网络的特性决定了：不同的数据到来顺序是乱序的，他们之间可能有重叠(overlapping)，而且到来的数据可能已经被push， 而Reassembler要解决这些问题，提供可靠的<strong>流服务(Reliable Flow)</strong>。</p>
+<h2 id="设计思路">设计思路</h2>
+<p>我的基本想法是用一个类似char数组的缓存存储<strong>arrived-and-unpushed</strong>的数据， 然后用一个<code>map&lt;int,int&gt;</code>存储已经到达的数据的index区间 <span class="math inline">\([l,r]\)</span>，在数据到达时进行区间的合并， 这一问题和经典算法题<strong>插入区间</strong>一致。</p>
+<p>其他的逻辑比较简单，主要是： - <code>first_index</code>若是arrived-and-unpushed data的首地址，要直接push - 若是空字符则省略，但若有last_string的标识，则要把writer关闭 - 一部分data在push之后，buf之后的数据要往前推（有优化空间？）</p>
+<p>Reassembler的成员如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  std::map&lt;<span class="type">uint64_t</span>, <span class="type">uint64_t</span>&gt; buffer;</span><br><span class="line">  std::string buf;</span><br><span class="line">  <span class="type">uint64_t</span> end_index;</span><br><span class="line">  <span class="type">uint64_t</span> pending;</span><br></pre></td></tr></table></figure></p>
+<p>实现代码如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Your code here.</span></span><br><span class="line">  (<span class="type">void</span>)first_index;</span><br><span class="line">  (<span class="type">void</span>)data;</span><br><span class="line">  (<span class="type">void</span>)is_last_substring;</span><br><span class="line">  (<span class="type">void</span>)output;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( buf.<span class="built_in">empty</span>() )</span><br><span class="line">    buf.<span class="built_in">resize</span>( output.<span class="built_in">capacity</span>() );</span><br><span class="line"></span><br><span class="line">  <span class="type">uint64_t</span> bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">  <span class="type">uint64_t</span> insert_l = <span class="built_in">max</span>( output.<span class="built_in">bytes_pushed</span>(), first_index );</span><br><span class="line">  <span class="type">uint64_t</span> insert_r = <span class="built_in">min</span>( first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>, output.<span class="built_in">available_capacity</span>() + bias_push - <span class="number">1</span> );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( is_last_substring )</span><br><span class="line">    end_index = first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( data.<span class="built_in">empty</span>() &amp;&amp; is_last_substring ) &#123;</span><br><span class="line">    output.<span class="built_in">close</span>();</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l - first_index &gt;= data.<span class="built_in">size</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span> ( insert_l &gt; insert_r )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = insert_l; i &lt;= insert_r; i++ ) &#123;</span><br><span class="line">    buf[i - bias_push] = data[i - first_index];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">bool</span> changed = <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">while</span> ( changed &amp;&amp; !buffer.<span class="built_in">empty</span>() ) &#123;</span><br><span class="line">    changed = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">auto</span> upper = buffer.<span class="built_in">lower_bound</span>( insert_l );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// upper.first &gt;= l, compare [l,r] with [uf, us]</span></span><br><span class="line">    <span class="keyword">if</span> ( upper != buffer.<span class="built_in">end</span>() &amp;&amp; insert_r + <span class="number">1</span> &gt;= upper-&gt;first ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_r = <span class="built_in">max</span>( upper-&gt;second, insert_r );</span><br><span class="line">      pending -= upper-&gt;second - upper-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( upper );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( upper == buffer.<span class="built_in">begin</span>() || buffer.<span class="built_in">empty</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">auto</span> lower = --upper;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// lower.first &lt; l, compare [lf, ls] with [l, r]</span></span><br><span class="line">    <span class="keyword">if</span> ( lower != buffer.<span class="built_in">end</span>() &amp;&amp; lower-&gt;second + <span class="number">1</span> &gt;= insert_l ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_l =  lower-&gt;first;</span><br><span class="line">      insert_r = <span class="built_in">max</span>( lower-&gt;second, insert_r );</span><br><span class="line">      pending -= lower-&gt;second - lower-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( lower );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l == output.<span class="built_in">bytes_pushed</span>() ) &#123;</span><br><span class="line">    <span class="type">uint64_t</span> old_bias = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">    output.<span class="built_in">push</span>( buf.<span class="built_in">substr</span>( insert_l - output.<span class="built_in">bytes_pushed</span>(), insert_r - insert_l + <span class="number">1</span> ) );</span><br><span class="line">    bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( insert_r == end_index ) &#123;</span><br><span class="line">      output.<span class="built_in">close</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ( <span class="keyword">auto</span> it = buffer.<span class="built_in">begin</span>(); it != buffer.<span class="built_in">end</span>(); it++ )</span><br><span class="line">      <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = it-&gt;first; i &lt;= it-&gt;second; ++i )</span><br><span class="line">        buf[i - bias_push] = buf[i - old_bias];</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    buffer[insert_l] = insert_r;</span><br><span class="line">    pending += insert_r - insert_l + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Reassembler::bytes_pending</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> pending;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>大部分的代码和插入区间问题一致,最后的性能指标为 1.78Gbit/s，有一定的优化空间。</p>
+<p>我想用string先存储起来，最后进行合并的话性能会提高不少。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/04/CS144-Lab0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/04/CS144-Lab0/" class="post-title-link" itemprop="url">CS144-Lab0</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-04 15:35:27" itemprop="dateCreated datePublished" datetime="2023-09-04T15:35:27+08:00">2023-09-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-18 23:19:07" itemprop="dateModified" datetime="2023-09-18T23:19:07+08:00">2023-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文基于<a target="_blank" rel="noopener" href="https://cs144.github.io/assignments/check0.pdf">指导文档</a>进行编写。</p>
+<p>CS144 的 Lab0 主要分为三部分</p>
+<ul>
+<li>第一部分是 VM 的安装/使用</li>
+<li>第二部分则是 telnet 等网络程序的尝试</li>
+<li>第三部分则是写一个基于 OS 自带 socket 库的网络程序和实现一个简单 ByteStream</li>
+</ul>
+<p>第一部分可以略过。</p>
+<p>第二部分则主要是介绍<strong>telnet</strong>和<strong>telcat</strong>，其中<strong>telnet</strong>的作用就是建立 connection, 并用不同协议进行通信。<br><strong>netcat</strong>则是用于建立 client/server 一类的 end-to-end 的端。</p>
+<p>首先用</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telcat 9091</span><br></pre></td></tr></table></figure>
+<p>建立一个对于 9091 端口的监听 socket, 然后打开另一个终端用</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telnet localhost 9091</span><br></pre></td></tr></table></figure>
+<p>连接到该端口，此时 telcat 的窗口就会显示连接信息。</p>
+<p>重点是第三部分的实验。这个实验将利用 Linux 的 Socket 构建一个基于 TCP 的程序，要求该程序可以连接到 Web Server，并抓取一个界面。</p>
+<p>这里有些需要注意的要点：</p>
+<ul>
+<li>在 HTTP 协议中每行必须以‘\r\n’结尾</li>
+<li>不能漏了‘Connection: closed’, 不然进程会一直等待</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">get_URL</span><span class="params">( <span class="type">const</span> string&amp; host, <span class="type">const</span> string&amp; path )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  TCPSocket sock1;</span><br><span class="line">  Address addr = <span class="built_in">Address</span>( host, <span class="string">&quot;http&quot;</span> );</span><br><span class="line">  sock1.<span class="built_in">connect</span>( addr );</span><br><span class="line">  sock1.<span class="built_in">write</span>( <span class="string">&quot;GET &quot;</span> + path + <span class="string">&quot; &quot;</span> + <span class="string">&quot;HTTP/1.1\r\nHost: &quot;</span> + host + <span class="string">&quot;\r\nConnection: close\r\n\r\n&quot;</span> );</span><br><span class="line">  <span class="keyword">while</span> ( <span class="number">1</span> ) &#123;</span><br><span class="line">    string recv;</span><br><span class="line">    sock1.<span class="built_in">read</span>( recv );</span><br><span class="line">    cout &lt;&lt; recv;</span><br><span class="line">    <span class="keyword">if</span> ( sock1.<span class="built_in">eof</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  sock1.<span class="built_in">close</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 ByteStream 部分，要实现对于数据的读写，笔者主要是基于<code>std::queue</code>实现的缓存，<br>主要难点在于 peek 函数，参考网上代码后，发现 string_view 必须像下列代码一样初始化：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">string_view <span class="title">Reader::peek</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123; &amp;buffer.<span class="built_in">front</span>(), <span class="number">1</span> &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="优化部分"><a href="#优化部分" class="headerlink" title="优化部分"></a>优化部分</h3><p>用 string_view 和 move 实现移动语义：</p>
+<p>两个队列存数据和引用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::queue&lt;std::string_view&gt; buffer;</span><br><span class="line">std::queue&lt;std::string&gt; buffer_actual;</span><br></pre></td></tr></table></figure>
+<p>Reader 的 pop 则要分类讨论：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reader::pop</span><span class="params">( <span class="type">uint64_t</span> len )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  bytesPopped += len;</span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">unsigned</span> i = <span class="number">0</span>; i &lt; len; ) &#123;</span><br><span class="line">    <span class="keyword">if</span> ( buffer.<span class="built_in">front</span>().<span class="built_in">size</span>() &gt; len - i ) &#123;</span><br><span class="line">      buffer.<span class="built_in">front</span>() = buffer.<span class="built_in">front</span>().<span class="built_in">substr</span>( len - i );</span><br><span class="line">      i = len;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      i += buffer.<span class="built_in">front</span>().<span class="built_in">size</span>();</span><br><span class="line">      buffer.<span class="built_in">pop</span>();</span><br><span class="line">      buffer_actual.<span class="built_in">pop</span>();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> ( !buffer.<span class="built_in">empty</span>() &amp;&amp; buffer.<span class="built_in">front</span>().<span class="built_in">empty</span>() )</span><br><span class="line">    buffer.<span class="built_in">pop</span>();</span><br><span class="line">  bytesBuffered -= len;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后优化的结果：<br><img src="/images/CS144_Lab0.png" alt="img"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/28/Linear-Algebra-4-3-Least-Squares/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/28/Linear-Algebra-4-3-Least-Squares/" class="post-title-link" itemprop="url">Linear Algebra 4.3 -- Least Squares Approximations</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-28 14:06:46" itemprop="dateCreated datePublished" datetime="2023-08-28T14:06:46+08:00">2023-08-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-04 15:35:41" itemprop="dateModified" datetime="2023-09-04T15:35:41+08:00">2023-09-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linear-Algebra/" itemprop="url" rel="index"><span itemprop="name">Linear Algebra</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>线性回归基本方法—<strong>最小二乘法(Least Squares Approximations)</strong>，这里记录具体思想。</p>
+<p>$Ax=b$在实际情况中大多是无解的，一种情况是：方程式往往会比未知数更多($m&gt;n$)，而 n 列只能产生 m 维线性空间的一小部分。<br>换句话讲，$\boldsymbol{b}$ 总是在 $C(A)$ 之外。这时我们便可以通过上一章投影的有关知识解决这一问题。</p>
+<p>首先给出结果，和投影一样，我们的基本方程仍是如下方程：</p>
+<script type="math/tex; mode=display">A^TA\boldsymbol{\hat{x}}=A^T\boldsymbol{b}</script><p>而我们的基本目标就是减小 error ( $\boldsymbol{Ax-b}$ )，我们可以从三个不同的方向解决的这个问题：</p>
+<h4 id="几何方向"><a href="#几何方向" class="headerlink" title="几何方向"></a>几何方向</h4><p>对于一条直线$\boldsymbol{b}$，要让其和一个平面/子空间 $A\boldsymbol{x}$ 相距最小，<br>必然要求出其投影$\boldsymbol{p}$，$\boldsymbol{e = b - p}$ 此时就是最小的，<br>$\boldsymbol{p}$ 此时也是比较合适的的接近解的直线。</p>
+<h4 id="代数方向"><a href="#代数方向" class="headerlink" title="代数方向"></a>代数方向</h4><p>每一个向量 $\boldsymbol{b}$ 都可以被分成两个部分，一个是在 $C(A)$ 中的 $\boldsymbol{p}$，<br>另一部分则是正交于 $C(A)$ 的 $\boldsymbol{e}$。</p>
+<p>$A\boldsymbol{x = b = p + e}$ 是不可解的</p>
+<p>$A\boldsymbol{\hat{x} = p}$ 则是可解的</p>
+<p>而后者的解则留下了最小的误差$ \boldsymbol{e}$。最小的原因：</p>
+<p>这里有 <strong>Squared length for any $x$</strong>: $||Ax - b||^2 = ||Ax-p||^2 + ||e||^2$</p>
+<p>而我们把 $||Ax-p||^2$ 减到了 $0$ ，已经把 $||Ax - b||^2$ 减到不能再减了。</p>
+<h4 id="微积分方向"><a href="#微积分方向" class="headerlink" title="微积分方向"></a>微积分方向</h4><p>举例而言，对于直线$C + Dt$，有三个样本点：$(0,6), (1,0), (2,0)$，则有：</p>
+<script type="math/tex; mode=display">
+A=\left [ \begin{matrix}
+1& 0 \\
+1& 1 \\
+1& 2 \\
+\end{matrix} \right ] ,
+\boldsymbol{x} = \left [ \begin{matrix}
+C \\
+D \\
+\end{matrix} \right ] ,
+\boldsymbol{b} = \left [ \begin{matrix}
+6 \\
+0 \\
+0 \\
+\end{matrix} \right ]</script><p>我们要最小化 $E = ||Ax-b||^2$ 则要有：</p>
+<script type="math/tex; mode=display">\frac{\partial E}{\partial C} = 0, \quad \frac{\partial E}{\partial D} = 0</script><p>事实上最后化简的结果与 $A^TA\hat{x}=A^Tb$ 是一样的。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/28/Linear-Algebra-Projection/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/28/Linear-Algebra-Projection/" class="post-title-link" itemprop="url">Linear Algebra 4.2 -- Projection</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-08-28 13:20:06 / Modified: 14:05:37" itemprop="dateCreated datePublished" datetime="2023-08-28T13:20:06+08:00">2023-08-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linear-Algebra/" itemprop="url" rel="index"><span itemprop="name">Linear Algebra</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>The projection of $\boldsymbol{b}$ onto a subspace $C(A)$ is computed by:</p>
+<script type="math/tex; mode=display">
+ \boldsymbol{p} =  P\boldsymbol{b}</script><p>where $P$ is called <strong>Projection Matrix</strong>.<br>The reason for multiplying a matrix is based on how the projection is computed.</p>
+<p>Here is the reasoning steps:</p>
+<p>Let’s image that there is $\boldsymbol{b}$ projecting onto a plane $C(A)$,<br>producing projection $\boldsymbol{p}$. Then $\boldsymbol{p}$ is in $C(A)$,<br>which could be expressed as $A\boldsymbol{\hat{x}}$. Our <strong>goal</strong> is to get $\boldsymbol{\hat{x}}$.</p>
+<p>Let $\boldsymbol{e = b - A\hat{x}}$ be the error vector ,<br>only when $\boldsymbol{e}$ is <strong>perpendicular</strong> to the subspace, can we say $\boldsymbol{p = b - e}$ is projection.</p>
+<p>Since $\boldsymbol{e}$ is perpendicular to $C(A)$, we can get:</p>
+<script type="math/tex; mode=display">A^T(\boldsymbol{b}-A\boldsymbol{\hat{x}}) = \boldsymbol{0}</script><p>or</p>
+<script type="math/tex; mode=display">A^TA\boldsymbol{\hat{x}} = A^T\boldsymbol{b}</script><p>The symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>.<br>Then,</p>
+<script type="math/tex; mode=display">\boldsymbol{p} = A\boldsymbol{\hat{x}}=A(A^TA)^{-1}A^T\boldsymbol{b}</script><p>Here $A(A^TA)^{-1}A^T$ is a matrix, we name it <strong>Projection Matrix</strong>.<br>You might try to split $(A^TA)^{-1}$ into $A^{-1}(A^{T})^{-1}$, however when $A$ is rectangular, it has no inverse.</p>
+<p>Or when $A$ is invertible, $N(A), N(A^T)$ contains only <strong>zero</strong> vector,<br>where $A^T\boldsymbol{e} = 0 \rightarrow \boldsymbol{e=0, b=p}$ itself, $P = \boldsymbol{I}$ satisfies it well.</p>
+<h4 id="Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent"><a href="#Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent" class="headerlink" title="Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are independent?"></a>Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>?</h4><script type="math/tex; mode=display">A^TAx = 0 \Longleftrightarrow Ax = 0</script><p>Thus $A^TA$ has the same nullspace with $A$. $A$ is invertible, <strong>if and only if</strong> $A^TA$ is invertible.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-44/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/23/LeetCode-44/" class="post-title-link" itemprop="url">LeetCode 44 通配符匹配 题解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-24 17:39:02" itemprop="dateModified" datetime="2023-08-24T17:39:02+08:00">2023-08-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>题目描述： <img src="/images/leetcode44.png" alt="img" /></p>
+<h2 id="动态规划">动态规划</h2>
+<p>简单想法：</p>
+<p>使用动态规划，令 <span class="math inline">\(dp[i][j]\)</span> 为 <strong>是否 <span class="math inline">\(s[0..i]\)</span> 与 <span class="math inline">\(p[0..j]\)</span> 匹配</strong> ,也就是 s 前 i 个字符与 p 前 j 个字符匹配。</p>
+<p>则有初始状态:</p>
+<p><span class="math display">\[dp[0][0] = true\]</span></p>
+<p>由于长度大于 0 的字符串不可能被长度为 0 的模式匹配，故令：</p>
+<p><span class="math display">\[dp[i][0] = false, 0 &lt; i \le sn\]</span></p>
+<p>同时长度为 0 的字符串只可能被形如"<strong>*</strong>"这样<strong>全为通配符</strong>的模式匹配，故令：</p>
+<p><span class="math display">\[dp[0][j] = dp[0][j-1] \quad \wedge \quad p[j-1] = &#39;*&#39;\]</span></p>
+<p>状态转移方程则为：</p>
+<p><span class="math display">\[
+ \begin{equation*} %加*表示不对公式编号
+    \begin{split}
+        dp[i][j] =
+        &amp;   dp[i][j - 1] \wedge p[j - 1] = &#39;*&#39; \quad \vee \\
+        &amp;   dp[i - 1][j] \wedge p[j - 1] = &#39;*&#39; \quad \vee \\
+        &amp;   dp[i - 1][j - 1] \wedge (s[i - 1] = p[j - 1] \vee p[j - 1] = &#39;?&#39; \vee p[j - 1] = &#39;*&#39;)
+    \end{split}
+\end{equation*} 
+\]</span></p>
+<p>故我们可以有代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">bool</span> dp[<span class="number">2001</span>][<span class="number">2001</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">isMatch</span><span class="params">(string s, string p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (s.<span class="built_in">length</span>() == <span class="number">0</span> &amp;&amp;</span><br><span class="line">        std::<span class="built_in">all_of</span>(p.<span class="built_in">begin</span>(), p.<span class="built_in">end</span>(), [](<span class="type">char</span> c) &#123; <span class="keyword">return</span> c == <span class="string">&#x27;*&#x27;</span>; &#125;))</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">if</span> (p.<span class="built_in">length</span>() == <span class="number">0</span>)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> sn = s.<span class="built_in">length</span>();</span><br><span class="line">    <span class="type">int</span> pn = p.<span class="built_in">length</span>();</span><br><span class="line">    dp[<span class="number">0</span>][<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= pn; ++i) &#123;</span><br><span class="line">      dp[<span class="number">0</span>][i] = std::<span class="built_in">all_of</span>(p.<span class="built_in">begin</span>(), p.<span class="built_in">begin</span>() + i,</span><br><span class="line">                             [](<span class="type">char</span> c) &#123; <span class="keyword">return</span> c == <span class="string">&#x27;*&#x27;</span>; &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= sn; ++i) &#123;</span><br><span class="line">      dp[i][<span class="number">0</span>] = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= sn; ++i) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">1</span>; j &lt;= pn; ++j) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">bool</span> a = dp[i][j] =</span><br><span class="line">            (dp[i][j - <span class="number">1</span>] &amp;&amp; p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>) ||</span><br><span class="line">            (dp[i - <span class="number">1</span>][j] &amp;&amp; p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>) ||</span><br><span class="line">            (dp[i - <span class="number">1</span>][j - <span class="number">1</span>] &amp;&amp;</span><br><span class="line">             (s[i - <span class="number">1</span>] == p[j - <span class="number">1</span>] || p[j - <span class="number">1</span>] == <span class="string">&#x27;?&#x27;</span> || p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> dp[sn][pn];</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>时间复杂度为 <span class="math inline">\(O(mn)\)</span>, 空间复杂度为 <span class="math inline">\(O(mn)\)</span></p>
+<h2 id="贪心leetcode-题解">贪心(LeetCode 题解)</h2>
+<p>前一方法的瓶颈在于对星号 <span class="math inline">\(*\)</span> 的处理方式：使用动态规划枚举所有的情况。由于星号是「万能」的匹配字符，连续的多个星号和单个星号实际上是等价的，那么不连续的多个星号呢？</p>
+<p>我们以 <span class="math inline">\(p=∗ abcd ∗\)</span> 为例，ppp 可以匹配所有包含子串 abcd 的字符串，也就是说，我们只需要暴力地枚举字符串 s 中的每个位置作为起始位置，并判断对应的子串是否为 abcd 即可。这种暴力方法的时间复杂度为 O(mn)，与动态规划一致，但不需要额外的空间。</p>
+<p>如果 p=∗abcd∗efgh∗i∗ 呢？显然，ppp 可以匹配所有依次出现子串 abcd、efgh、i 的字符串。此时，对于任意一个字符串 sss，我们首先暴力找到最早出现的 abcd，随后从下一个位置开始暴力找到最早出现的 efgh，最后找出 i，就可以判断 sss 是否可以与 ppp 匹配。这样「贪心地」找到最早出现的子串是比较直观的，因为如果 sss 中多次出现了某个子串，那么我们选择最早出现的位置，可以使得后续子串能被找到的机会更大。</p>
+<p>因此，如果模式 ppp 的形式为 <span class="math display">\[* u_1 * u_2 * u_3 * \cdots * u_x ∗\]</span> ，即字符串（可以为空）和星号交替出现，并且首尾字符均为星号，那么我们就可以设计出下面这个基于贪心的暴力匹配算法。算法的本质是：如果在字符串 sss 中首先找到 <span class="math inline">\(u_1\)</span> ，再找到 <span class="math inline">\(u_2, u_3, \cdots, u_x\)</span>，那么 s 就可以与模式 p 匹配，伪代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 我们用 sIndex 和 pIndex 表示当前遍历到 s 和 p 的位置</span></span><br><span class="line"><span class="comment">// 此时我们正在 s 中寻找某个 u_i</span></span><br><span class="line"><span class="comment">// 其在 s 和 p 中的起始位置为 sRecord 和 pRecord</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// sIndex 和 sRecord 的初始值为 0</span></span><br><span class="line"><span class="comment">// 即我们从字符串 s 的首位开始匹配</span></span><br><span class="line">sIndex = sRecord = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// pIndex 和 pRecord 的初始值为 1</span></span><br><span class="line"><span class="comment">// 这是因为模式 p 的首位是星号，那么 u_1 的起始位置为 1</span></span><br><span class="line">pIndex = pRecord = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> sIndex &lt; s.length <span class="keyword">and</span> pIndex &lt; p.length <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> p[pIndex] == <span class="string">&#x27;*&#x27;</span> then</span><br><span class="line">        <span class="comment">// 如果遇到星号，说明找到了 u_i，开始寻找 u_i+1</span></span><br><span class="line">        pIndex += <span class="number">1</span></span><br><span class="line">        <span class="comment">// 记录下起始位置</span></span><br><span class="line">        sRecord = sIndex</span><br><span class="line">        pRecord = pIndex</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">match</span>(s[sIndex], p[pIndex]) then</span><br><span class="line">        <span class="comment">// 如果两个字符可以匹配，就继续寻找 u_i 的下一个字符</span></span><br><span class="line">        sIndex += <span class="number">1</span></span><br><span class="line">        pIndex += <span class="number">1</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> sRecord + <span class="number">1</span> &lt; s.length then</span><br><span class="line">        <span class="comment">// 如果两个字符不匹配，那么需要重新寻找 u_i</span></span><br><span class="line">        <span class="comment">// 枚举下一个 s 中的起始位置</span></span><br><span class="line">        sRecord += <span class="number">1</span></span><br><span class="line">        sIndex = sRecord</span><br><span class="line">        pIndex = pRecord</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="comment">// 如果不匹配并且下一个起始位置不存在，那么匹配失败</span></span><br><span class="line">        <span class="keyword">return</span> False</span><br><span class="line">    end <span class="keyword">if</span></span><br><span class="line">end <span class="keyword">while</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 由于 p 的最后一个字符是星号，那么 s 未匹配完，那么没有关系</span></span><br><span class="line"><span class="comment">// 但如果 p 没有匹配完，那么 p 剩余的字符必须都是星号</span></span><br><span class="line"><span class="keyword">return</span> <span class="built_in">all</span>(p[pIndex] ~ p[p.length - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>当然还有一些特殊情况，如星号不总是出现在前后，此处省略。 时间复杂度： 渐进：<span class="math inline">\(O(mn)\)</span>，平均复杂度：<span class="math inline">\(O(m\log{n})\)</span> 具体的分析可以参考论文<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1407.0950">On the Average-case Complexity of Pattern Matching with Wildcards</a>，注意论文中的分析是对于每一个<span class="math inline">\(u_i\)</span> 而言的，即模式中只包含小写字母和问号，本题相当于多个连续模式的情况。由于超出了面试难度。这里不再赘述。</p>
+<p>空间复杂度：O(1)</p>
+<h2 id="此外leetcode-官方题解">此外(LeetCode 官方题解)</h2>
+<p>在贪心方法中，对于每一个被星号分隔的、只包含小写字符和问号的子模式 <span class="math inline">\(u_i\)</span> ，我们在原串中使用的是暴力匹配的方法。然而这里是可以继续进行优化的，即使用 AC 自动机 代替暴力方法进行匹配。 由于 AC 自动机本身已经是竞赛难度的知识点，而本题还需要在 AC 自动机中额外存储一些内容才能完成匹配，因此这种做法远远超过了面试难度。 这里只给出参考讲义 <a target="_blank" rel="noopener" href="http://www.cs.cmu.edu/~ab/CMU/Week%2010-%20Strings%20Search/print04.pdf">Set Matching and Aho-Corasick Algorithm</a>：</p>
+<ul>
+<li><p>讲义的前 6 页介绍了字典树 Trie；</p></li>
+<li><p>讲义的 7−19 页介绍了 AC 自动机，它是以字典树为基础的；</p></li>
+<li><p>讲义的 20−23 页介绍了基于 AC 自动机的一种 wildcard matching 算法，其中的 wildcard <span class="math inline">\(\phi\)</span> 就是本题中的问号。</p></li>
+</ul>
+<p>感兴趣的读者可以尝试进行学习。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-42/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -216,10 +966,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2023-08-23 16:35:00 / Modified: 16:49:43" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
+              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-24 17:39:00" itemprop="dateModified" datetime="2023-08-24T17:39:00+08:00">2023-08-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -429,771 +1185,10 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/Routing-Algorithms/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/19/Routing-Algorithms/" class="post-title-link" itemprop="url">Routing-Algorithms</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-19 13:09:21 / Modified: 23:26:18" itemprop="dateCreated datePublished" datetime="2023-08-19T13:09:21+08:00">2023-08-19</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Routing algorithm goal: determine <strong>good</strong> paths from sending hosts to receiving host. So what is a good path? Here "good" means least cost, fastest and least congested. Cost is defined by network operator: related to bandwidth, related to congestion, etc.</p>
-<p>For the characterisitics of network, We apply <strong>graph abstraction</strong> to solve this problem. Let routers be vertices, connections be edges and the "cost" of connection be weights of edges.</p>
-<p>There is routing algorithm classification:</p>
-<ul>
-<li>global: all routers have complete topology, link cost info</li>
-<li>decentralized: iterative process of computation, exchange of info with neighbors</li>
-<li>dynamic: routes change more quickly</li>
-<li>static: routes change slowly over time</li>
-</ul>
-<h2 id="link-state">Link State</h2>
-<p><strong>Link State Algorithm</strong> is iterative and centralized/global, which knows network topology, link costs needed. And it computes least cost paths from one node to all other nodes.</p>
-<p>Notation: <span class="math inline">\(C_{a,b}\)</span> is the cost from <span class="math inline">\(a\)</span> to <span class="math inline">\(b\)</span>. <span class="math inline">\(D(a)\)</span> is the cost of least-cost-path from source to destination <span class="math inline">\(a\)</span>. <span class="math inline">\(p(a)\)</span> is the predecessor node along path from source to <span class="math inline">\(a\)</span>. And <span class="math inline">\(N&#39;\)</span> is set of nodes whose least-cost-path definitively known.</p>
-<p>And it's mostly the same as <strong>Dijkstra's Algorithm</strong> or <strong>Prim Algorithm</strong> in Graph Theory. Omit details here.</p>
-<p>Optimized algorithm complexity: <span class="math inline">\(O(nlogn)\)</span></p>
-<p>Message Complexity: Each router must broadcast its link state information to other <span class="math inline">\(n\)</span> routers, so complexity is <span class="math inline">\(O(n^2)\)</span></p>
-<h2 id="distance-vector">Distance Vector</h2>
-<p><strong>Distance Vector</strong> is an application of <strong>Bellman Ford Algorithm</strong>, which is decentralized, iterative and asynchronous. In this algorithm, each node propagates its cost(distance vector) to its neighbors, so that they can update their own distance vectors.</p>
-<p>The process for each node is: - wait for change in local link cost or msg from neighbor - recompute its own DV estimates with DV received from neighbor - if its own DV changed, send it to its neightbors</p>
-<p>Such thing is like state information diffusion. <strong>As a compiler learner, I think it's the same as what MFP(Maximum FixedPoint) implements</strong></p>
-<p>However, there's difference where one of the costs increase. For example, with path x-4-y-1-z, when <span class="math inline">\(C_{x,y}\)</span> updates to 60, <span class="math inline">\(y\)</span> will update <span class="math inline">\(D_y(x)\)</span> to 6 because <span class="math display">\[D_y(x) = min(D_y(x), C_{y,z} + D_z(x))\]</span>, while <span class="math inline">\(D_z(x)\)</span> is out-of-date. Such count-to-infinity problem is tricky to solve.</p>
-<p>Message complexity: exchange between neighbors; convergence time varies.</p>
-<h2 id="comparsion-of-ls-and-dv-algorithms">Comparsion of LS and DV algorithms</h2>
-<p>robustness: - LS: - router can advertise incorrect link cost. - each router computes only its own table.</p>
-<ul>
-<li>DV:
-<ul>
-<li>DV router can advertise incorrect path cost:black-holing.</li>
-<li>each router;s DV is used by others: error propagate through network.</li>
-</ul></li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/17/TCP-Congestion-Control/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/17/TCP-Congestion-Control/" class="post-title-link" itemprop="url">TCP Congestion Control</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-17 14:42:32" itemprop="dateCreated datePublished" datetime="2023-08-17T14:42:32+08:00">2023-08-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-19 13:09:57" itemprop="dateModified" datetime="2023-08-19T13:09:57+08:00">2023-08-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="classic-tcp">Classic TCP</h1>
-<h2 id="aimd">AIMD</h2>
-<p><strong>A</strong>I<strong>M</strong>D - a distributed, asynchronous algorithm - has been shown to:</p>
-<ul>
-<li>optimize congested flow rates network wide.</li>
-<li>have desirable stability properties.</li>
-</ul>
-<p>Approach: senders can <strong>increase</strong> sending rate until packet loss occurs, then <strong>decrease</strong> sending rate on loss event.</p>
-<p>Additive Increase: Increase sending rate by 1 maximum segment size every RTT until loss detected.</p>
-<p>Multiplicative Decrease: Cut sending rate in half at each loss event by triple duplicate ACK (TCP Reno). Or cut to 1 maximum segment size when loss is detected by timeout (TCP Tahoe)</p>
-<h2 id="tcp-congestion-control-details">TCP Congestion Control Details</h2>
-<p>sender sequence number space:</p>
-<figure>
-<img src="/images/SenderSequenceSpace.png" alt="" /><figcaption>/images/SenderSequenceSpace.png</figcaption>
-</figure>
-<p>TCP rate ~= <span class="math inline">\(\frac{cwnd}{RTT}\)</span> bytes/sec</p>
-<ul>
-<li>TCP sender limits transmission : LastByteSent - LastByteAcked &lt;= cwnd</li>
-<li><em>cwnd</em> is dynamically adjusted in response to observed network congestion</li>
-</ul>
-<h3 id="tcp-slow-start">TCP slow start</h3>
-<p>initially cwnd = 1 MSS. double cwnd every RTT. done by incrementing cwnd for every ACK received.</p>
-<p>When cwnd gets to 1/2 of its value before, we should switch to linear</p>
-<h2 id="cubic">CUBIC</h2>
-<figure>
-<img src="/images/TCPCUBIC.png" alt="" /><figcaption>CUBIC</figcaption>
-</figure>
-<p>TCP CUBIC is default in Linux, most popular TCP for popular Web servers.</p>
-<h1 id="enhanced-tcps">Enhanced TCPs</h1>
-<h2 id="delay-based-tcp-congestion-control">Delay-based TCP congestion control</h2>
-<p>"Just full enough, but not fuller": keep bottleneck link busy transmitting, but avoid high delays/buffering</p>
-<h2 id="explicit-congestion-notification-ecn">Explicit congestion notification (ECN)</h2>
-<p>TCP deployments often implement network-assisted congestion control.</p>
-<ul>
-<li>two bits in IP header (ToS field) marked by network router to indicate congestion
-<ul>
-<li>policy to determine marking chosen by network operator</li>
-</ul></li>
-<li>congestion indication carried to destination</li>
-<li>destination sets ECE bit on ACK segment to notify sender of congestion</li>
-<li>involves both IP (IP header ECN bit marking) and TCP (TCP header C,E bit marking)</li>
-</ul>
-<h2 id="tcp-fairness">TCP fairness</h2>
-<p>Goal: Multiple TCP sessions share the equal resource of network.</p>
-<p>However, there is no Internet police policing use of congestion control.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Direct-Memory-Access/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Direct-Memory-Access/" class="post-title-link" itemprop="url">Direct Memory Access Mechanism</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-07 23:59:31" itemprop="dateCreated datePublished" datetime="2023-08-07T23:59:31+08:00">2023-08-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-08 00:18:00" itemprop="dateModified" datetime="2023-08-08T00:18:00+08:00">2023-08-08</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>DMA serves asa real solution for I/O problems.</p>
-<ul>
-<li>Device controller transfers data directly to/from memory without involving the processor.</li>
-<li>Only interrupts once per page (large) once transfer is complete.</li>
-</ul>
-<p>The incoming procedure:</p>
-<ul>
-<li>Receive interrupt from device</li>
-<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
-<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
-<li>Upon completion, Device/DMA engine interrupt the CPU again</li>
-</ul>
-<p>The outgoing procedure:</p>
-<ul>
-<li>CPU decides to initiate transfer, confirms that external device is ready.</li>
-<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
-<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
-<li>Device/DMA engine interrupt the CPU again to signal completion</li>
-</ul>
-<h2 id="cache-coherency">Cache-coherency</h2>
-<p>DMA writes to memory, leading to incoherency with cache. Here we can see DMA as another processor core, whose coherency has been solved by most modern multiprocessors.</p>
-<h2 id="dma-and-cpu-sharing-memory">DMA and CPU Sharing Memory</h2>
-<h3 id="cycle-stealing-mode">Cycle Stealing mode</h3>
-<ul>
-<li>DMA Engine transfers a byte, releases control, then repeats</li>
-</ul>
-<h3 id="transparent-mode-maybe-best">Transparent Mode (Maybe best)</h3>
-<ul>
-<li>DMA transfer only occurs when CPU is not using the system bus</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Virtual-Memory/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Virtual-Memory/" class="post-title-link" itemprop="url">Virtual-Memory</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 22:34:59 / Modified: 23:15:42" itemprop="dateCreated datePublished" datetime="2023-08-07T22:34:59+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="address-translation">Address Translation</h2>
-<p>Assuming the virtual memory has 1024B, a page has 256B, then the index of page should be: <span class="math display">\[\log_2{\frac{1024}{256}} = 2 bit\]</span> So for an 32-bit address, the first 2 bits is the index, while the remaining 30 bits serve as offset.</p>
-<h2 id="page-table">Page Table</h2>
-<p>Consist of: [Valid] [Access Rights] [VPN] [PPN]</p>
-<p>Valid bit determines whether this virtual page is mapped to a physical page. The mapping VPN to PPN is by looking up the table. The offset from virtual to physical is invariant.</p>
-<p>Page Tables are always saved in main memory. And we always create hierarchical page table since page tables is too big. <img src="/images/HierachicalPageTable.png" alt="pagetable" /></p>
-<h2 id="problems">Problems</h2>
-<p>2+ Physical memory accesses per data access is too slow. Since locality in pages of data, there must be locality in the translations of those pages, we could build a separate cache for the page table.</p>
-<p>For historical reasons, cache is called a Translation Lookaside Buffer (TLB)</p>
-<p>VPN -&gt; TLB -&gt; PPN -&gt; Data (Access Page Table in main memory if messed)</p>
-<h2 id="performance-analysis">Performance Analysis</h2>
-<h3 id="vm-performance">VM Performance</h3>
-<p>Similar to cache. But here, though the rate of page miss is much smaller, page miss will lead to much slower performance. Page fault(Loading page from disk) requires about 20,000,000 cycles, which is destructive. The corresponding miss rate must be quite small to match it.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/OS-Boot/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/OS-Boot/" class="post-title-link" itemprop="url">OS Boot</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 21:55:02 / Modified: 21:57:56" itemprop="dateCreated datePublished" datetime="2023-08-07T21:55:02+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>The 1st period: the CPU executes instructions from some start address (stored in Flash ROM)</p>
-<ol type="1">
-<li>BIOS: FInd a storage device and load first sector.</li>
-<li>Bootloader: Load the OS kernel from disk into a location in memory and jump into it.</li>
-<li>OS Boot: Initialize services, drivers, etc.</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Cache-Performance-Analysis/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Cache-Performance-Analysis/" class="post-title-link" itemprop="url">Cache Performance Analysis</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 16:21:00 / Modified: 21:55:41" itemprop="dateCreated datePublished" datetime="2023-08-07T16:21:00+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="some-concepts">Some Concepts</h2>
-<p>AMAT: Average memory access time. <span class="math inline">\(AMAT = t_{hit} + rate_{missed} * penalty_{missed}\)</span></p>
-<h2 id="cache-miss">Cache Miss</h2>
-<p>Sources of Cache Misses:</p>
-<ul>
-<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
-<li>Capacity</li>
-<li>Conflict (Collison)</li>
-</ul>
-<p>The Design Solutions:</p>
-<ul>
-<li>Compulsory:
-<ul>
-<li>Increase block size</li>
-</ul></li>
-<li>Capacity:
-<ul>
-<li>Increase cache size</li>
-</ul></li>
-<li>Conflict:
-<ul>
-<li>Increase associativity (may increase hit-time)</li>
-</ul></li>
-</ul>
-<h2 id="miss-penalty">Miss Penalty</h2>
-<p>Factors:</p>
-<ul>
-<li>How big is your memory architecture</li>
-<li>How big is your block size</li>
-</ul>
-<h2 id="multiple-cache-levels">Multiple Cache Levels</h2>
-<p>To minimize AMAT, we need to adjust the type/parameters of cache. But it's hard to reduce hit time, miss rate and miss penalty at once.</p>
-<p>Multiple Cache Levels resolves this.</p>
-<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate. However, there is also big write back cost for such design.</p>
-<h2 id="the-cache-design-space">The Cache Design Space</h2>
-<ul>
-<li>Cache parameters</li>
-<li>Policy choices (Rewrite, Replacement)</li>
-<li>Optimal choice is a compromise</li>
-<li>Simplicity often wins</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Different-Caches/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Different-Caches/" class="post-title-link" itemprop="url">Different Caches</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 15:38:13 / Modified: 22:57:32" itemprop="dateCreated datePublished" datetime="2023-08-07T15:38:13+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="fully-associative-caches">Fully Associative Caches</h2>
-<p>Basic implementation of cache. Omit it here. Note: The offset is determined by block size.</p>
-<h2 id="direct-mapped-caches">Direct Mapped Caches</h2>
-<p>For normal fully associative cache, we break down the address into: <code>[Tag | 31 ~ X bits] [Offset | X-1 ~ 0 bits]</code> which requires multiple tag checks.</p>
-<p>So we design a direct-mapped cache inspired by hash table. Currently, we break down the address into: <code>[Tag | 31 ~ X bits] [Index | X-1 ~ Y bits] [Offset | Y-1 ~ 0 bits]</code> And the <strong>Index</strong> serves as the hashcode for the address, <strong>Tag</strong> as a identifier.</p>
-<p>Here, for <em>Write-back Policy</em> cache, there are：</p>
-<ul>
-<li>Block of data</li>
-<li>Index field</li>
-<li>Tag field of address as identifier</li>
-<li>Valid bit</li>
-<li>Dirty bit</li>
-<li>No replacement management bit</li>
-</ul>
-<p>every slot.</p>
-<p>For example, for address 10010010, we can break it down into:</p>
-<ul>
-<li>Tag: 1001</li>
-<li>Index: 001</li>
-<li>Offset: 0</li>
-</ul>
-<p>Then look for something like <code>cache[Index] + Offset</code> to find avaliable data.</p>
-<p>There are also some worst-case for such design. Since the multiple address is mapped into the same slot, We can consider the memory accesses: 00000010, 00010010, 00000010, 00010010, ... And all of the accesses will be missed.</p>
-<p>But for fully associative cache, it only miss twice.</p>
-<p>What <strong>direct-mapped</strong> outweighs <strong>fully-associative</strong> is its fast mapping.</p>
-<h2 id="set-associative-caches">Set Associative Caches</h2>
-<p><strong>N-way set-associative</strong>: divide $ into sets, each of which consists of N slots.</p>
-<ul>
-<li>Memory block maps to a set determined by <strong>Index</strong> field and is placed in any of the N slots of that set.</li>
-<li>Call <span class="math inline">\(N\)</span> the associativity.</li>
-<li>Replcaement policy applies to every set.</li>
-</ul>
-<p>Actually, from my perspective, Set Associative Cache is just a in-between of the two former.</p>
-<p>Fully associative requires 0 index bits. Direct-mapped requires max index bits. Set-associative requires somewhere in-between.</p>
-<p>Here is a screenshot from CS61C: <img src="/images/Set-Associative.png" alt="img" /></p>
-<p>As you can see, it's just the combination of Direct-Mapped and Fully-Associative.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/07/26/Sequential-Logic-Circuit/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/07/26/Sequential-Logic-Circuit/" class="post-title-link" itemprop="url">Sequential-Logic-Circuit</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-07-26 17:15:33 / Modified: 23:15:42" itemprop="dateCreated datePublished" datetime="2023-07-26T17:15:33+08:00">2023-07-26</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="sequential-clock-circuit">Sequential Clock Circuit</h2>
-<p>There are multiple combinational logic circuits in a circuit. And sequential logic circuit connects them into a single one, which is synchorized by a clock.</p>
-<p>The <strong>critical path</strong> is the longest delay betwwen any two <em>registers</em> in a circuit. The clock period must be longer be longer than this critical path, or the signal will not propagate properly to that next register.</p>
-<p>So the max frequency of the circuit is limited by how much time needed to get correct Next State to Register. (<span class="math inline">\(t_{setup}\)</span> constraint)</p>
-<p>The structure of circuit should like this: <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">input -&gt; Combinational -&gt; output </span><br><span class="line">    --&gt; Logic Circuit --</span><br><span class="line">    |                  | (Next State)</span><br><span class="line">    ---   Register &lt;----</span><br></pre></td></tr></table></figure></p>
-<p>So when you overclock, you actually force your machine to break the limit of Max Clock Frequency. That's unsafe and untable.</p>
-<p>You can: - add extra register to shorten critical path. Meanwhile, it may require more period. However, that's fine for pipeline. More latency, but more throughtput too.</p>
-<p>Pipielining <strong>tends</strong> to improve performance.</p>
-<h2 id="finite-state-machine">Finite State Machine</h2>
-<p>State transitions are controlled by the clock, On each clock cycle the machine checks, generate new state and new output.</p>
-<p>Register holds a representation of the FSM's state - Must assign a unique bit pattern for each state - Output is present/current state (PS/CS) - Input is next state (NS)</p>
-<p>Combinational Logic implements transition function here.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -1261,20 +1256,20 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">31</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">15</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">9</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">23</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">31</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,655 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/05/18/XSharp-4-Class-Design/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/05/18/XSharp-4-Class-Design/" class="post-title-link" itemprop="url">XSharp-4-Class-Design</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-05-18 00:28:17 / Modified: 01:05:07" itemprop="dateCreated datePublished" datetime="2023-05-18T00:28:17+08:00">2023-05-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Waiting to complete</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/04/17/XSharp-3-Array-Design-0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/04/17/XSharp-3-Array-Design-0/" class="post-title-link" itemprop="url">XSharp开发思路-数组设计</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-04-17 00:46:21" itemprop="dateCreated datePublished" datetime="2023-04-17T00:46:21+08:00">2023-04-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-05-18 01:04:42" itemprop="dateModified" datetime="2023-05-18T01:04:42+08:00">2023-05-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>参考了 Java 中的对象模型 我决定把 XSharp 中的 <strong>数组(Array)</strong> 的模型设计为以下形式： [ <strong>8</strong> bytes ] object header as <strong>length of array</strong> [ <strong>4 or 8</strong> bytes ] pointer <strong><em>p</em></strong> to a sequential memory (<strong>for elements</strong>)</p>
+<p>故对以下 XSharp 代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i64[] a = new i64[100]</span><br></pre></td></tr></table></figure>
+<p>在 64 位系统上，我们将会在栈上分配 8 + 4 字节的内存，由于 align 的要求我们再加上 4 字节的 padding， 一共 16 字节，并为 100 个 i64 元素在堆上分配 100 * 8 字节的内存</p>
+<p>而每次执行<code>a[i]</code>这样的操作时，我们会对取 a 的地址 并加上 8，得到指向对应连续内存的指针 <strong><em>p</em></strong> ， 再对 <strong>p + i _ sizeof(i64)</strong> 对应的地址指向读/写操作</p>
+<p>对应到 LLVM 的 CodeGen，我们则需要定义形如<code>StructType&lt;i64,PointerTo&lt;xxx&gt;&gt;</code>这样的类型， 并用<strong>getelementptr inbound</strong>和<strong>getelementptr</strong>指令获得某个元素的地址</p>
+<p>这样设计的好处则是将长度 length 放到栈上，不需要在堆分配和取元素时进行额外的计算， 也不需要 align 来保证 cache friendly，同时也方便优化。</p>
+<p>而相较于 C 语言风格的数组，我们的数组主体始终放在堆上，故内存的管理不够精细， 但经过了封装，其易用性更胜一筹，基于这些限制，其优化也更容易实现。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/" class="post-title-link" itemprop="url">XSharp开发思路-表达式解析-Pratt Parsing</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-03-15 23:16:20" itemprop="dateCreated datePublished" datetime="2023-03-15T23:16:20+08:00">2023-03-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-03-16 02:09:50" itemprop="dateModified" datetime="2023-03-16T02:09:50+08:00">2023-03-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>手工实现 Parser 常用<strong>递归下降法(Recusive Descent)</strong>，XSharp 的 Parser 也采用了<strong>递归下降</strong>的主体结构。</p>
+<p>一般来说递归下降法适用于自上而下的结构，更容易解析开头有标识符的语言，如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> () &#123;&#125;</span><br><span class="line"><span class="keyword">while</span> () &#123;&#125;</span><br><span class="line"><span class="keyword">class</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>但也由于同样的原因，递归下降法处理表达式非常吃力。Parser 在读到表达式开头的时候，无法知道自己身处哪种表达式之中，这是因为操作符往往在表达式的中间位置（甚至结尾），比如加法运算的+、函数调用的()。为了能自顶向下地解析表达式，你需要将每一种操作符 <strong>优先级(priority)</strong> 都单独作为一个层级，为其编写解析函数，并手动处理 <strong>结合性(associativity)</strong> ，因此解析函数会比较多、比较复杂。</p>
+<p>所以在重构 XSharp 的 Parser 时，我选择了 <strong>Pratt Parsing</strong> 作为表达式的算法</p>
+<p>笔者参考了 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/471075848">Pratt Parsing 知乎</a> 和 <a target="_blank" rel="noopener" href="https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html">Pratt Parsing Rust</a> 进行了有关代码的重构</p>
+<p>核心代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">ASTNode* lhs = <span class="built_in">operand</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">isStopwords</span>(current, stopwords)) <span class="keyword">return</span> lhs;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (current-&gt;type != Operator)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">XSharpError</span>(<span class="string">&quot;No operator matched after operand&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">priority</span>(current-&gt;value) &lt;= ctxPriority) <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">    XString op = current-&gt;value;</span><br><span class="line"></span><br><span class="line">    forward();</span><br><span class="line">    <span class="keyword">auto</span> right_binding_power =</span><br><span class="line">        <span class="built_in">assoc</span>(op) == LeftToRight ? <span class="built_in">priority</span>(op) : <span class="built_in">priority</span>(op) - <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">auto</span> rhs = <span class="built_in">expression</span>(stopwords, right_binding_power);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> new_lhs = <span class="keyword">new</span> BinaryOperatorNode;</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setOperatorStr</span>(op);</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setLeft</span>(lhs);</span><br><span class="line">    new_lhs-&gt;<span class="built_in">setRight</span>(rhs);</span><br><span class="line">    lhs = new_lhs;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> lhs;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/" class="post-title-link" itemprop="url">XSharp开发思路-Mutable Variable的LLVM IR生成</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-03-03 20:06:53 / Modified: 20:48:35" itemprop="dateCreated datePublished" datetime="2023-03-03T20:06:53+08:00">2023-03-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="为什么需要-mutable-variable">为什么需要 Mutable Variable?</h3>
+<p>由于 LLVM 内部优化等原因，LLVM IR 中的寄存器必须遵循<strong>SSA</strong>原则，即每个寄存器在 SSA 中仅被赋值一次。</p>
+<p>但由于 XSharp 需要支持同个变量的多次引用，我们不能直接使用寄存器作为变量的存储单元。</p>
+<p>幸运的是，LLVM 并不强制要求栈上的变量保持<strong>SSA</strong>，所以我们可以考虑将所有变量存放在栈上，</p>
+<p>然后再通过 LLVM 提供的 Mem2Reg 工具或者 Pass 进行栈上内存的数据流分析，尽可能地将栈上的变量转换至寄存器上。</p>
+<p>原文档在此:<a target="_blank" rel="noopener" href="https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/LangImpl07.html">LLVM Mutable Variable</a></p>
+<p>而针对 XSharp,我们可以写出如下代码</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/" class="post-title-link" itemprop="url">Neovim常用配置(3) (clangd & CMake)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-03-01 22:42:55 / Modified: 23:04:19" itemprop="dateCreated datePublished" datetime="2023-03-01T22:42:55+08:00">2023-03-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在使用 Neovim 进行 C/C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮/重构等语言服务</p>
+<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
+<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
+<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
+<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
+<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
+<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+<p>构建时只需要输入 build.sh</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/" class="post-title-link" itemprop="url">XSharp开发思路-Type</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-18 18:41:20" itemprop="dateCreated datePublished" datetime="2023-02-18T18:41:20+08:00">2023-02-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-03-03 20:21:59" itemprop="dateModified" datetime="2023-03-03T20:21:59+08:00">2023-03-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="一个好的编程语言需要有一个好的类型系统">一个好的编程语言需要有一个好的类型系统</h3>
+<p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
+<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
+<p>于是<strong>TypeNode</strong>出现了</p>
+<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/" class="post-title-link" itemprop="url">Neovim常用配置(2)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-08 00:12:28" itemprop="dateCreated datePublished" datetime="2023-02-08T00:12:28+08:00">2023-02-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-03-01 22:43:48" itemprop="dateModified" datetime="2023-03-01T22:43:48+08:00">2023-03-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="使用-lua-配置-neovim并设置自己的-workflow">使用 Lua 配置 Neovim，并设置自己的 workflow</h3>
+<h4 id="结合命令行工具">结合命令行工具</h4>
+<p>我在编码时常常有使用 git 的需求，但又不想总是在命令行中敲命令</p>
+<p>于是我利用与 ToggleTerm 把命令行工具 lazygit 嵌入至 Neovim 中</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Terminal = <span class="built_in">require</span>(<span class="string">&#x27;toggleterm.terminal&#x27;</span>).Terminal</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> lazygit = Terminal:new(&#123; cmd = <span class="string">&quot;lazygit&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"><span class="keyword">local</span> top = Terminal:new(&#123; cmd = <span class="string">&quot;top&quot;</span>, direction = <span class="string">&#x27;float&#x27;</span>, hidden = <span class="literal">true</span> &#125;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- lazygit</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;LazyGit&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        lazygit:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- top</span></span><br><span class="line">vim.api.nvim_create_user_command(<span class="string">&quot;Top&quot;</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">        top:toggle()</span><br><span class="line">    <span class="keyword">end</span>,</span><br><span class="line">    &#123; nargs = <span class="number">0</span> &#125;)</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/02/08/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-2/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/06/Mathematica%E5%BE%AE%E7%A7%AF%E5%88%86%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/02/06/Mathematica%E5%BE%AE%E7%A7%AF%E5%88%86%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">Mathematica微积分常用命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-06 20:58:55" itemprop="dateCreated datePublished" datetime="2023-02-06T20:58:55+08:00">2023-02-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-03-01 22:43:43" itemprop="dateModified" datetime="2023-03-01T22:43:43+08:00">2023-03-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Math/" itemprop="url" rel="index"><span itemprop="name">Math</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>作为大一新生,每天都要为了数学作业焦头烂额，为了解决这个问题，聪慧的我想到了利用数学工具 Mathematica 来解决这个问题</p>
+<p>于是我先用南大邮箱获得了 mma，并在 Ubuntu 上安装了 mma 及其依赖</p>
+<p>下面记录有关求极限，求微分，以及求积分的几个模板</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/02/06/Mathematica%E5%BE%AE%E7%A7%AF%E5%88%86%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -345,94 +994,10 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/06/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/02/06/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-02-06 14:36:01" itemprop="dateCreated datePublished" datetime="2023-02-06T14:36:01+08:00">2023-02-06</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-03-01 23:03:01" itemprop="dateModified" datetime="2023-03-01T23:03:01+08:00">2023-03-01</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Blog-s-configuration/" itemprop="url" rel="index"><span itemprop="name">Blog's configuration</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="quick-start">Quick Start</h2>
-<h3 id="create-a-new-post">Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/02/06/hello-world/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -500,20 +1065,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">31</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
