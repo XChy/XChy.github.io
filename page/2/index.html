@@ -131,7 +131,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">31</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">33</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -193,6 +193,252 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-42/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/23/LeetCode-42/" class="post-title-link" itemprop="url">LeetCode 42 接雨水 题解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-24 17:39:00" itemprop="dateModified" datetime="2023-08-24T17:39:00+08:00">2023-08-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>题目描述： <img src="/images/leetcode42.png" alt="img" /></p>
+<p>基本想法：</p>
+<p>对于每个方格索引 <span class="math inline">\(x\)</span>，其容量<span class="math inline">\(c(x)\)</span>取决于其左边最高的格子和右边最高的格子，也就是说令：</p>
+<p><span class="math display">\[t(x) = \min(\max_{y&lt;x}{\{h(y)\}} , \max_{y&gt;x}{\{h(y)\}})\]</span></p>
+<p>则</p>
+<p><span class="math display">\[
+c(x) =
+\begin{cases}
+t(x) - h(x), &amp; \text{if } y &gt; x \\
+0, &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<p>故我们可以有代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">int</span> <span class="title">trap</span><span class="params">(vector&lt;<span class="type">int</span>&gt; &amp;height)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = height.<span class="built_in">size</span>();</span><br><span class="line">    <span class="type">int</span> *maxLessThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    <span class="type">int</span> *maxGreaterThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    maxLessThan[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">    maxGreaterThan[n - <span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i - <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i - <span class="number">1</span>];</span><br><span class="line">      maxLessThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line">    curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">2</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i + <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i + <span class="number">1</span>];</span><br><span class="line">      maxGreaterThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="type">int</span> t = std::<span class="built_in">min</span>(maxLessThan[i], maxGreaterThan[i]);</span><br><span class="line">      <span class="type">int</span> capa = t &gt; height[i] ? t - height[i] : <span class="number">0</span>;</span><br><span class="line">      ret += capa;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>当然还有同样思想的双指针法，此处不表。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/OSPF_BGP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/19/OSPF_BGP/" class="post-title-link" itemprop="url">OSPF (Open Shortest Path First) & BGP (Border Gateway Protocol)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-19 23:23:17" itemprop="dateCreated datePublished" datetime="2023-08-19T23:23:17+08:00">2023-08-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-20 00:20:54" itemprop="dateModified" datetime="2023-08-20T00:20:54+08:00">2023-08-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="making-routing-scalable">Making routing scalable</h2>
+<p>Here are some concepts to note:</p>
+<p>scale: billions of destinations:</p>
+<ul>
+<li>can't store all destinations in routing tables.</li>
+<li>routing table exchange would swamp links.</li>
+</ul>
+<p>administrative autonomy:</p>
+<ul>
+<li>Internet: a network of networks</li>
+<li>each network admin may want to control routing in its own network</li>
+</ul>
+<h2 id="approach-to-scalable-routing">Approach to scalable routing</h2>
+<p>We always aggregate routers into regions known as "autonomous systems" (a.k.a "domains").</p>
+<p>And <strong>intra-AS (intra-domain)</strong> is such routing among routers within same AS(network).</p>
+<ul>
+<li>all routers in AS must run same intra-domain protocol.</li>
+<li>routers in different AS can run different intra-domain protocols.</li>
+<li>gateway router: at edge of its own AS, has link(s) to router(s) in other AS'es</li>
+</ul>
+<p><strong>inter-AS</strong> routing among AS'es is the gateways perform inter-domain routing</p>
+<p>Both of them determine entries for destination of routers, while former is <em>within</em> AS and latter is for <em>external</em> destinations. Most common intra-AS routing protocols:</p>
+<ul>
+<li>RIP (Routing Information Protocol), which is no longer widely used.</li>
+<li>OSPF (Open Shortest Path First), which includes classic <strong>link-state</strong> routing.</li>
+<li>EIGRP: (Enhanced Interior Gateway Routing Protocol), which is <strong>DV</strong> based/</li>
+</ul>
+<h2 id="ospf">OSPF</h2>
+<p>OSPF is an intra-domain routing protocol.</p>
+<ul>
+<li><p>open: publicly available</p></li>
+<li><p>classic link-state:</p>
+<ul>
+<li>each router floods OSPF link-state advertisements (directly over IP) to all other routers in entire AS.</li>
+<li>multiple link costs metrics possible: bandwidth, delay.</li>
+<li>global (has full topology)</li>
+</ul>
+<p>There is two-level hierarchy: local <em>area</em> and <em>backbone</em>.</p>
+<ul>
+<li><strong>Local routers</strong> only know/compute detailed topology within its local area, and forwad information to <strong>area border routers</strong>.</li>
+<li>And <strong>area border routers</strong> are responsible for <em>summarizing</em> distances to destinations in own area, and advertising in backbone.</li>
+</ul></li>
+</ul>
+<h2 id="bgp">BGP</h2>
+<p>BGP is an inter-domain routing protocol ("glue that holds the Internet together").</p>
+<p>BGP provides each AS a means to:</p>
+<ul>
+<li>obtain destination network reachability information from neighboring ASes (<strong>eBGP</strong>).</li>
+<li>determine roues to other networks based on reachability information and policy.</li>
+<li>propagate reachability information to all AS-internal routers (<strong>iBGP</strong>).</li>
+<li>advertise destination reachability information.</li>
+</ul>
+<h3 id="bgp-basics">BGP Basics</h3>
+<p>BGP Session: two BGP routers exchange BGP messages over semi-permanent TCP connection:</p>
+<ul>
+<li>advertising paths to different destination network prefixes</li>
+<li>BGP is a "path vector" protocol</li>
+</ul>
+<p>BGP protocol messages [RFC 4371]:</p>
+<ul>
+<li>Open: opens <strong>TCP</strong> connection to peer and authenticates sending BGP peer</li>
+<li>Update: advertises new path (or withdraws old)</li>
+<li>Keepalive: keeps connection alive in absence of UPDATES; also ACKS OPEN request</li>
+<li>Notification: reports erros in previous msg; also used to close connection</li>
+</ul>
+<h3 id="bgp-path-advertisement">BGP: path advertisement</h3>
+<p>BGP advertised path: prefix + attributes</p>
+<ul>
+<li>path prefix: destination being advertised</li>
+<li>two important attributes:
+<ul>
+<li>AS-PATH: list of ASes through which prefix advertisement has passed</li>
+<li>NEXT-HOP: indicates specific internal-AS router to next-hop AS</li>
+</ul></li>
+</ul>
+<h3 id="bgp-policy">BGP policy</h3>
+<p>ISP only wants to route traffic to/from its customer networks (does not want to carry transit traffic between other ISPs – a typical “real world” policy)</p>
+<h3 id="bgp-populating-forwading-tables">BGP: populating forwading tables</h3>
+<p>Just popluate from boundary to internal and choose local gateway that has least intra-domain cost. Omit details here.</p>
+<h2 id="benefits">Benefits</h2>
+<p>Intra/Inter-AS routing scale the network, creating hierarchical routing, reducing forwarding table size. And seperate them can make:</p>
+<ul>
+<li>intra-AS focus on performance.</li>
+<li>inter-AS has policy dominates over performaance.</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/Routing-Algorithms/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -216,17 +462,23 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2023-08-19 13:09:21 / Modified: 23:26:18" itemprop="dateCreated datePublished" datetime="2023-08-19T13:09:21+08:00">2023-08-19</time>
+              <time title="Created: 2023-08-19 13:09:21" itemprop="dateCreated datePublished" datetime="2023-08-19T13:09:21+08:00">2023-08-19</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-21 15:34:29" itemprop="dateModified" datetime="2023-09-21T15:34:29+08:00">2023-09-21</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                  <a href="/categories/Compiler-Theory/" itemprop="url" rel="index"><span itemprop="name">Compiler Theory</span></a>
                 </span>
             </span>
 
@@ -950,189 +1202,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/" class="post-title-link" itemprop="url">编译原理-数据流分析-冗余消除</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-07-08 21:49:09" itemprop="dateCreated datePublished" datetime="2023-07-08T21:49:09+08:00">2023-07-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-07-09 00:10:35" itemprop="dateModified" datetime="2023-07-09T00:10:35+08:00">2023-07-09</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Compiler-Theory-%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">Compiler Theory(编译原理)</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>本章博客将介绍一种消除程序代码冗余的编译器代码优化技术 --- <strong>懒惰代码移动算法</strong></p>
-<h2 id="什么是冗余消除">什么是冗余消除</h2>
-<p><strong>冗余消除</strong>就是要尽量减少表达式求值的次数，避免形如<span class="math inline">\(x+y\)</span>的表达式在之后的代码中多次计算，影响性能。</p>
-<p>冗余的来源主要有以下三种：</p>
-<ol type="1">
-<li>公共子表达式 (<em>Common Expression</em>)</li>
-<li>循环不变表达式 (<em>Loop Invariant</em>)</li>
-<li>部分冗余表达式 (<em>Partial Redundancy Expression</em>)</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/07/08/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90-%E5%86%97%E4%BD%99%E6%B6%88%E9%99%A4/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/06/30/LLVM-First-Contribution/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/06/30/LLVM-First-Contribution/" class="post-title-link" itemprop="url">第一次给LLVM的Contribution</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-06-30 22:53:10" itemprop="dateCreated datePublished" datetime="2023-06-30T22:53:10+08:00">2023-06-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-07-04 22:09:43" itemprop="dateModified" datetime="2023-07-04T22:09:43+08:00">2023-07-04</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="为什么要参与llvm的开源">为什么要参与LLVM的开源？</h2>
-<p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译， 我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
-<p>于是我参考了一位LLVM Member的文章: <a target="_blank" rel="noopener" href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
-<p>以下则是我从编译到提交patch的全流程。</p>
-<h3 id="编译">编译</h3>
-<p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
-<p>那么我们首先要clone LLVM的git仓库，或者自己fork了<strong>llvm-project</strong>后再clone到本地。二者区别不大，我按照github的开源习惯选了后者。</p>
-<p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。 以下是cmake的模板：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmake -GNinja -Bbuild -Hllvm \</span><br><span class="line">    -DLLVM_ENABLE_PROJECTS=&quot;clang&quot; \</span><br><span class="line">    -DLLVM_TARGETS_TO_BUILD=&quot;all&quot; \</span><br><span class="line">    -DCMAKE_BUILD_TYPE=Release \</span><br><span class="line">    -DLLVM_ENABLE_ASSERTIONS=true \</span><br><span class="line">    -DLLVM_CCACHE_BUILD=true \</span><br><span class="line">    -DLLVM_USE_LINKER=lld</span><br></pre></td></tr></table></figure>
-<p>其中Debug可通过<code>-debug</code> flag来进行，你可以在对应的代码位置用<code>errs() &lt;&lt; something</code>进行输出。</p>
-<p>而ninja的编译速度相对较快，所以以下有构建和测试的shell：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Build LLVM</span></span><br><span class="line">ninja -Cbuild</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run all LLVM tests</span></span><br><span class="line">ninja -Cbuild check-llvm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run tests <span class="keyword">in</span> a specific directory.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v will <span class="built_in">print</span> additional information <span class="keyword">for</span> failures.</span></span><br><span class="line">build/bin/llvm-lit -v llvm/test/Transforms/InstCombine</span><br></pre></td></tr></table></figure>
-<h3 id="选issue">选Issue</h3>
-<p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/06/30/LLVM-First-Contribution/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1204,7 +1273,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-count">33</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

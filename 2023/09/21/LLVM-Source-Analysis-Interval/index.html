@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。 Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。 先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 \(Node \ne H">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLVM源码解析-Interval Analysis">
+<meta property="og:url" content="http://xchy.github.io/2023/09/21/LLVM-Source-Analysis-Interval/index.html">
+<meta property="og:site_name" content="XChy&#39;s Blog">
+<meta property="og:description" content="第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。 Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。 先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 \(Node \ne H">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-09-21T11:51:36.000Z">
+<meta property="article:modified_time" content="2023-09-22T09:32:56.868Z">
+<meta property="article:author" content="XChy">
+<meta property="article:tag" content="Compiler">
+<meta property="article:tag" content="LLVM">
+<meta property="article:tag" content="OpenSource">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://xchy.github.io/2023/09/21/LLVM-Source-Analysis-Interval/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>LLVM源码解析-Interval Analysis | XChy's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">XChy's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">For life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">33</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/21/LLVM-Source-Analysis-Interval/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          LLVM源码解析-Interval Analysis
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-21 19:51:36" itemprop="dateCreated datePublished" datetime="2023-09-21T19:51:36+08:00">2023-09-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-22 17:32:56" itemprop="dateModified" datetime="2023-09-22T17:32:56+08:00">2023-09-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
+<p>Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。</p>
+<p>先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 <span class="math inline">\(Node \ne Head\)</span> 都满足 <span class="math inline">\(Pred(Node) \subset Interval\)</span> ：</p>
+<h2 id="interval-类">Interval 类</h2>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Interval</span> &#123;</span><br><span class="line">  <span class="comment">/// HeaderNode - The header BasicBlock, which dominates all BasicBlocks in this</span></span><br><span class="line">  <span class="comment">/// interval.  Also, any loops in this interval must go through the HeaderNode.</span></span><br><span class="line">  <span class="comment">///</span></span><br><span class="line">  BasicBlock *HeaderNode;</span><br></pre></td></tr></table></figure>
+<p>这里的 HeaderNode dominates Interval 里所有的 BasicBlock(Node)，代表了一个 Interval。</p>
+<span id="more"></span>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="title">Interval</span><span class="params">(BasicBlock *Header)</span> : HeaderNode(Header) &#123;</span></span><br><span class="line">  Nodes.<span class="built_in">push_back</span>(Header);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">inline</span> BasicBlock *<span class="title">getHeaderNode</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> HeaderNode; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// Nodes - The basic blocks in this interval.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Nodes;</span><br></pre></td></tr></table></figure>
+<p>构造函数和一些基本定义, Nodes 存了 Interval 里所有的 BasicBlock。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Successors - List of BasicBlocks that are reachable directly from nodes in</span></span><br><span class="line"><span class="comment">/// this interval, but are not in the interval themselves.</span></span><br><span class="line"><span class="comment">/// These nodes necessarily must be header nodes for other intervals.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Successors;</span><br></pre></td></tr></table></figure>
+<p>Successors 是所有<strong>从</strong>Interval 里的 Node 可以<strong>直接</strong>到达的 Nodes</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Predecessors - List of BasicBlocks that have this Interval&#x27;s header block</span></span><br><span class="line"><span class="comment">/// as one of their successors.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Predecessors;</span><br></pre></td></tr></table></figure>
+<p>Predecessors 则是满足 <span class="math inline">\(Head \in Succ(Node)\)</span> 的所有 Node。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// contains - Find out if a basic block is in this interval</span></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="type">bool</span> <span class="title">contains</span><span class="params">(BasicBlock *BB)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (BasicBlock *Node : Nodes)</span><br><span class="line">    <span class="keyword">if</span> (Node == BB)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">// I don&#x27;t want the dependency on &lt;algorithm&gt;</span></span><br><span class="line">  <span class="comment">//return find(Nodes.begin(), Nodes.end(), BB) != Nodes.end();</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// isSuccessor - find out if a basic block is a successor of this Interval</span></span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="type">bool</span> <span class="title">isSuccessor</span><span class="params">(BasicBlock *BB)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (BasicBlock *Successor : Successors)</span><br><span class="line">    <span class="keyword">if</span> (Successor == BB)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">// I don&#x27;t want the dependency on &lt;algorithm&gt;</span></span><br><span class="line">  <span class="comment">//return find(Successors.begin(), Successors.end(), BB) != Successors.end();</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// Equality operator.  It is only valid to compare two intervals from the</span></span><br><span class="line"><span class="comment">/// same partition, because of this, all we have to check is the header node</span></span><br><span class="line"><span class="comment">/// for equality.</span></span><br><span class="line"><span class="keyword">inline</span> <span class="type">bool</span> <span class="keyword">operator</span>==(<span class="type">const</span> Interval &amp;I) <span class="type">const</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> HeaderNode == I.HeaderNode;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这些比较简单就不多说了。</p>
+<h2 id="interval-partition-类">Interval Partition 类</h2>
+<p>下面是关键的 IntervalPartition 和 IntervalIterator，也是算法核心:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">IntervalPartition</span> : <span class="keyword">public</span> FunctionPass &#123;</span><br><span class="line">  <span class="keyword">using</span> IntervalMapTy = std::map&lt;BasicBlock *, Interval *&gt;;</span><br><span class="line">  IntervalMapTy IntervalMap;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">using</span> IntervalListTy = std::vector&lt;Interval *&gt;;</span><br><span class="line">  Interval *RootInterval = <span class="literal">nullptr</span>;</span><br><span class="line">  std::vector&lt;Interval *&gt; Intervals;</span><br></pre></td></tr></table></figure>
+<p>这里的存储类型也和理论一致，由一个根节点和所有节点的集合以及 BasicBlock 与 Interval 的对应(Map)构成。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// addIntervalToPartition - Add an interval to the internal list of intervals,</span></span><br><span class="line"><span class="comment">// and then add mappings from all of the basic blocks in the interval to the</span></span><br><span class="line"><span class="comment">// interval itself (in the IntervalMap).</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">IntervalPartition::addIntervalToPartition</span><span class="params">(Interval *I)</span> </span>&#123;</span><br><span class="line">  Intervals.<span class="built_in">push_back</span>(I);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add mappings for all of the basic blocks in I to the IntervalPartition</span></span><br><span class="line">  <span class="keyword">for</span> (Interval::node_iterator It = I-&gt;Nodes.<span class="built_in">begin</span>(), End = I-&gt;Nodes.<span class="built_in">end</span>();</span><br><span class="line">       It != End; ++It)</span><br><span class="line">    IntervalMap.<span class="built_in">insert</span>(std::<span class="built_in">make_pair</span>(*It, I));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数就是加 Intervals,并把 BasicBlock 和其 Interval 的 Map 建立起来。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// updatePredecessors - Interval generation only sets the successor fields of</span></span><br><span class="line"><span class="comment">// the interval data structures.  After interval generation is complete,</span></span><br><span class="line"><span class="comment">// run through all of the intervals and propagate successor info as</span></span><br><span class="line"><span class="comment">// predecessor info.</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">IntervalPartition::updatePredecessors</span><span class="params">(Interval *Int)</span> </span>&#123;</span><br><span class="line">  BasicBlock *Header = Int-&gt;<span class="built_in">getHeaderNode</span>();</span><br><span class="line">  <span class="keyword">for</span> (BasicBlock *Successor : Int-&gt;Successors)</span><br><span class="line">    <span class="built_in">getBlockInterval</span>(Successor)-&gt;Predecessors.<span class="built_in">push_back</span>(Header);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于生成 Interval 时只更新了 Interval 的 Successors 数据，这里需要更新其对应的 Predecessors。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// IntervalPartition ctor - Build the first level interval partition for the</span></span><br><span class="line"><span class="comment">// specified function...</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">IntervalPartition::runOnFunction</span><span class="params">(Function &amp;F)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Pass false to intervals_begin because we take ownership of it&#x27;s memory</span></span><br><span class="line">  function_interval_iterator I = <span class="built_in">intervals_begin</span>(&amp;F, <span class="literal">false</span>);</span><br><span class="line">  <span class="built_in">assert</span>(I != <span class="built_in">intervals_end</span>(&amp;F) &amp;&amp; <span class="string">&quot;No intervals in function!?!?!&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="built_in">addIntervalToPartition</span>(RootInterval = *I);</span><br><span class="line"></span><br><span class="line">  ++I;  <span class="comment">// After the first one...</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Add the rest of the intervals to the partition.</span></span><br><span class="line">  <span class="keyword">for</span> (function_interval_iterator E = <span class="built_in">intervals_end</span>(&amp;F); I != E; ++I)</span><br><span class="line">    <span class="built_in">addIntervalToPartition</span>(*I);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Now that we know all of the successor information, propagate this to the</span></span><br><span class="line">  <span class="comment">// predecessors for each block.</span></span><br><span class="line">  <span class="keyword">for</span> (Interval *I : Intervals)</span><br><span class="line">    <span class="built_in">updatePredecessors</span>(I);</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里就是一个 Interval 一个 Interval 地分解，根据算法原理我们可以知道， 当一个 Interval 更新完，可以根据其 Successors 更新其余的 Interval，最后更新 Preds 并划分整个函数。</p>
+<h2 id="interval-iterator-类">Interval Iterator 类</h2>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> <span class="title class_">NodeTy</span>, <span class="keyword">class</span> <span class="title class_">OrigContainer_t</span>, <span class="keyword">class</span> <span class="title class_">GT</span> = GraphTraits&lt;NodeTy *&gt;,</span><br><span class="line">         <span class="keyword">class</span> IGT = GraphTraits&lt;Inverse&lt;NodeTy *&gt;&gt;&gt;</span><br><span class="line"><span class="keyword">class</span> IntervalIterator &#123;</span><br><span class="line">  std::vector&lt;std::pair&lt;Interval *, <span class="keyword">typename</span> Interval::succ_iterator&gt;&gt; IntStack;</span><br><span class="line">  std::set&lt;BasicBlock *&gt; Visited;</span><br><span class="line">  OrigContainer_t *OrigContainer;</span><br><span class="line">  <span class="type">bool</span> IOwnMem;     <span class="comment">// If True, delete intervals when done with them</span></span><br><span class="line">                    <span class="comment">// See file header for conditions of use</span></span><br></pre></td></tr></table></figure>
+<p>这是 Iterator 的数据结构，暂时不需要分析模板，这里直接把 NodeTy 换成 BasicBlock, OrigContainer 看成 Function。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ProcessInterval - This method is used during the construction of the</span></span><br><span class="line"><span class="comment">// interval graph.  It walks through the source graph, recursively creating</span></span><br><span class="line"><span class="comment">// an interval per invocation until the entire graph is covered.  This uses</span></span><br><span class="line"><span class="comment">// the ProcessNode method to add all of the nodes to the interval.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// This method is templated because it may operate on two different source</span></span><br><span class="line"><span class="comment">// graphs: a basic block graph, or a preexisting interval graph.</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">ProcessInterval</span><span class="params">(NodeTy *Node)</span> </span>&#123;</span><br><span class="line">  BasicBlock *Header = <span class="built_in">getNodeHeader</span>(Node);</span><br><span class="line">  <span class="keyword">if</span> (!Visited.<span class="built_in">insert</span>(Header).second)</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">  Interval *Int = <span class="keyword">new</span> <span class="built_in">Interval</span>(Header);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Check all of our successors to see if they are in the interval...</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">typename</span> GT::ChildIteratorType I = GT::<span class="built_in">child_begin</span>(Node),</span><br><span class="line">         E = GT::<span class="built_in">child_end</span>(Node); I != E; ++I)</span><br><span class="line">    <span class="built_in">ProcessNode</span>(Int, <span class="built_in">getSourceGraphNode</span>(OrigContainer, *I));</span><br><span class="line"></span><br><span class="line">  IntStack.<span class="built_in">push_back</span>(std::<span class="built_in">make_pair</span>(Int, <span class="built_in">succ_begin</span>(Int)));</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ProcessNode - This method is called by ProcessInterval to add nodes to the</span></span><br><span class="line"><span class="comment">// interval being constructed, and it is also called recursively as it walks</span></span><br><span class="line"><span class="comment">// the source graph.  A node is added to the current interval only if all of</span></span><br><span class="line"><span class="comment">// its predecessors are already in the graph.  This also takes care of keeping</span></span><br><span class="line"><span class="comment">// the successor set of an interval up to date.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// This method is templated because it may operate on two different source</span></span><br><span class="line"><span class="comment">// graphs: a basic block graph, or a preexisting interval graph.</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ProcessNode</span><span class="params">(Interval *Int, NodeTy *Node)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">assert</span>(Int &amp;&amp; <span class="string">&quot;Null interval == bad!&quot;</span>);</span><br><span class="line">  <span class="built_in">assert</span>(Node &amp;&amp; <span class="string">&quot;Null Node == bad!&quot;</span>);</span><br><span class="line"></span><br><span class="line">  BasicBlock *NodeHeader = <span class="built_in">getNodeHeader</span>(Node);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (Visited.<span class="built_in">count</span>(NodeHeader)) &#123;     <span class="comment">// Node already been visited?</span></span><br><span class="line">    <span class="keyword">if</span> (Int-&gt;<span class="built_in">contains</span>(NodeHeader)) &#123;   <span class="comment">// Already in this interval...</span></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;                           <span class="comment">// In other interval, add as successor</span></span><br><span class="line">      <span class="keyword">if</span> (!Int-&gt;<span class="built_in">isSuccessor</span>(NodeHeader)) <span class="comment">// Add only if not already in set</span></span><br><span class="line">        Int-&gt;Successors.<span class="built_in">push_back</span>(NodeHeader);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;                             <span class="comment">// Otherwise, not in interval yet</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">typename</span> IGT::ChildIteratorType I = IGT::<span class="built_in">child_begin</span>(Node),</span><br><span class="line">           E = IGT::<span class="built_in">child_end</span>(Node); I != E; ++I) &#123;</span><br><span class="line">      <span class="keyword">if</span> (!Int-&gt;<span class="built_in">contains</span>(*I)) &#123;        <span class="comment">// If pred not in interval, we can&#x27;t be</span></span><br><span class="line">        <span class="keyword">if</span> (!Int-&gt;<span class="built_in">isSuccessor</span>(NodeHeader)) <span class="comment">// Add only if not already in set</span></span><br><span class="line">          Int-&gt;Successors.<span class="built_in">push_back</span>(NodeHeader);</span><br><span class="line">        <span class="keyword">return</span>;                        <span class="comment">// See you later</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If we get here, then all of the predecessors of BB are in the interval</span></span><br><span class="line">    <span class="comment">// already.  In this case, we must add BB to the interval!</span></span><br><span class="line">    <span class="built_in">addNodeToInterval</span>(Int, Node);</span><br><span class="line">    Visited.<span class="built_in">insert</span>(NodeHeader);     <span class="comment">// The node has now been visited!</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (Int-&gt;<span class="built_in">isSuccessor</span>(NodeHeader)) &#123;</span><br><span class="line">      <span class="comment">// If we were in the successor list from before... remove from succ list</span></span><br><span class="line">      llvm::<span class="built_in">erase_value</span>(Int-&gt;Successors, NodeHeader);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Now that we have discovered that Node is in the interval, perhaps some</span></span><br><span class="line">    <span class="comment">// of its successors are as well?</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">typename</span> GT::ChildIteratorType It = GT::<span class="built_in">child_begin</span>(Node),</span><br><span class="line">           End = GT::<span class="built_in">child_end</span>(Node); It != End; ++It)</span><br><span class="line">      <span class="built_in">ProcessNode</span>(Int, <span class="built_in">getSourceGraphNode</span>(OrigContainer, *It));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是最关键的算法部分，第一个<code>ProcessInterval</code>函数以 Node 作为 Header, 开始寻找以此为 Header 的 Interval(通过调用第二个 ProcessInterval)。然后把找到的 Interval 和对应的 Successors 迭代器入栈, 然后在<code>operator ++()</code>里面每次搜索 IntStack 里所有 Successors 作为 Header 的 Interval，其实这是一种<strong>Interval 层面的 BFS</strong>。 同时注意，如果已经 visited 改 Node, 就返回 false, 说明这次没有找到 Interval。</p>
+<p>我们接下来看 Interval 里面的图算法,也就是第二个<code>ProcessInterval</code>函数里的逻辑。</p>
+<p>如果 Visited[Node]:</p>
+<ul>
+<li>若 Interval 里已经有这个 Node 了，就结束这次寻找</li>
+<li>若没有，说明在别的 Interval 里，也就是说，是本 Interval 的 Successor 之一</li>
+</ul>
+<p>若没有 Visited</p>
+<ul>
+<li>若逆向搜索发现 Pred(Node)不在 Interval 里，则说明我们没有搜完 Node 的 Preds， 也就是还不能 dominate Node， 先退出让 Preds 先被搜完 (BasicBlock 层面的 BFS, 其实还是会 see you later)
+<ul>
+<li>若 Node 不是 Successor，先加进去，后面再删除。<span class="math inline">\((1)\)</span></li>
+</ul></li>
+</ul>
+<p>然后把 Node 加进 Interval 里，若 Node 之前是 Successor 现在取出，对应的是情况<span class="math inline">\((1)\)</span></p>
+<p>最后继续搜索子节点，直到所有对应的 Node 都被加进来，注意这里 Interval 的前一个 Interval 的 Successors 是未更新的， 这也就是为什么 IntervalPartition 类要调用<code>updatePredecessors(I)</code>。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Compiler/" rel="tag"><i class="fa fa-tag"></i> Compiler</a>
+              <a href="/tags/LLVM/" rel="tag"><i class="fa fa-tag"></i> LLVM</a>
+              <a href="/tags/OpenSource/" rel="tag"><i class="fa fa-tag"></i> OpenSource</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/21/Whale-Dependencies-Analysis-0/" rel="prev" title="Whale-Dependencies-Analysis-0">
+      <i class="fa fa-chevron-left"></i> Whale-Dependencies-Analysis-0
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">Interval 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-partition-%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">Interval Partition 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-iterator-%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">Interval Iterator 类</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="XChy"
+      src="/images/doge.jpg">
+  <p class="site-author-name" itemprop="name">XChy</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/XChy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;XChy" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:xxs_chy@outlook.com" title="E-Mail → mailto:xxs_chy@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XChy</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
