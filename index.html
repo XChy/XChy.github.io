@@ -131,7 +131,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">33</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">34</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,103 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/08/LLVM-Source-Analysis-EarlyCSE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/10/08/LLVM-Source-Analysis-EarlyCSE/" class="post-title-link" itemprop="url">LLVM源码解析- EarlyCSE</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-10-08 16:57:53" itemprop="dateCreated datePublished" datetime="2023-10-08T16:57:53+08:00">2023-10-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-10-12 14:06:32" itemprop="dateModified" datetime="2023-10-12T14:06:32+08:00">2023-10-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.</p>
+<p>CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators. For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE.</p>
+<p>The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
+<hr />
+<h2 id="a-top-down-view">A Top-Down View</h2>
+<p>EarlyCSE iterates down all BasicBlocks in BFS order within dom-tree (only once), which guarantees that expressions in current expressions will be <strong>dominated</strong> after the expressions iterated before.</p>
+<p>Besides, EarlyCSE tags every Node(or BasicBlock) with a generation number for memory instructions, since memory insts in LLVM doesn't fit into SSA, which we must hack in other ways. And every time we meet a branch (current BB has more than one predecessors), we have to increment generation by one.</p>
+<blockquote>
+<p>If this block has a single predecessor, then the predecessor is the parent of the domtree node and all of the live out memory values are still current in this block. If this block has multiple predecessors, then they could have invalidated the live-out memory values of our parent value. For now, just be conservative and invalidate memory if this block has multiple predecessors.</p>
+</blockquote>
+<p>Then, in <code>processBlock</code> function, we handle the most key case where "SimpleValue" can handle. We maintain a hash table called "AvailableValues". And when we encounter an instruction, we lookup this table for the hash value of the instruction. If no such hash in table, insert it. Otherwise, we compare whether those with the same hash is equivalent in instruction level. If equivalent, we replace the latter with the former higher in dom-tree.</p>
+<p>In this way, we handle the most SSA. Memory operations are discussed later.</p>
+<h2 id="how-is-lookup-implemented">How is lookup implemented?</h2>
+<p>Let's take a look at <code>getHashValueImpl</code> of SimpleValue:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">unsigned</span> <span class="title">getHashValueImpl</span><span class="params">(SimpleValue Val)</span> </span>&#123;</span><br><span class="line">  Instruction *Inst = Val.Inst;</span><br><span class="line">  <span class="comment">// Hash in all of the operands as pointers.</span></span><br><span class="line">  <span class="keyword">if</span> (BinaryOperator *BinOp = <span class="built_in">dyn_cast</span>&lt;BinaryOperator&gt;(Inst)) &#123;</span><br><span class="line">    Value *LHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (BinOp-&gt;<span class="built_in">isCommutative</span>() &amp;&amp; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>) &gt; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>))</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(BinOp-&gt;<span class="built_in">getOpcode</span>(), LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (CmpInst *CI = <span class="built_in">dyn_cast</span>&lt;CmpInst&gt;(Inst)) &#123;</span><br><span class="line">    <span class="comment">// Compares can be commuted by swapping the comparands and</span></span><br><span class="line">    <span class="comment">// updating the predicate.  Choose the form that has the</span></span><br><span class="line">    <span class="comment">// comparands in sorted order, or in the case of a tie, the</span></span><br><span class="line">    <span class="comment">// one with the lower predicate.</span></span><br><span class="line">    Value *LHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    CmpInst::Predicate Pred = CI-&gt;<span class="built_in">getPredicate</span>();</span><br><span class="line">    CmpInst::Predicate SwappedPred = CI-&gt;<span class="built_in">getSwappedPredicate</span>();</span><br><span class="line">    <span class="keyword">if</span> (std::<span class="built_in">tie</span>(LHS, Pred) &gt; std::<span class="built_in">tie</span>(RHS, SwappedPred)) &#123;</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line">      Pred = SwappedPred;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(Inst-&gt;<span class="built_in">getOpcode</span>(), Pred, LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>As we can see, <span class="math inline">\(hash(binop) = hash(opcode, lhs, rhs)\)</span>, where <span class="math inline">\(lhs\)</span> is the pointer of lhs, <span class="math inline">\(rhs\)</span> is that of rhs. It means that what we can eliminate once is those instruction with the same <strong>references/pointers</strong> of the same value.</p>
+<p>That is, for <span class="math inline">\(op(a,b), op(c,d)\)</span>, only when <span class="math inline">\(addressof(a) == addressof(c) &amp;&amp; addressof(b) == addressof(d)\)</span>, can we eliminate them. If <span class="math inline">\(a\)</span> is <span class="math inline">\(A1+A2\)</span> and <span class="math inline">\(b\)</span> is <span class="math inline">\(B1+B2\)</span>, they can be judged identical even if <span class="math inline">\(A1+A2\)</span> is identical with <span class="math inline">\(B1+B2\)</span>.</p>
+<p>Besides, IR flags like <code>nsw, nuw</code> having no effect on the what IR actually does are ignored.</p>
+<p>With such easy implementation, EarlyCSE is <strong>cheap</strong> with <span class="math inline">\(O(n)\)</span> time, but <strong>less effective</strong> than <em>GVN</em>.</p>
+<h2 id="ignorecombine-ir-flag">Ignore/Combine IR flag</h2>
+<p>When hashing instructions, we always ignore the flags like <code>nsw, nuw</code>. But for memory instructions, we will combine the flags like matching id, atomicity.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">AvailableLoads.<span class="built_in">insert</span>(MemInst.<span class="built_in">getPointerOperand</span>(),</span><br><span class="line">                              <span class="built_in">LoadValue</span>(&amp;Inst, CurrentGeneration,</span><br><span class="line">                                        MemInst.<span class="built_in">getMatchingId</span>(),</span><br><span class="line">                                        MemInst.<span class="built_in">isAtomic</span>(),</span><br><span class="line">                                        MemInst.<span class="built_in">isLoad</span>()));</span><br></pre></td></tr></table></figure>
+<h2 id="memory-cse">Memory CSE</h2>
+<p>To be continued.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -984,119 +1081,6 @@ D \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-44/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/23/LeetCode-44/" class="post-title-link" itemprop="url">LeetCode 44 通配符匹配 题解</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-24 17:39:02" itemprop="dateModified" datetime="2023-08-24T17:39:02+08:00">2023-08-24</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>题目描述： <img src="/images/leetcode44.png" alt="img" /></p>
-<h2 id="动态规划">动态规划</h2>
-<p>简单想法：</p>
-<p>使用动态规划，令 <span class="math inline">\(dp[i][j]\)</span> 为 <strong>是否 <span class="math inline">\(s[0..i]\)</span> 与 <span class="math inline">\(p[0..j]\)</span> 匹配</strong> ,也就是 s 前 i 个字符与 p 前 j 个字符匹配。</p>
-<p>则有初始状态:</p>
-<p><span class="math display">\[dp[0][0] = true\]</span></p>
-<p>由于长度大于 0 的字符串不可能被长度为 0 的模式匹配，故令：</p>
-<p><span class="math display">\[dp[i][0] = false, 0 &lt; i \le sn\]</span></p>
-<p>同时长度为 0 的字符串只可能被形如"<strong>*</strong>"这样<strong>全为通配符</strong>的模式匹配，故令：</p>
-<p><span class="math display">\[dp[0][j] = dp[0][j-1] \quad \wedge \quad p[j-1] = &#39;*&#39;\]</span></p>
-<p>状态转移方程则为：</p>
-<p><span class="math display">\[
- \begin{equation*} %加*表示不对公式编号
-    \begin{split}
-        dp[i][j] =
-        &amp;   dp[i][j - 1] \wedge p[j - 1] = &#39;*&#39; \quad \vee \\
-        &amp;   dp[i - 1][j] \wedge p[j - 1] = &#39;*&#39; \quad \vee \\
-        &amp;   dp[i - 1][j - 1] \wedge (s[i - 1] = p[j - 1] \vee p[j - 1] = &#39;?&#39; \vee p[j - 1] = &#39;*&#39;)
-    \end{split}
-\end{equation*} 
-\]</span></p>
-<p>故我们可以有代码：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">bool</span> dp[<span class="number">2001</span>][<span class="number">2001</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">isMatch</span><span class="params">(string s, string p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (s.<span class="built_in">length</span>() == <span class="number">0</span> &amp;&amp;</span><br><span class="line">        std::<span class="built_in">all_of</span>(p.<span class="built_in">begin</span>(), p.<span class="built_in">end</span>(), [](<span class="type">char</span> c) &#123; <span class="keyword">return</span> c == <span class="string">&#x27;*&#x27;</span>; &#125;))</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">if</span> (p.<span class="built_in">length</span>() == <span class="number">0</span>)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> sn = s.<span class="built_in">length</span>();</span><br><span class="line">    <span class="type">int</span> pn = p.<span class="built_in">length</span>();</span><br><span class="line">    dp[<span class="number">0</span>][<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= pn; ++i) &#123;</span><br><span class="line">      dp[<span class="number">0</span>][i] = std::<span class="built_in">all_of</span>(p.<span class="built_in">begin</span>(), p.<span class="built_in">begin</span>() + i,</span><br><span class="line">                             [](<span class="type">char</span> c) &#123; <span class="keyword">return</span> c == <span class="string">&#x27;*&#x27;</span>; &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= sn; ++i) &#123;</span><br><span class="line">      dp[i][<span class="number">0</span>] = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= sn; ++i) &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">1</span>; j &lt;= pn; ++j) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">bool</span> a = dp[i][j] =</span><br><span class="line">            (dp[i][j - <span class="number">1</span>] &amp;&amp; p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>) ||</span><br><span class="line">            (dp[i - <span class="number">1</span>][j] &amp;&amp; p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>) ||</span><br><span class="line">            (dp[i - <span class="number">1</span>][j - <span class="number">1</span>] &amp;&amp;</span><br><span class="line">             (s[i - <span class="number">1</span>] == p[j - <span class="number">1</span>] || p[j - <span class="number">1</span>] == <span class="string">&#x27;?&#x27;</span> || p[j - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> dp[sn][pn];</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>时间复杂度为 <span class="math inline">\(O(mn)\)</span>, 空间复杂度为 <span class="math inline">\(O(mn)\)</span></p>
-<h2 id="贪心leetcode-题解">贪心(LeetCode 题解)</h2>
-<p>前一方法的瓶颈在于对星号 <span class="math inline">\(*\)</span> 的处理方式：使用动态规划枚举所有的情况。由于星号是「万能」的匹配字符，连续的多个星号和单个星号实际上是等价的，那么不连续的多个星号呢？</p>
-<p>我们以 <span class="math inline">\(p=∗ abcd ∗\)</span> 为例，ppp 可以匹配所有包含子串 abcd 的字符串，也就是说，我们只需要暴力地枚举字符串 s 中的每个位置作为起始位置，并判断对应的子串是否为 abcd 即可。这种暴力方法的时间复杂度为 O(mn)，与动态规划一致，但不需要额外的空间。</p>
-<p>如果 p=∗abcd∗efgh∗i∗ 呢？显然，ppp 可以匹配所有依次出现子串 abcd、efgh、i 的字符串。此时，对于任意一个字符串 sss，我们首先暴力找到最早出现的 abcd，随后从下一个位置开始暴力找到最早出现的 efgh，最后找出 i，就可以判断 sss 是否可以与 ppp 匹配。这样「贪心地」找到最早出现的子串是比较直观的，因为如果 sss 中多次出现了某个子串，那么我们选择最早出现的位置，可以使得后续子串能被找到的机会更大。</p>
-<p>因此，如果模式 ppp 的形式为 <span class="math display">\[* u_1 * u_2 * u_3 * \cdots * u_x ∗\]</span> ，即字符串（可以为空）和星号交替出现，并且首尾字符均为星号，那么我们就可以设计出下面这个基于贪心的暴力匹配算法。算法的本质是：如果在字符串 sss 中首先找到 <span class="math inline">\(u_1\)</span> ，再找到 <span class="math inline">\(u_2, u_3, \cdots, u_x\)</span>，那么 s 就可以与模式 p 匹配，伪代码如下：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 我们用 sIndex 和 pIndex 表示当前遍历到 s 和 p 的位置</span></span><br><span class="line"><span class="comment">// 此时我们正在 s 中寻找某个 u_i</span></span><br><span class="line"><span class="comment">// 其在 s 和 p 中的起始位置为 sRecord 和 pRecord</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// sIndex 和 sRecord 的初始值为 0</span></span><br><span class="line"><span class="comment">// 即我们从字符串 s 的首位开始匹配</span></span><br><span class="line">sIndex = sRecord = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// pIndex 和 pRecord 的初始值为 1</span></span><br><span class="line"><span class="comment">// 这是因为模式 p 的首位是星号，那么 u_1 的起始位置为 1</span></span><br><span class="line">pIndex = pRecord = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> sIndex &lt; s.length <span class="keyword">and</span> pIndex &lt; p.length <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> p[pIndex] == <span class="string">&#x27;*&#x27;</span> then</span><br><span class="line">        <span class="comment">// 如果遇到星号，说明找到了 u_i，开始寻找 u_i+1</span></span><br><span class="line">        pIndex += <span class="number">1</span></span><br><span class="line">        <span class="comment">// 记录下起始位置</span></span><br><span class="line">        sRecord = sIndex</span><br><span class="line">        pRecord = pIndex</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">match</span>(s[sIndex], p[pIndex]) then</span><br><span class="line">        <span class="comment">// 如果两个字符可以匹配，就继续寻找 u_i 的下一个字符</span></span><br><span class="line">        sIndex += <span class="number">1</span></span><br><span class="line">        pIndex += <span class="number">1</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> sRecord + <span class="number">1</span> &lt; s.length then</span><br><span class="line">        <span class="comment">// 如果两个字符不匹配，那么需要重新寻找 u_i</span></span><br><span class="line">        <span class="comment">// 枚举下一个 s 中的起始位置</span></span><br><span class="line">        sRecord += <span class="number">1</span></span><br><span class="line">        sIndex = sRecord</span><br><span class="line">        pIndex = pRecord</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="comment">// 如果不匹配并且下一个起始位置不存在，那么匹配失败</span></span><br><span class="line">        <span class="keyword">return</span> False</span><br><span class="line">    end <span class="keyword">if</span></span><br><span class="line">end <span class="keyword">while</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 由于 p 的最后一个字符是星号，那么 s 未匹配完，那么没有关系</span></span><br><span class="line"><span class="comment">// 但如果 p 没有匹配完，那么 p 剩余的字符必须都是星号</span></span><br><span class="line"><span class="keyword">return</span> <span class="built_in">all</span>(p[pIndex] ~ p[p.length - <span class="number">1</span>] == <span class="string">&#x27;*&#x27;</span>)</span><br></pre></td></tr></table></figure>
-<p>当然还有一些特殊情况，如星号不总是出现在前后，此处省略。 时间复杂度： 渐进：<span class="math inline">\(O(mn)\)</span>，平均复杂度：<span class="math inline">\(O(m\log{n})\)</span> 具体的分析可以参考论文<a target="_blank" rel="noopener" href="https://arxiv.org/abs/1407.0950">On the Average-case Complexity of Pattern Matching with Wildcards</a>，注意论文中的分析是对于每一个<span class="math inline">\(u_i\)</span> 而言的，即模式中只包含小写字母和问号，本题相当于多个连续模式的情况。由于超出了面试难度。这里不再赘述。</p>
-<p>空间复杂度：O(1)</p>
-<h2 id="此外leetcode-官方题解">此外(LeetCode 官方题解)</h2>
-<p>在贪心方法中，对于每一个被星号分隔的、只包含小写字符和问号的子模式 <span class="math inline">\(u_i\)</span> ，我们在原串中使用的是暴力匹配的方法。然而这里是可以继续进行优化的，即使用 AC 自动机 代替暴力方法进行匹配。 由于 AC 自动机本身已经是竞赛难度的知识点，而本题还需要在 AC 自动机中额外存储一些内容才能完成匹配，因此这种做法远远超过了面试难度。 这里只给出参考讲义 <a target="_blank" rel="noopener" href="http://www.cs.cmu.edu/~ab/CMU/Week%2010-%20Strings%20Search/print04.pdf">Set Matching and Aho-Corasick Algorithm</a>：</p>
-<ul>
-<li><p>讲义的前 6 页介绍了字典树 Trie；</p></li>
-<li><p>讲义的 7−19 页介绍了 AC 自动机，它是以字典树为基础的；</p></li>
-<li><p>讲义的 20−23 页介绍了基于 AC 自动机的一种 wildcard matching 算法，其中的 wildcard <span class="math inline">\(\phi\)</span> 就是本题中的问号。</p></li>
-</ul>
-<p>感兴趣的读者可以尝试进行学习。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1168,7 +1152,7 @@ D \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-count">34</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
