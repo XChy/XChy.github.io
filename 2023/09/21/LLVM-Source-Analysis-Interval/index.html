@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="A brief analysis of Interval Analysis in LLVM in Chinese.">
+  <meta name="description" content="Abstract 第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。 Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。 先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 \(N">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LLVM源码解析-Interval Analysis">
 <meta property="og:url" content="http://xchy.github.io/2023/09/21/LLVM-Source-Analysis-Interval/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
-<meta property="og:description" content="A brief analysis of Interval Analysis in LLVM in Chinese.">
+<meta property="og:description" content="Abstract 第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。 Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。 先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 \(N">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-09-21T11:51:36.000Z">
-<meta property="article:modified_time" content="2023-10-16T05:35:30.696Z">
+<meta property="article:modified_time" content="2023-10-17T06:16:03.565Z">
 <meta property="article:author" content="XChy">
 <meta property="article:tag" content="Compiler">
 <meta property="article:tag" content="LLVM">
@@ -138,7 +138,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">34</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">35</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -231,7 +231,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-10-16 13:35:30" itemprop="dateModified" datetime="2023-10-16T13:35:30+08:00">2023-10-16</time>
+                <time title="Modified: 2023-10-17 14:16:03" itemprop="dateModified" datetime="2023-10-17T14:16:03+08:00">2023-10-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -244,7 +244,6 @@
             </span>
 
           
-            <div class="post-description">A brief analysis of Interval Analysis in LLVM in Chinese.</div>
 
         </div>
       </header>
@@ -255,13 +254,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
+        <h2 id="abstract">Abstract</h2>
+<p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
 <p>Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。</p>
 <p>先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 <span class="math inline">\(Node \ne Head\)</span> 都满足 <span class="math inline">\(Pred(Node) \subset Interval\)</span> ：</p>
+<span id="more"></span>
 <h2 id="interval-类">Interval 类</h2>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Interval</span> &#123;</span><br><span class="line">  <span class="comment">/// HeaderNode - The header BasicBlock, which dominates all BasicBlocks in this</span></span><br><span class="line">  <span class="comment">/// interval.  Also, any loops in this interval must go through the HeaderNode.</span></span><br><span class="line">  <span class="comment">///</span></span><br><span class="line">  BasicBlock *HeaderNode;</span><br></pre></td></tr></table></figure>
 <p>这里的 HeaderNode dominates Interval 里所有的 BasicBlock(Node)，代表了一个 Interval。</p>
-<span id="more"></span>
+<!-- more -->
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="title">Interval</span><span class="params">(BasicBlock *Header)</span> : HeaderNode(Header) &#123;</span></span><br><span class="line">  Nodes.<span class="built_in">push_back</span>(Header);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">inline</span> BasicBlock *<span class="title">getHeaderNode</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> HeaderNode; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// Nodes - The basic blocks in this interval.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Nodes;</span><br></pre></td></tr></table></figure>
 <p>构造函数和一些基本定义, Nodes 存了 Interval 里所有的 BasicBlock。</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Successors - List of BasicBlocks that are reachable directly from nodes in</span></span><br><span class="line"><span class="comment">/// this interval, but are not in the interval themselves.</span></span><br><span class="line"><span class="comment">/// These nodes necessarily must be header nodes for other intervals.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Successors;</span><br></pre></td></tr></table></figure>
@@ -386,7 +387,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">Interval 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-partition-%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">Interval Partition 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-iterator-%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">Interval Iterator 类</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#abstract"><span class="nav-number">1.</span> <span class="nav-text">Abstract</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">Interval 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-partition-%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">Interval Partition 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interval-iterator-%E7%B1%BB"><span class="nav-number">4.</span> <span class="nav-text">Interval Iterator 类</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -402,7 +403,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">35</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

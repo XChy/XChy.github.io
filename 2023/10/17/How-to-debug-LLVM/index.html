@@ -20,15 +20,22 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="XChy&#39;s Blog">
-<meta property="og:url" content="http://xchy.github.io/tags/LLVM/index.html">
+  <meta name="description" content="Abstract Debugging programs remains a significant topic in software engineering field. Especially in system software like Compiler, it&#39;s difficult to pinpoint the root and solve relative problems. For">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to debug LLVM ?">
+<meta property="og:url" content="http://xchy.github.io/2023/10/17/How-to-debug-LLVM/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
+<meta property="og:description" content="Abstract Debugging programs remains a significant topic in software engineering field. Especially in system software like Compiler, it&#39;s difficult to pinpoint the root and solve relative problems. For">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-10-17T07:34:42.000Z">
+<meta property="article:modified_time" content="2023-10-17T17:06:02.132Z">
 <meta property="article:author" content="XChy">
+<meta property="article:tag" content="Compiler">
+<meta property="article:tag" content="LLVM">
+<meta property="article:tag" content="OpenSource">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://xchy.github.io/tags/LLVM/">
+<link rel="canonical" href="http://xchy.github.io/2023/10/17/How-to-debug-LLVM/">
 
 
 <script id="page-configurations">
@@ -36,12 +43,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Tag: LLVM | XChy's Blog</title>
+  <title>How to debug LLVM ? | XChy's Blog</title>
   
 
 
@@ -187,191 +194,139 @@
         <div class="content-wrap">
           
 
-          <div class="content tag">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <h2 class="collection-header">LLVM
-          <small>Tag</small>
-        </h2>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/17/How-to-debug-LLVM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          How to debug LLVM ?
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-10-17 15:34:42" itemprop="dateCreated datePublished" datetime="2023-10-17T15:34:42+08:00">2023-10-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-10-18 01:06:02" itemprop="dateModified" datetime="2023-10-18T01:06:02+08:00">2023-10-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2023</span>
-    </div>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-10-17T15:34:42+08:00"
-              content="2023-10-17">
-          10-17
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/10/17/How-to-debug-LLVM/" itemprop="url">
-            <span itemprop="name">How to debug LLVM ?</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-10-08T16:57:53+08:00"
-              content="2023-10-08">
-          10-08
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/10/08/LLVM-Source-Analysis-EarlyCSE/" itemprop="url">
-            <span itemprop="name">LLVM源码解析- EarlyCSE</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-09-21T19:51:36+08:00"
-              content="2023-09-21">
-          09-21
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/09/21/LLVM-Source-Analysis-Interval/" itemprop="url">
-            <span itemprop="name">LLVM源码解析-Interval Analysis</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-09-21T15:33:44+08:00"
-              content="2023-09-21">
-          09-21
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/09/21/Whale-Dependencies-Analysis-0/" itemprop="url">
-            <span itemprop="name">Whale-Dependencies-Analysis-0</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-06-30T22:53:10+08:00"
-              content="2023-06-30">
-          06-30
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/06/30/LLVM-First-Contribution/" itemprop="url">
-            <span itemprop="name">第一次给LLVM的Contribution</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-05-18T00:28:17+08:00"
-              content="2023-05-18">
-          05-18
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/05/18/XSharp-4-Class-Design/" itemprop="url">
-            <span itemprop="name">XSharp-4-Class-Design</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-04-17T00:46:21+08:00"
-              content="2023-04-17">
-          04-17
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/04/17/XSharp-3-Array-Design-0/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-数组设计</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2023-03-03T20:06:53+08:00"
-              content="2023-03-03">
-          03-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/" itemprop="url">
-            <span itemprop="name">XSharp开发思路-Mutable Variable的LLVM IR生成</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
+        <h2 id="abstract">Abstract</h2>
+<p>Debugging programs remains a significant topic in software engineering field. Especially in system software like <em>Compiler</em>, it's difficult to pinpoint the root and solve relative problems.<br />
+For my recent work on <em>LLVM</em>, I'd like to share some experience about it.</p>
+<span id="more"></span>
+<h2 id="classification-of-bugs">Classification of Bugs</h2>
+<p>Bugs in Compiler field can be mainly classified into <em>Crash</em>, <em>Mis-compilation</em>, and <em>Missed Optimizations</em>.</p>
+<p>For example, there may be a C file triggering one of these bugs.</p>
+<p>If it crashed clang, which is easiest to pinpoint, clang would dump the stack trace. With the stack trace, we are able to determine it's a frontend/middleend/backend problem.</p>
+<p>Or, if someone reported an assembly file after mis-compilation, we have to reduce it first (use <em>llvm-reduce</em> if it's a LLVM-IR), and try to validate in the whole compilation. For example, validate the AST, the LLVM-IR after each pass, and the assembly after every step in backend. In this way, we can pinpoint which module caused the mis-compilation.</p>
+<p>For missed optimizations, it's similar to the case as mis-compilation. However, it's harder to define whether it's a <em>helpful or real</em> missed optimizations. There are some kinds of missed optimizations that always make no sense to real improvement of optimization. And fuzzers always generate such missed cases:</p>
+<ul>
+<li><p>Too large IR. For this kind of IR, passes like CSE, GVN and DSE only fold it partially for cost/compile-time problem</p></li>
+<li><p>No real motivation. The optimization in LLVM is designed mostly for real-world applications. For this reason, some non-sense missed cases are not considered at all, unless they become a pattern.</p></li>
+<li><p>Hard to debug. Complex testcases always needs reduction and can be located precisely in which module.</p></li>
+<li><p>Won't fix. Optimization is a recursively unsolvable problem, and there is always some topics that compiler can't fix at all, such as fully eliminating all common expressions or simplifying all expressions. Most optimization in LLVM is <strong>mostly heuristic</strong> or based on <strong>experience</strong>, which determines that LLVM can't handle all cases.</p></li>
+</ul>
+<h2 id="some-tools">Some Tools</h2>
+<ul>
+<li><p><em>llc/opt --print-before=[crash pass] [ir]</em>: You could dump IR before the pass causing crash through it. For example, use <code>2&gt; dump.txt</code> to output to a file.</p></li>
+<li><p><em>opt -O2 -print-before-all / opt -O2 -print-before-all</em>: Dump all IR before/after all passes that modify IR.</p></li>
+<li><p><em>llvm-reduce [ir] --test=test.sh</em>: <em>llvm-reduce</em> is an IR-Reduction tool based on <em>Delta Algorithm</em>, which reduces ir if <em>test.sh</em> return 0(0 represents interestness). It make IR eaiser to analyze.</p></li>
+</ul>
+<hr />
+<h2 id="my-workflow">My Workflow</h2>
+<p>When I come across an IR file crashing clang/opt, I first take a look at stacktrace. The stacktrace always indicates which function/class exposes the error.</p>
+<!-- picture1 -->
+<p>Here we assume the error is exposed by a optimization pass <em>op1</em>. Then we enter:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opt --print-before=op1 -O2 -S [ir-file] &gt; [ir-before-op1.ll]</span><br></pre></td></tr></table></figure>
+<p>Or if it's a C file, we enter:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clang -mllvm -print-before=instcombine xxx.c -O2 -g0 2&gt; xxx.ll</span><br></pre></td></tr></table></figure>
+<p><code>O2</code> can be anything causing problem. The output serves as a reproducer. And then we use <em>op1</em> to reproduce it:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opt --passes=op1 -S [ir-file]</span><br></pre></td></tr></table></figure>
+<p>If we reproduce it successfully, we are down to reducing it:</p>
+<p>Write a <code>test.sh</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">opt --passes=op1 -S <span class="variable">$1</span> | grep <span class="string">&quot;something related to error&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># For missed optimization, write a testcase and check it with FileCheck</span></span><br><span class="line"><span class="comment"># FileCheck $1 | grep &quot;something related&quot;</span></span><br></pre></td></tr></table></figure>
+<p>And launch <em>llvm-reduce</em>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">llvm-reduce [ir-file] --<span class="built_in">test</span>=test.sh</span><br></pre></td></tr></table></figure>
+<p>Finally we get a <em>reduced.ll</em>. Based on this file, we analyze the problem easier.</p>
+<h2 id="how-to-get-command-line-arguments-and-ir-dump-file-when-bootstrapping">How to Get Command-Line Arguments and IR-dump File when bootstrapping</h2>
+<p>Refer to <a target="_blank" rel="noopener" href="https://discourse.llvm.org/t/how-to-reproduce-the-bug-and-get-the-exact-ir-before-crash-during-bootstrapping/74032">discourse</a></p>
+<h2 id="reference">Reference</h2>
+<p><a target="_blank" rel="noopener" href="https://clangbuiltlinux.github.io/llvm-dev-conf-2020/nick/debugging_llvm.html">Debugging llvm</a></p>
 
     </div>
-  </div>
-  
-  
-  
 
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Compiler/" rel="tag"><i class="fa fa-tag"></i> Compiler</a>
+              <a href="/tags/LLVM/" rel="tag"><i class="fa fa-tag"></i> LLVM</a>
+              <a href="/tags/OpenSource/" rel="tag"><i class="fa fa-tag"></i> OpenSource</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/08/LLVM-Source-Analysis-EarlyCSE/" rel="prev" title="LLVM源码解析- EarlyCSE">
+      <i class="fa fa-chevron-left"></i> LLVM源码解析- EarlyCSE
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 
@@ -424,6 +379,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#abstract"><span class="nav-number">1.</span> <span class="nav-text">Abstract</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classification-of-bugs"><span class="nav-number">2.</span> <span class="nav-text">Classification of Bugs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#some-tools"><span class="nav-number">3.</span> <span class="nav-text">Some Tools</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#my-workflow"><span class="nav-number">4.</span> <span class="nav-text">My Workflow</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#how-to-get-command-line-arguments-and-ir-dump-file-when-bootstrapping"><span class="nav-number">5.</span> <span class="nav-text">How to Get Command-Line Arguments and IR-dump File when bootstrapping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

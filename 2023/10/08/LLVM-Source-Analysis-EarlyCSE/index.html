@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="A brief analysis of EarlyCSE implementation in LLVM.">
+  <meta name="description" content="Abstract Common sub-expression elimination (CSE) is an important optimization for compilers, which is similar to partial redundancies elimination optimization. CSE is designed to eliminate those expre">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LLVM源码解析- EarlyCSE">
 <meta property="og:url" content="http://xchy.github.io/2023/10/08/LLVM-Source-Analysis-EarlyCSE/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
-<meta property="og:description" content="A brief analysis of EarlyCSE implementation in LLVM.">
+<meta property="og:description" content="Abstract Common sub-expression elimination (CSE) is an important optimization for compilers, which is similar to partial redundancies elimination optimization. CSE is designed to eliminate those expre">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-10-08T08:57:53.000Z">
-<meta property="article:modified_time" content="2023-10-16T09:10:48.491Z">
+<meta property="article:modified_time" content="2023-10-17T06:51:38.580Z">
 <meta property="article:author" content="XChy">
 <meta property="article:tag" content="Compiler">
 <meta property="article:tag" content="LLVM">
@@ -138,7 +138,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">34</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">35</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -231,7 +231,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-10-16 17:10:48" itemprop="dateModified" datetime="2023-10-16T17:10:48+08:00">2023-10-16</time>
+                <time title="Modified: 2023-10-17 14:51:38" itemprop="dateModified" datetime="2023-10-17T14:51:38+08:00">2023-10-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -244,7 +244,6 @@
             </span>
 
           
-            <div class="post-description">A brief analysis of EarlyCSE implementation in LLVM.</div>
 
         </div>
       </header>
@@ -255,9 +254,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.</p>
-<p>CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators. For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE.</p>
-<p>The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
+        <h2 id="abstract">Abstract</h2>
+<p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.<br />
+CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators.<br />
+For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE. The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
+<span id="more"></span>
 <h2 id="a-top-down-view">A Top-Down View</h2>
 <p>EarlyCSE iterates down all BasicBlocks in DFS order within dom-tree (only once), which guarantees that expressions in current expressions will be <strong>dominated</strong> after the expressions iterated before.</p>
 <p>Besides, EarlyCSE tags every Node(or BasicBlock) with a generation number for memory instructions, since memory insts in LLVM doesn't fit into SSA, which we must hack in other ways. And every time we meet a branch (current BB has more than one predecessors), we have to increment generation by one.</p>
@@ -272,7 +273,7 @@
 <p>Let's take a look at <code>getHashValueImpl</code> of SimpleValue:</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">unsigned</span> <span class="title">getHashValueImpl</span><span class="params">(SimpleValue Val)</span> </span>&#123;</span><br><span class="line">  Instruction *Inst = Val.Inst;</span><br><span class="line">  <span class="comment">// Hash in all of the operands as pointers.</span></span><br><span class="line">  <span class="keyword">if</span> (BinaryOperator *BinOp = <span class="built_in">dyn_cast</span>&lt;BinaryOperator&gt;(Inst)) &#123;</span><br><span class="line">    Value *LHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (BinOp-&gt;<span class="built_in">isCommutative</span>() &amp;&amp; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>) &gt; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>))</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(BinOp-&gt;<span class="built_in">getOpcode</span>(), LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (CmpInst *CI = <span class="built_in">dyn_cast</span>&lt;CmpInst&gt;(Inst)) &#123;</span><br><span class="line">    <span class="comment">// Compares can be commuted by swapping the comparands and</span></span><br><span class="line">    <span class="comment">// updating the predicate.  Choose the form that has the</span></span><br><span class="line">    <span class="comment">// comparands in sorted order, or in the case of a tie, the</span></span><br><span class="line">    <span class="comment">// one with the lower predicate.</span></span><br><span class="line">    Value *LHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    CmpInst::Predicate Pred = CI-&gt;<span class="built_in">getPredicate</span>();</span><br><span class="line">    CmpInst::Predicate SwappedPred = CI-&gt;<span class="built_in">getSwappedPredicate</span>();</span><br><span class="line">    <span class="keyword">if</span> (std::<span class="built_in">tie</span>(LHS, Pred) &gt; std::<span class="built_in">tie</span>(RHS, SwappedPred)) &#123;</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line">      Pred = SwappedPred;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(Inst-&gt;<span class="built_in">getOpcode</span>(), Pred, LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>As we can see, <span class="math inline">\(hash(binop) = hash(opcode, lhs, rhs)\)</span>, where <span class="math inline">\(lhs\)</span> is the pointer of lhs, <span class="math inline">\(rhs\)</span> is that of rhs. It means that what we can eliminate once is those instruction with the same <strong>references/pointers</strong> of the same value.</p>
-<p>That is, for <span class="math inline">\(op(a,b), op(c,d)\)</span>, only when <span class="math inline">\(addressof(a) == addressof(c) \&amp;\&amp; addressof(b) == addressof(d)\)</span>, can we eliminate them. If <span class="math inline">\(a\)</span> is <span class="math inline">\(A1+A2\)</span> and <span class="math inline">\(b\)</span> is <span class="math inline">\(B1+B2\)</span>, they can be judged identical even if <span class="math inline">\(A1+A2\)</span> is identical with <span class="math inline">\(B1+B2\)</span>.</p>
+<p>For the DFS order in dom-tree, for the same two <span class="math inline">\(op(a,b)\)</span> in BB1 and BB2, only when BB1 dominates BB2 or BB2 dominates BB1, can we eliminate them. However, <em>GVN</em> could solve it for its <em>RPO</em> iteration order (More <strong>expensive</strong> one).</p>
 <p>Besides, IR flags like <code>nsw, nuw</code> having no effect on the what IR actually does are ignored.</p>
 <p>With such easy implementation, EarlyCSE is <strong>cheap</strong> with <span class="math inline">\(O(n)\)</span> time, but <strong>less effective</strong> than <em>GVN</em>.</p>
 <h2 id="ignorecombine-ir-flag">Ignore/Combine IR flag</h2>
@@ -290,6 +291,8 @@
 <p>For invariant loop, its <em>memory location</em>, or pointer will keep <em>invariant</em> in later stages. So we keep the earliest load, to maximize its effect.</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// If we have an available version of this load, and if it is the right</span></span><br><span class="line"><span class="comment">// generation or the load is known to be from an invariant location,</span></span><br><span class="line"><span class="comment">// replace this instruction.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// If either the dominating load or the current load are invariant, then</span></span><br><span class="line"><span class="comment">// we can assume the current load loads the same value as the dominating</span></span><br><span class="line"><span class="comment">// load.</span></span><br><span class="line">LoadValue InVal = AvailableLoads.<span class="built_in">lookup</span>(MemInst.<span class="built_in">getPointerOperand</span>());</span><br><span class="line"><span class="keyword">if</span> (Value *Op = <span class="built_in">getMatchingValue</span>(InVal, MemInst, CurrentGeneration)) &#123;</span><br><span class="line">  <span class="comment">// Something related to debug information</span></span><br><span class="line">  <span class="keyword">if</span> (InVal.IsLoad)</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">auto</span> *I = <span class="built_in">dyn_cast</span>&lt;Instruction&gt;(Op))</span><br><span class="line">      <span class="built_in">combineMetadataForCSE</span>(I, &amp;Inst, <span class="literal">false</span>);</span><br><span class="line">  <span class="keyword">if</span> (!Inst.<span class="built_in">use_empty</span>())</span><br><span class="line">    Inst.<span class="built_in">replaceAllUsesWith</span>(Op);</span><br><span class="line">  <span class="comment">// Something related to updating analysis and debug information</span></span><br><span class="line">  Inst.<span class="built_in">eraseFromParent</span>();</span><br><span class="line">  Changed = <span class="literal">true</span>;</span><br><span class="line">  ++NumCSELoad;</span><br><span class="line">  <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Similar to SimpleValue case, besides getting matching value throught <em>MemorySSA</em>.</p>
+<h2 id="difference-between-gvn-and-earlycse">Difference between GVN and EarlyCSE</h2>
+<p>To be continued</p>
 
     </div>
 
@@ -314,7 +317,10 @@
     <a href="/2023/09/21/LLVM-Source-Analysis-Interval/" rel="prev" title="LLVM源码解析-Interval Analysis">
       <i class="fa fa-chevron-left"></i> LLVM源码解析-Interval Analysis
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/17/How-to-debug-LLVM/" rel="next" title="How to debug LLVM ?">
+      How to debug LLVM ? <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -373,7 +379,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#a-top-down-view"><span class="nav-number">1.</span> <span class="nav-text">A Top-Down View</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#how-is-the-available-values-maintained"><span class="nav-number">2.</span> <span class="nav-text">How is the available values maintained?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#how-is-lookup-implemented"><span class="nav-number">3.</span> <span class="nav-text">How is lookup implemented?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ignorecombine-ir-flag"><span class="nav-number">4.</span> <span class="nav-text">Ignore&#x2F;Combine IR flag</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memory-cse"><span class="nav-number">5.</span> <span class="nav-text">Memory CSE</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#abstract"><span class="nav-number">1.</span> <span class="nav-text">Abstract</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#a-top-down-view"><span class="nav-number">2.</span> <span class="nav-text">A Top-Down View</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#how-is-the-available-values-maintained"><span class="nav-number">3.</span> <span class="nav-text">How is the available values maintained?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#how-is-lookup-implemented"><span class="nav-number">4.</span> <span class="nav-text">How is lookup implemented?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ignorecombine-ir-flag"><span class="nav-number">5.</span> <span class="nav-text">Ignore&#x2F;Combine IR flag</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#memory-cse"><span class="nav-number">6.</span> <span class="nav-text">Memory CSE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#difference-between-gvn-and-earlycse"><span class="nav-number">7.</span> <span class="nav-text">Difference between GVN and EarlyCSE</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -389,7 +395,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">35</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

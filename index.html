@@ -131,7 +131,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">34</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">35</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -193,6 +193,89 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/17/How-to-debug-LLVM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/10/17/How-to-debug-LLVM/" class="post-title-link" itemprop="url">How to debug LLVM ?</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-10-17 15:34:42" itemprop="dateCreated datePublished" datetime="2023-10-17T15:34:42+08:00">2023-10-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-10-18 01:06:02" itemprop="dateModified" datetime="2023-10-18T01:06:02+08:00">2023-10-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="abstract">Abstract</h2>
+<p>Debugging programs remains a significant topic in software engineering field. Especially in system software like <em>Compiler</em>, it's difficult to pinpoint the root and solve relative problems.<br />
+For my recent work on <em>LLVM</em>, I'd like to share some experience about it.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/10/17/How-to-debug-LLVM/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/08/LLVM-Source-Analysis-EarlyCSE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -224,7 +307,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-10-16 17:10:48" itemprop="dateModified" datetime="2023-10-16T17:10:48+08:00">2023-10-16</time>
+                <time title="Modified: 2023-10-17 14:51:38" itemprop="dateModified" datetime="2023-10-17T14:51:38+08:00">2023-10-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -247,10 +330,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>A brief analysis of EarlyCSE implementation in LLVM.</p>
+          <h2 id="abstract">Abstract</h2>
+<p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.<br />
+CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators.<br />
+For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE. The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/10/08/LLVM-Source-Analysis-EarlyCSE/">
+              <a class="btn" href="/2023/10/08/LLVM-Source-Analysis-EarlyCSE/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -305,7 +391,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-10-16 13:35:30" itemprop="dateModified" datetime="2023-10-16T13:35:30+08:00">2023-10-16</time>
+                <time title="Modified: 2023-10-17 14:16:03" itemprop="dateModified" datetime="2023-10-17T14:16:03+08:00">2023-10-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -328,10 +414,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>A brief analysis of Interval Analysis in LLVM in Chinese.</p>
+          <h2 id="abstract">Abstract</h2>
+<p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
+<p>Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。</p>
+<p>先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 <span class="math inline">\(Node \ne Head\)</span> 都满足 <span class="math inline">\(Pred(Node) \subset Interval\)</span> ：</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2023/09/21/LLVM-Source-Analysis-Interval/">
+              <a class="btn" href="/2023/09/21/LLVM-Source-Analysis-Interval/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -981,85 +1070,6 @@ D \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/28/Linear-Algebra-Projection/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/28/Linear-Algebra-Projection/" class="post-title-link" itemprop="url">Linear Algebra 4.2 -- Projection</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-28 13:20:06 / Modified: 14:05:37" itemprop="dateCreated datePublished" datetime="2023-08-28T13:20:06+08:00">2023-08-28</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linear-Algebra/" itemprop="url" rel="index"><span itemprop="name">Linear Algebra</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>The projection of $\boldsymbol{b}$ onto a subspace $C(A)$ is computed by:</p>
-<script type="math/tex; mode=display">
- \boldsymbol{p} =  P\boldsymbol{b}</script><p>where $P$ is called <strong>Projection Matrix</strong>.<br>The reason for multiplying a matrix is based on how the projection is computed.</p>
-<p>Here is the reasoning steps:</p>
-<p>Let’s image that there is $\boldsymbol{b}$ projecting onto a plane $C(A)$,<br>producing projection $\boldsymbol{p}$. Then $\boldsymbol{p}$ is in $C(A)$,<br>which could be expressed as $A\boldsymbol{\hat{x}}$. Our <strong>goal</strong> is to get $\boldsymbol{\hat{x}}$.</p>
-<p>Let $\boldsymbol{e = b - A\hat{x}}$ be the error vector ,<br>only when $\boldsymbol{e}$ is <strong>perpendicular</strong> to the subspace, can we say $\boldsymbol{p = b - e}$ is projection.</p>
-<p>Since $\boldsymbol{e}$ is perpendicular to $C(A)$, we can get:</p>
-<script type="math/tex; mode=display">A^T(\boldsymbol{b}-A\boldsymbol{\hat{x}}) = \boldsymbol{0}</script><p>or</p>
-<script type="math/tex; mode=display">A^TA\boldsymbol{\hat{x}} = A^T\boldsymbol{b}</script><p>The symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>.<br>Then,</p>
-<script type="math/tex; mode=display">\boldsymbol{p} = A\boldsymbol{\hat{x}}=A(A^TA)^{-1}A^T\boldsymbol{b}</script><p>Here $A(A^TA)^{-1}A^T$ is a matrix, we name it <strong>Projection Matrix</strong>.<br>You might try to split $(A^TA)^{-1}$ into $A^{-1}(A^{T})^{-1}$, however when $A$ is rectangular, it has no inverse.</p>
-<p>Or when $A$ is invertible, $N(A), N(A^T)$ contains only <strong>zero</strong> vector,<br>where $A^T\boldsymbol{e} = 0 \rightarrow \boldsymbol{e=0, b=p}$ itself, $P = \boldsymbol{I}$ satisfies it well.</p>
-<h4 id="Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent"><a href="#Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent" class="headerlink" title="Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are independent?"></a>Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>?</h4><script type="math/tex; mode=display">A^TAx = 0 \Longleftrightarrow Ax = 0</script><p>Thus $A^TA$ has the same nullspace with $A$. $A$ is invertible, <strong>if and only if</strong> $A^TA$ is invertible.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1131,7 +1141,7 @@ D \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">35</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

@@ -1204,13 +1204,15 @@ D \\
   <entry>
     <title>LLVM源码解析-Interval Analysis</title>
     <url>/2023/09/21/LLVM-Source-Analysis-Interval/</url>
-    <content><![CDATA[<p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
+    <content><![CDATA[<h2 id="abstract">Abstract</h2>
+<p>第一次专门写 blog 解析 LLVM 源码，最近在看鲸书学习编译优化，正好借这个系列结合 Theory 与 Practice。</p>
 <p>Interval Analysis 是一种 Control Flow Analysis，常用作于其他优化如 LoopUnroll 的基础。</p>
 <p>先看 Interval 类的代码，在编译理论里，Interval 一般指 Node 的集合， 集合里每个 <span class="math inline">\(Node \ne Head\)</span> 都满足 <span class="math inline">\(Pred(Node) \subset Interval\)</span> ：</p>
+<span id="more"></span>
 <h2 id="interval-类">Interval 类</h2>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Interval</span> &#123;</span><br><span class="line">  <span class="comment">/// HeaderNode - The header BasicBlock, which dominates all BasicBlocks in this</span></span><br><span class="line">  <span class="comment">/// interval.  Also, any loops in this interval must go through the HeaderNode.</span></span><br><span class="line">  <span class="comment">///</span></span><br><span class="line">  BasicBlock *HeaderNode;</span><br></pre></td></tr></table></figure>
 <p>这里的 HeaderNode dominates Interval 里所有的 BasicBlock(Node)，代表了一个 Interval。</p>
-<span id="more"></span>
+<!-- more -->
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"><span class="function"><span class="keyword">inline</span> <span class="title">Interval</span><span class="params">(BasicBlock *Header)</span> : HeaderNode(Header) &#123;</span></span><br><span class="line">  Nodes.<span class="built_in">push_back</span>(Header);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">inline</span> BasicBlock *<span class="title">getHeaderNode</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> HeaderNode; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// Nodes - The basic blocks in this interval.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Nodes;</span><br></pre></td></tr></table></figure>
 <p>构造函数和一些基本定义, Nodes 存了 Interval 里所有的 BasicBlock。</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">/// Successors - List of BasicBlocks that are reachable directly from nodes in</span></span><br><span class="line"><span class="comment">/// this interval, but are not in the interval themselves.</span></span><br><span class="line"><span class="comment">/// These nodes necessarily must be header nodes for other intervals.</span></span><br><span class="line">std::vector&lt;BasicBlock*&gt; Successors;</span><br></pre></td></tr></table></figure>
@@ -1278,9 +1280,11 @@ D \\
   <entry>
     <title>LLVM源码解析- EarlyCSE</title>
     <url>/2023/10/08/LLVM-Source-Analysis-EarlyCSE/</url>
-    <content><![CDATA[<p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.</p>
-<p>CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators. For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE.</p>
-<p>The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
+    <content><![CDATA[<h2 id="abstract">Abstract</h2>
+<p><strong>Common sub-expression elimination (CSE)</strong> is an important optimization for compilers, which is similar to partial redundancies elimination optimization.<br />
+CSE is designed to eliminate those expressions with identical and semantically equivalent components, with consideration for some properties like commutativity, associativity of operators.<br />
+For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for CSE. The "Early" in <strong>EarlyCSE</strong> means that simple, fast and can be applied in every stages it needs.</p>
+<span id="more"></span>
 <h2 id="a-top-down-view">A Top-Down View</h2>
 <p>EarlyCSE iterates down all BasicBlocks in DFS order within dom-tree (only once), which guarantees that expressions in current expressions will be <strong>dominated</strong> after the expressions iterated before.</p>
 <p>Besides, EarlyCSE tags every Node(or BasicBlock) with a generation number for memory instructions, since memory insts in LLVM doesn't fit into SSA, which we must hack in other ways. And every time we meet a branch (current BB has more than one predecessors), we have to increment generation by one.</p>
@@ -1295,7 +1299,7 @@ D \\
 <p>Let's take a look at <code>getHashValueImpl</code> of SimpleValue:</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">unsigned</span> <span class="title">getHashValueImpl</span><span class="params">(SimpleValue Val)</span> </span>&#123;</span><br><span class="line">  Instruction *Inst = Val.Inst;</span><br><span class="line">  <span class="comment">// Hash in all of the operands as pointers.</span></span><br><span class="line">  <span class="keyword">if</span> (BinaryOperator *BinOp = <span class="built_in">dyn_cast</span>&lt;BinaryOperator&gt;(Inst)) &#123;</span><br><span class="line">    Value *LHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (BinOp-&gt;<span class="built_in">isCommutative</span>() &amp;&amp; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>) &gt; BinOp-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>))</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(BinOp-&gt;<span class="built_in">getOpcode</span>(), LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (CmpInst *CI = <span class="built_in">dyn_cast</span>&lt;CmpInst&gt;(Inst)) &#123;</span><br><span class="line">    <span class="comment">// Compares can be commuted by swapping the comparands and</span></span><br><span class="line">    <span class="comment">// updating the predicate.  Choose the form that has the</span></span><br><span class="line">    <span class="comment">// comparands in sorted order, or in the case of a tie, the</span></span><br><span class="line">    <span class="comment">// one with the lower predicate.</span></span><br><span class="line">    Value *LHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">0</span>);</span><br><span class="line">    Value *RHS = CI-&gt;<span class="built_in">getOperand</span>(<span class="number">1</span>);</span><br><span class="line">    CmpInst::Predicate Pred = CI-&gt;<span class="built_in">getPredicate</span>();</span><br><span class="line">    CmpInst::Predicate SwappedPred = CI-&gt;<span class="built_in">getSwappedPredicate</span>();</span><br><span class="line">    <span class="keyword">if</span> (std::<span class="built_in">tie</span>(LHS, Pred) &gt; std::<span class="built_in">tie</span>(RHS, SwappedPred)) &#123;</span><br><span class="line">      std::<span class="built_in">swap</span>(LHS, RHS);</span><br><span class="line">      Pred = SwappedPred;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">hash_combine</span>(Inst-&gt;<span class="built_in">getOpcode</span>(), Pred, LHS, RHS);</span><br><span class="line">  &#125;</span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>As we can see, <span class="math inline">\(hash(binop) = hash(opcode, lhs, rhs)\)</span>, where <span class="math inline">\(lhs\)</span> is the pointer of lhs, <span class="math inline">\(rhs\)</span> is that of rhs. It means that what we can eliminate once is those instruction with the same <strong>references/pointers</strong> of the same value.</p>
-<p>That is, for <span class="math inline">\(op(a,b), op(c,d)\)</span>, only when <span class="math inline">\(addressof(a) == addressof(c) \&amp;\&amp; addressof(b) == addressof(d)\)</span>, can we eliminate them. If <span class="math inline">\(a\)</span> is <span class="math inline">\(A1+A2\)</span> and <span class="math inline">\(b\)</span> is <span class="math inline">\(B1+B2\)</span>, they can be judged identical even if <span class="math inline">\(A1+A2\)</span> is identical with <span class="math inline">\(B1+B2\)</span>.</p>
+<p>For the DFS order in dom-tree, for the same two <span class="math inline">\(op(a,b)\)</span> in BB1 and BB2, only when BB1 dominates BB2 or BB2 dominates BB1, can we eliminate them. However, <em>GVN</em> could solve it for its <em>RPO</em> iteration order (More <strong>expensive</strong> one).</p>
 <p>Besides, IR flags like <code>nsw, nuw</code> having no effect on the what IR actually does are ignored.</p>
 <p>With such easy implementation, EarlyCSE is <strong>cheap</strong> with <span class="math inline">\(O(n)\)</span> time, but <strong>less effective</strong> than <em>GVN</em>.</p>
 <h2 id="ignorecombine-ir-flag">Ignore/Combine IR flag</h2>
@@ -1313,6 +1317,63 @@ D \\
 <p>For invariant loop, its <em>memory location</em>, or pointer will keep <em>invariant</em> in later stages. So we keep the earliest load, to maximize its effect.</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="comment">// If we have an available version of this load, and if it is the right</span></span><br><span class="line"><span class="comment">// generation or the load is known to be from an invariant location,</span></span><br><span class="line"><span class="comment">// replace this instruction.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// If either the dominating load or the current load are invariant, then</span></span><br><span class="line"><span class="comment">// we can assume the current load loads the same value as the dominating</span></span><br><span class="line"><span class="comment">// load.</span></span><br><span class="line">LoadValue InVal = AvailableLoads.<span class="built_in">lookup</span>(MemInst.<span class="built_in">getPointerOperand</span>());</span><br><span class="line"><span class="keyword">if</span> (Value *Op = <span class="built_in">getMatchingValue</span>(InVal, MemInst, CurrentGeneration)) &#123;</span><br><span class="line">  <span class="comment">// Something related to debug information</span></span><br><span class="line">  <span class="keyword">if</span> (InVal.IsLoad)</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">auto</span> *I = <span class="built_in">dyn_cast</span>&lt;Instruction&gt;(Op))</span><br><span class="line">      <span class="built_in">combineMetadataForCSE</span>(I, &amp;Inst, <span class="literal">false</span>);</span><br><span class="line">  <span class="keyword">if</span> (!Inst.<span class="built_in">use_empty</span>())</span><br><span class="line">    Inst.<span class="built_in">replaceAllUsesWith</span>(Op);</span><br><span class="line">  <span class="comment">// Something related to updating analysis and debug information</span></span><br><span class="line">  Inst.<span class="built_in">eraseFromParent</span>();</span><br><span class="line">  Changed = <span class="literal">true</span>;</span><br><span class="line">  ++NumCSELoad;</span><br><span class="line">  <span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Similar to SimpleValue case, besides getting matching value throught <em>MemorySSA</em>.</p>
+<h2 id="difference-between-gvn-and-earlycse">Difference between GVN and EarlyCSE</h2>
+<p>To be continued</p>
+]]></content>
+      <categories>
+        <category>LLVM</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>OpenSource</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>How to debug LLVM ?</title>
+    <url>/2023/10/17/How-to-debug-LLVM/</url>
+    <content><![CDATA[<h2 id="abstract">Abstract</h2>
+<p>Debugging programs remains a significant topic in software engineering field. Especially in system software like <em>Compiler</em>, it's difficult to pinpoint the root and solve relative problems.<br />
+For my recent work on <em>LLVM</em>, I'd like to share some experience about it.</p>
+<span id="more"></span>
+<h2 id="classification-of-bugs">Classification of Bugs</h2>
+<p>Bugs in Compiler field can be mainly classified into <em>Crash</em>, <em>Mis-compilation</em>, and <em>Missed Optimizations</em>.</p>
+<p>For example, there may be a C file triggering one of these bugs.</p>
+<p>If it crashed clang, which is easiest to pinpoint, clang would dump the stack trace. With the stack trace, we are able to determine it's a frontend/middleend/backend problem.</p>
+<p>Or, if someone reported an assembly file after mis-compilation, we have to reduce it first (use <em>llvm-reduce</em> if it's a LLVM-IR), and try to validate in the whole compilation. For example, validate the AST, the LLVM-IR after each pass, and the assembly after every step in backend. In this way, we can pinpoint which module caused the mis-compilation.</p>
+<p>For missed optimizations, it's similar to the case as mis-compilation. However, it's harder to define whether it's a <em>helpful or real</em> missed optimizations. There are some kinds of missed optimizations that always make no sense to real improvement of optimization. And fuzzers always generate such missed cases:</p>
+<ul>
+<li><p>Too large IR. For this kind of IR, passes like CSE, GVN and DSE only fold it partially for cost/compile-time problem</p></li>
+<li><p>No real motivation. The optimization in LLVM is designed mostly for real-world applications. For this reason, some non-sense missed cases are not considered at all, unless they become a pattern.</p></li>
+<li><p>Hard to debug. Complex testcases always needs reduction and can be located precisely in which module.</p></li>
+<li><p>Won't fix. Optimization is a recursively unsolvable problem, and there is always some topics that compiler can't fix at all, such as fully eliminating all common expressions or simplifying all expressions. Most optimization in LLVM is <strong>mostly heuristic</strong> or based on <strong>experience</strong>, which determines that LLVM can't handle all cases.</p></li>
+</ul>
+<h2 id="some-tools">Some Tools</h2>
+<ul>
+<li><p><em>llc/opt --print-before=[crash pass] [ir]</em>: You could dump IR before the pass causing crash through it. For example, use <code>2&gt; dump.txt</code> to output to a file.</p></li>
+<li><p><em>opt -O2 -print-before-all / opt -O2 -print-before-all</em>: Dump all IR before/after all passes that modify IR.</p></li>
+<li><p><em>llvm-reduce [ir] --test=test.sh</em>: <em>llvm-reduce</em> is an IR-Reduction tool based on <em>Delta Algorithm</em>, which reduces ir if <em>test.sh</em> return 0(0 represents interestness). It make IR eaiser to analyze.</p></li>
+</ul>
+<hr />
+<h2 id="my-workflow">My Workflow</h2>
+<p>When I come across an IR file crashing clang/opt, I first take a look at stacktrace. The stacktrace always indicates which function/class exposes the error.</p>
+<!-- picture1 -->
+<p>Here we assume the error is exposed by a optimization pass <em>op1</em>. Then we enter:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">opt --print-before=op1 -O2 -S [ir-file] &gt; [ir-before-op1.ll]</span><br></pre></td></tr></table></figure>
+<p>Or if it's a C file, we enter:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">clang -mllvm -print-before=instcombine xxx.c -O2 -g0 2&gt; xxx.ll</span><br></pre></td></tr></table></figure>
+<p><code>O2</code> can be anything causing problem. The output serves as a reproducer. And then we use <em>op1</em> to reproduce it:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">opt --passes=op1 -S [ir-file]</span><br></pre></td></tr></table></figure>
+<p>If we reproduce it successfully, we are down to reducing it:</p>
+<p>Write a <code>test.sh</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">opt --passes=op1 -S <span class="variable">$1</span> | grep <span class="string">&quot;something related to error&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># For missed optimization, write a testcase and check it with FileCheck</span></span><br><span class="line"><span class="comment"># FileCheck $1 | grep &quot;something related&quot;</span></span><br></pre></td></tr></table></figure>
+<p>And launch <em>llvm-reduce</em>:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">llvm-reduce [ir-file] --<span class="built_in">test</span>=test.sh</span><br></pre></td></tr></table></figure>
+<p>Finally we get a <em>reduced.ll</em>. Based on this file, we analyze the problem easier.</p>
+<h2 id="how-to-get-command-line-arguments-and-ir-dump-file-when-bootstrapping">How to Get Command-Line Arguments and IR-dump File when bootstrapping</h2>
+<p>Refer to <a href="https://discourse.llvm.org/t/how-to-reproduce-the-bug-and-get-the-exact-ir-before-crash-during-bootstrapping/74032">discourse</a></p>
+<h2 id="reference">Reference</h2>
+<p><a href="https://clangbuiltlinux.github.io/llvm-dev-conf-2020/nick/debugging_llvm.html">Debugging llvm</a></p>
 ]]></content>
       <categories>
         <category>LLVM</category>
