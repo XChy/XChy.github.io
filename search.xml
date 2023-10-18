@@ -1375,7 +1375,7 @@ D \\
       </categories>
   </entry>
   <entry>
-    <title>(Paper Reading) SCC-Based Value Numebring</title>
+    <title>(Paper Reading) SCC-Based Value Numbering</title>
     <url>/2023/10/18/Paper-Reading-SCC-VN/</url>
     <content><![CDATA[<h2 id="introduction">Introduction</h2>
 <p><em>Value Numbering</em> is an universally useful optimization implemented by most compilers like <em>Clang, GCC</em>, etc. Traditionally <em>GVN</em> can be divided into <em>Hash-Based</em> and <em>Value-Partitioning</em>. The former handles algebraic simplifications but locally. The latter is global but handling only simple redundancies. <em>K. C</em> and <em>T. S</em> came up with a new method to solve it for <em>SSA</em>.</p>
@@ -1394,26 +1394,31 @@ D \\
 <p>Then, we try to get its time complexity. <strong>Back edges</strong> play a key role here.</p>
 <p><img src="/images/lemma1-scc.png" /></p>
 <p>Induction for <span class="math inline">\(x \ncong_{i} y\)</span>:</p>
-<p>Basis (<span class="math inline">\(i = 1\)</span>): Empty sequence<br />
-Basics (<span class="math inline">\(j=1\)</span>) and Induction: (<span class="math inline">\(i &gt; 1\)</span>):</p>
+<p>Basis (<span class="math inline">\(i = 1\)</span>): Empty sequence</p>
 <ul>
-<li><ul>
+<li><p>Basics (<span class="math inline">\(j=1\)</span>) and Induction: (<span class="math inline">\(i &gt; 1\)</span>):</p>
+<ul>
 <li>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible due to <span class="math inline">\(x \cong_{i-1} y\)</span>.</li>
 <li>case2: <span class="math inline">\(x[e_1] \ncong_{i} y[e_1]\)</span> for some <strong>non-back</strong> edge. <strong>Some</strong> here means that there exists non-back edge <span class="math inline">\(e\)</span> cause it. But that contradicts with <span class="math inline">\(x \cong_{i - 1} y\)</span>. Just like graph below, it's impossible: <img src="/images/flow-scc.png" /></li>
 <li>case 3: <span class="math inline">\(x[e_1] \ncong_{i-1} y[e_1]\)</span> for some <strong>back</strong> edge. That's possible. Sequence now consists of <span class="math inline">\(e\)</span>.</li>
 </ul></li>
-</ul>
-<p>Induction (<span class="math inline">\(j &gt; 1\)</span>)</p>
+<li><p>Induction (<span class="math inline">\(j &gt; 1\)</span>)</p>
 <ul>
-<li><ul>
 <li><p>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible as before.</p></li>
 <li><p>case2: <span class="math inline">\(x[e_j] \ncong_{i} y[e_j]\)</span> for some <strong>non-back</strong> edge. The sequence consists of <span class="math inline">\(e\)</span> followed by the sequence for the pair <span class="math inline">\(x[e_{j-1}],y[e_{j-1}]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(j\)</span></strong>: <span class="math inline">\(s\)</span></p></li>
 <li><p>case 3: <span class="math inline">\(x[e_j] \ncong_{i-1} y[e_j]\)</span> for some <strong>back</strong> edge. The sequence consists of <span class="math inline">\(e_j\)</span> followed by the sequence for the pair <span class="math inline">\(x[e],y[e]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(i\)</span></strong>.</p></li>
 </ul></li>
 </ul>
 <p>Final time analysis (<span class="math inline">\(D(SSA)\)</span> is the <em>loop connectedness</em>): <img src="/images/theorem2-scc.jpg" /></p>
-<h2 id="more-efficient-scc-extension">More efficient SCC extension</h2>
-<p>To be continued.</p>
+<h2 id="the-scc-algorithm-more-efficient">The SCC Algorithm (More efficient)</h2>
+<blockquote>
+<p>To make the algorithm more efficient in practice, we operate on the <strong>SSA graph</strong> instead of the <strong>control-flow graph</strong>. We refer to the improved algorithm as the SCC algorithm because it concentrates on the strongly connected components of the SSA graph.</p>
+</blockquote>
+<p>The paper works with <em>Tarjan's depth-first algorithm for finding SCCs</em>. Just handle the single node firstly and then handle nodes in SCCs in RPO order.</p>
+<h2 id="result">Result</h2>
+<p>Not worse than <em>Hash-Based</em> and <em>Value-Partitioning</em> methods. Details in paper.</p>
+<h2 id="connection-with-modern-compilers">Connection with modern compilers</h2>
+<p><em>NewGVN in LLVM</em> applies the algorithm in this paper, in development still.</p>
 <h2 id="reference">Reference</h2>
 <ul>
 <li><em>SCC-Based Value Numbering, by Keith Cooper and Taylor Simpson</em></li>
