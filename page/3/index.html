@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">18</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">35</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">36</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,114 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Cache-Performance-Analysis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/07/Cache-Performance-Analysis/" class="post-title-link" itemprop="url">Cache Performance Analysis</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-08-07 16:21:00 / Modified: 21:55:41" itemprop="dateCreated datePublished" datetime="2023-08-07T16:21:00+08:00">2023-08-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="some-concepts">Some Concepts</h2>
+<p>AMAT: Average memory access time. <span class="math inline">\(AMAT = t_{hit} + rate_{missed} * penalty_{missed}\)</span></p>
+<h2 id="cache-miss">Cache Miss</h2>
+<p>Sources of Cache Misses:</p>
+<ul>
+<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
+<li>Capacity</li>
+<li>Conflict (Collison)</li>
+</ul>
+<p>The Design Solutions:</p>
+<ul>
+<li>Compulsory:
+<ul>
+<li>Increase block size</li>
+</ul></li>
+<li>Capacity:
+<ul>
+<li>Increase cache size</li>
+</ul></li>
+<li>Conflict:
+<ul>
+<li>Increase associativity (may increase hit-time)</li>
+</ul></li>
+</ul>
+<h2 id="miss-penalty">Miss Penalty</h2>
+<p>Factors:</p>
+<ul>
+<li>How big is your memory architecture</li>
+<li>How big is your block size</li>
+</ul>
+<h2 id="multiple-cache-levels">Multiple Cache Levels</h2>
+<p>To minimize AMAT, we need to adjust the type/parameters of cache. But it's hard to reduce hit time, miss rate and miss penalty at once.</p>
+<p>Multiple Cache Levels resolves this.</p>
+<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate. However, there is also big write back cost for such design.</p>
+<h2 id="the-cache-design-space">The Cache Design Space</h2>
+<ul>
+<li>Cache parameters</li>
+<li>Policy choices (Rewrite, Replacement)</li>
+<li>Optimal choice is a compromise</li>
+<li>Simplicity often wins</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -521,17 +629,20 @@
           <blockquote>
 <p>2023.9.21修改：LLVM的patch以及完全迁移到Github PR上，本篇文章有关Phabricator的操作已经<strong>out-of-dated</strong>。</p>
 </blockquote>
-<h2 id="为什么要参与LLVM的开源？"><a href="#为什么要参与LLVM的开源？" class="headerlink" title="为什么要参与LLVM的开源？"></a>为什么要参与LLVM的开源？</h2><p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译，<br>我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
-<p>于是我参考了一位LLVM Member的文章:<br><a target="_blank" rel="noopener" href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
+<h2 id="为什么要参与llvm的开源">为什么要参与LLVM的开源？</h2>
+<p>由于一直以来对编译器后端特别感兴趣，又曾用<strong>LLVM</strong>作为后端为自己的语言进行AOT的编译， 我对LLVM的内部十分好奇，于是想通过为<strong>LLVM</strong>贡献代码的方式了解<strong>LLVM</strong>，并了解编译器优化的流程。</p>
+<p>于是我参考了一位LLVM Member的文章: <a target="_blank" rel="noopener" href="https://developers.redhat.com/articles/2022/12/20/how-contribute-llvm#implementing_the_transform">How to contribute to llvm?</a></p>
 <p>以下则是我从编译到提交patch的全流程。</p>
-<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
+<h3 id="编译">编译</h3>
+<p>要为LLVM贡献代码，那首先能在本地编译LLVM库。</p>
 <p>那么我们首先要clone LLVM的git仓库，或者自己fork了<strong>llvm-project</strong>后再clone到本地。二者区别不大，我按照github的开源习惯选了后者。</p>
-<p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。<br>以下是cmake的模板：</p>
+<p>clone完之后我们开始编译，这边要注意的是：由于计算机编译速度的限制，我们一边建议进行<strong>Release</strong>编译。否则一次编译链接要长达几小时的时间。 以下是cmake的模板：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">cmake -GNinja -Bbuild -Hllvm \</span><br><span class="line">    -DLLVM_ENABLE_PROJECTS=&quot;clang&quot; \</span><br><span class="line">    -DLLVM_TARGETS_TO_BUILD=&quot;all&quot; \</span><br><span class="line">    -DCMAKE_BUILD_TYPE=Release \</span><br><span class="line">    -DLLVM_ENABLE_ASSERTIONS=true \</span><br><span class="line">    -DLLVM_CCACHE_BUILD=true \</span><br><span class="line">    -DLLVM_USE_LINKER=lld</span><br></pre></td></tr></table></figure>
 <p>其中Debug可通过<code>-debug</code> flag来进行，你可以在对应的代码位置用<code>errs() &lt;&lt; something</code>进行输出。</p>
 <p>而ninja的编译速度相对较快，所以以下有构建和测试的shell：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Build LLVM</span></span><br><span class="line">ninja -Cbuild</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run all LLVM tests</span></span><br><span class="line">ninja -Cbuild check-llvm</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Run tests <span class="keyword">in</span> a specific directory.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">-v will <span class="built_in">print</span> additional information <span class="keyword">for</span> failures.</span></span><br><span class="line">build/bin/llvm-lit -v llvm/test/Transforms/InstCombine</span><br></pre></td></tr></table></figure>
-<h3 id="选Issue"><a href="#选Issue" class="headerlink" title="选Issue"></a>选Issue</h3><p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。<br>
+<h3 id="选issue">选Issue</h3>
+<p>由于我是LLVM领域的新手，不太可能一上来就砍大龙，所以我挑了个简单的任务。
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2023/06/30/LLVM-First-Contribution/#more" rel="contents">
@@ -949,92 +1060,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/" class="post-title-link" itemprop="url">XSharp开发思路-Type</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-02-18 18:41:20" itemprop="dateCreated datePublished" datetime="2023-02-18T18:41:20+08:00">2023-02-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-03-03 20:21:59" itemprop="dateModified" datetime="2023-03-03T20:21:59+08:00">2023-03-03</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/XSharp/" itemprop="url" rel="index"><span itemprop="name">XSharp</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="一个好的编程语言需要有一个好的类型系统">一个好的编程语言需要有一个好的类型系统</h3>
-<p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
-<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
-<p>于是<strong>TypeNode</strong>出现了</p>
-<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1106,20 +1131,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

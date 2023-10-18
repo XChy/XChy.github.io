@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">18</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">35</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">36</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -193,6 +193,112 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/28/Linear-Algebra-4-3-Least-Squares/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/28/Linear-Algebra-4-3-Least-Squares/" class="post-title-link" itemprop="url">Linear Algebra 4.3 -- Least Squares Approximations</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-28 14:06:46" itemprop="dateCreated datePublished" datetime="2023-08-28T14:06:46+08:00">2023-08-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-04 15:35:41" itemprop="dateModified" datetime="2023-09-04T15:35:41+08:00">2023-09-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linear-Algebra/" itemprop="url" rel="index"><span itemprop="name">Linear Algebra</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>线性回归基本方法--<strong>最小二乘法(Least Squares Approximations)</strong>，这里记录具体思想。</p>
+<p><span class="math inline">\(Ax=b\)</span>在实际情况中大多是无解的，一种情况是：方程式往往会比未知数更多(<span class="math inline">\(m&gt;n\)</span>)，而 n 列只能产生 m 维线性空间的一小部分。 换句话讲，<span class="math inline">\(\boldsymbol{b}\)</span> 总是在 <span class="math inline">\(C(A)\)</span> 之外。这时我们便可以通过上一章投影的有关知识解决这一问题。</p>
+<p>首先给出结果，和投影一样，我们的基本方程仍是如下方程： <span class="math display">\[A^TA\boldsymbol{\hat{x}}=A^T\boldsymbol{b}\]</span></p>
+<p>而我们的基本目标就是减小 error ( <span class="math inline">\(\boldsymbol{Ax-b}\)</span> )，我们可以从三个不同的方向解决的这个问题：</p>
+<h4 id="几何方向">几何方向</h4>
+<p>对于一条直线<span class="math inline">\(\boldsymbol{b}\)</span>，要让其和一个平面/子空间 <span class="math inline">\(A\boldsymbol{x}\)</span> 相距最小， 必然要求出其投影<span class="math inline">\(\boldsymbol{p}\)</span>，<span class="math inline">\(\boldsymbol{e = b - p}\)</span> 此时就是最小的， <span class="math inline">\(\boldsymbol{p}\)</span> 此时也是比较合适的的接近解的直线。</p>
+<h4 id="代数方向">代数方向</h4>
+<p>每一个向量 <span class="math inline">\(\boldsymbol{b}\)</span> 都可以被分成两个部分，一个是在 <span class="math inline">\(C(A)\)</span> 中的 <span class="math inline">\(\boldsymbol{p}\)</span>， 另一部分则是正交于 <span class="math inline">\(C(A)\)</span> 的 <span class="math inline">\(\boldsymbol{e}\)</span>。</p>
+<p><span class="math inline">\(A\boldsymbol{x = b = p + e}\)</span> 是不可解的</p>
+<p><span class="math inline">\(A\boldsymbol{\hat{x} = p}\)</span> 则是可解的</p>
+<p>而后者的解则留下了最小的误差$ $。最小的原因：</p>
+<p>这里有 <strong>Squared length for any <span class="math inline">\(x\)</span></strong>: <span class="math inline">\(||Ax - b||^2 = ||Ax-p||^2 + ||e||^2\)</span></p>
+<p>而我们把 <span class="math inline">\(||Ax-p||^2\)</span> 减到了 <span class="math inline">\(0\)</span> ，已经把 <span class="math inline">\(||Ax - b||^2\)</span> 减到不能再减了。</p>
+<h4 id="微积分方向">微积分方向</h4>
+<p>举例而言，对于直线<span class="math inline">\(C + Dt\)</span>，有三个样本点：<span class="math inline">\((0,6), (1,0), (2,0)\)</span>，则有：</p>
+<p><span class="math display">\[
+A=\left [ \begin{matrix}
+1&amp; 0 \\
+1&amp; 1 \\
+1&amp; 2 \\
+\end{matrix} \right ] ,
+\boldsymbol{x} = \left [ \begin{matrix}
+C \\
+D \\
+\end{matrix} \right ] ,
+\boldsymbol{b} = \left [ \begin{matrix}
+6 \\
+0 \\
+0 \\
+\end{matrix} \right ]
+\]</span></p>
+<p>我们要最小化 <span class="math inline">\(E = ||Ax-b||^2\)</span> 则要有： <span class="math display">\[\frac{\partial E}{\partial C} = 0, \quad \frac{\partial E}{\partial D} = 0\]</span></p>
+<p>事实上最后化简的结果与 <span class="math inline">\(A^TA\hat{x}=A^Tb\)</span> 是一样的。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/28/Linear-Algebra-Projection/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -241,18 +347,109 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>The projection of $\boldsymbol{b}$ onto a subspace $C(A)$ is computed by:</p>
-<script type="math/tex; mode=display">
- \boldsymbol{p} =  P\boldsymbol{b}</script><p>where $P$ is called <strong>Projection Matrix</strong>.<br>The reason for multiplying a matrix is based on how the projection is computed.</p>
+          <p>The projection of <span class="math inline">\(\boldsymbol{b}\)</span> onto a subspace <span class="math inline">\(C(A)\)</span> is computed by:</p>
+<p><span class="math display">\[
+ \boldsymbol{p} =  P\boldsymbol{b}
+\]</span></p>
+<p>where <span class="math inline">\(P\)</span> is called <strong>Projection Matrix</strong>. The reason for multiplying a matrix is based on how the projection is computed.</p>
 <p>Here is the reasoning steps:</p>
-<p>Let’s image that there is $\boldsymbol{b}$ projecting onto a plane $C(A)$,<br>producing projection $\boldsymbol{p}$. Then $\boldsymbol{p}$ is in $C(A)$,<br>which could be expressed as $A\boldsymbol{\hat{x}}$. Our <strong>goal</strong> is to get $\boldsymbol{\hat{x}}$.</p>
-<p>Let $\boldsymbol{e = b - A\hat{x}}$ be the error vector ,<br>only when $\boldsymbol{e}$ is <strong>perpendicular</strong> to the subspace, can we say $\boldsymbol{p = b - e}$ is projection.</p>
-<p>Since $\boldsymbol{e}$ is perpendicular to $C(A)$, we can get:</p>
-<script type="math/tex; mode=display">A^T(\boldsymbol{b}-A\boldsymbol{\hat{x}}) = \boldsymbol{0}</script><p>or</p>
-<script type="math/tex; mode=display">A^TA\boldsymbol{\hat{x}} = A^T\boldsymbol{b}</script><p>The symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>.<br>Then,</p>
-<script type="math/tex; mode=display">\boldsymbol{p} = A\boldsymbol{\hat{x}}=A(A^TA)^{-1}A^T\boldsymbol{b}</script><p>Here $A(A^TA)^{-1}A^T$ is a matrix, we name it <strong>Projection Matrix</strong>.<br>You might try to split $(A^TA)^{-1}$ into $A^{-1}(A^{T})^{-1}$, however when $A$ is rectangular, it has no inverse.</p>
-<p>Or when $A$ is invertible, $N(A), N(A^T)$ contains only <strong>zero</strong> vector,<br>where $A^T\boldsymbol{e} = 0 \rightarrow \boldsymbol{e=0, b=p}$ itself, $P = \boldsymbol{I}$ satisfies it well.</p>
-<h4 id="Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent"><a href="#Why-the-symmetric-matrix-A-TA-is-invertible-if-and-only-if-boldsymbol-a’s-in-A-are-independent" class="headerlink" title="Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are independent?"></a>Why the symmetric matrix $A^TA$ is invertible if and only if $\boldsymbol{a’s}$ in $A$ are <strong>independent</strong>?</h4><script type="math/tex; mode=display">A^TAx = 0 \Longleftrightarrow Ax = 0</script><p>Thus $A^TA$ has the same nullspace with $A$. $A$ is invertible, <strong>if and only if</strong> $A^TA$ is invertible.</p>
+<p>Let's image that there is <span class="math inline">\(\boldsymbol{b}\)</span> projecting onto a plane <span class="math inline">\(C(A)\)</span>, producing projection <span class="math inline">\(\boldsymbol{p}\)</span>. Then <span class="math inline">\(\boldsymbol{p}\)</span> is in <span class="math inline">\(C(A)\)</span>, which could be expressed as <span class="math inline">\(A\boldsymbol{\hat{x}}\)</span>. Our <strong>goal</strong> is to get <span class="math inline">\(\boldsymbol{\hat{x}}\)</span>.</p>
+<p>Let <span class="math inline">\(\boldsymbol{e = b - A\hat{x}}\)</span> be the error vector , only when <span class="math inline">\(\boldsymbol{e}\)</span> is <strong>perpendicular</strong> to the subspace, can we say <span class="math inline">\(\boldsymbol{p = b - e}\)</span> is projection.</p>
+<p>Since <span class="math inline">\(\boldsymbol{e}\)</span> is perpendicular to <span class="math inline">\(C(A)\)</span>, we can get: <span class="math display">\[A^T(\boldsymbol{b}-A\boldsymbol{\hat{x}}) = \boldsymbol{0}\]</span> or <span class="math display">\[A^TA\boldsymbol{\hat{x}} = A^T\boldsymbol{b}\]</span></p>
+<p>The symmetric matrix <span class="math inline">\(A^TA\)</span> is invertible if and only if <span class="math inline">\(\boldsymbol{a&#39;s}\)</span> in <span class="math inline">\(A\)</span> are <strong>independent</strong>. Then, <span class="math display">\[\boldsymbol{p} = A\boldsymbol{\hat{x}}=A(A^TA)^{-1}A^T\boldsymbol{b}\]</span></p>
+<p>Here <span class="math inline">\(A(A^TA)^{-1}A^T\)</span> is a matrix, we name it <strong>Projection Matrix</strong>. You might try to split <span class="math inline">\((A^TA)^{-1}\)</span> into <span class="math inline">\(A^{-1}(A^{T})^{-1}\)</span>, however when <span class="math inline">\(A\)</span> is rectangular, it has no inverse.</p>
+<p>Or when <span class="math inline">\(A\)</span> is invertible, <span class="math inline">\(N(A), N(A^T)\)</span> contains only <strong>zero</strong> vector, where <span class="math inline">\(A^T\boldsymbol{e} = 0 \rightarrow \boldsymbol{e=0, b=p}\)</span> itself, <span class="math inline">\(P = \boldsymbol{I}\)</span> satisfies it well.</p>
+<h4 id="why-the-symmetric-matrix-ata-is-invertible-if-and-only-if-boldsymbolas-in-a-are-independent">Why the symmetric matrix <span class="math inline">\(A^TA\)</span> is invertible if and only if <span class="math inline">\(\boldsymbol{a&#39;s}\)</span> in <span class="math inline">\(A\)</span> are <strong>independent</strong>?</h4>
+<p><span class="math display">\[A^TAx = 0 \Longleftrightarrow Ax = 0\]</span></p>
+<p>Thus <span class="math inline">\(A^TA\)</span> has the same nullspace with <span class="math inline">\(A\)</span>. <span class="math inline">\(A\)</span> is invertible, <strong>if and only if</strong> <span class="math inline">\(A^TA\)</span> is invertible.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-42/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/08/23/LeetCode-42/" class="post-title-link" itemprop="url">LeetCode 42 接雨水 题解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-08-24 17:39:00" itemprop="dateModified" datetime="2023-08-24T17:39:00+08:00">2023-08-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>题目描述： <img src="/images/leetcode42.png" alt="img" /></p>
+<p>基本想法：</p>
+<p>对于每个方格索引 <span class="math inline">\(x\)</span>，其容量<span class="math inline">\(c(x)\)</span>取决于其左边最高的格子和右边最高的格子，也就是说令：</p>
+<p><span class="math display">\[t(x) = \min(\max_{y&lt;x}{\{h(y)\}} , \max_{y&gt;x}{\{h(y)\}})\]</span></p>
+<p>则</p>
+<p><span class="math display">\[
+c(x) =
+\begin{cases}
+t(x) - h(x), &amp; \text{if } y &gt; x \\
+0, &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<p>故我们可以有代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">int</span> <span class="title">trap</span><span class="params">(vector&lt;<span class="type">int</span>&gt; &amp;height)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = height.<span class="built_in">size</span>();</span><br><span class="line">    <span class="type">int</span> *maxLessThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    <span class="type">int</span> *maxGreaterThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    maxLessThan[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">    maxGreaterThan[n - <span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i - <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i - <span class="number">1</span>];</span><br><span class="line">      maxLessThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line">    curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">2</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i + <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i + <span class="number">1</span>];</span><br><span class="line">      maxGreaterThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="type">int</span> t = std::<span class="built_in">min</span>(maxLessThan[i], maxGreaterThan[i]);</span><br><span class="line">      <span class="type">int</span> capa = t &gt; height[i] ? t - height[i] : <span class="number">0</span>;</span><br><span class="line">      ret += capa;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>当然还有同样思想的双指针法，此处不表。</p>
 
       
     </div>
@@ -366,94 +563,6 @@
 <li><p>讲义的 20−23 页介绍了基于 AC 自动机的一种 wildcard matching 算法，其中的 wildcard <span class="math inline">\(\phi\)</span> 就是本题中的问号。</p></li>
 </ul>
 <p>感兴趣的读者可以尝试进行学习。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/23/LeetCode-42/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/23/LeetCode-42/" class="post-title-link" itemprop="url">LeetCode 42 接雨水 题解</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-23 16:35:00" itemprop="dateCreated datePublished" datetime="2023-08-23T16:35:00+08:00">2023-08-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-24 17:39:00" itemprop="dateModified" datetime="2023-08-24T17:39:00+08:00">2023-08-24</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>题目描述： <img src="/images/leetcode42.png" alt="img" /></p>
-<p>基本想法：</p>
-<p>对于每个方格索引 <span class="math inline">\(x\)</span>，其容量<span class="math inline">\(c(x)\)</span>取决于其左边最高的格子和右边最高的格子，也就是说令：</p>
-<p><span class="math display">\[t(x) = \min(\max_{y&lt;x}{\{h(y)\}} , \max_{y&gt;x}{\{h(y)\}})\]</span></p>
-<p>则</p>
-<p><span class="math display">\[
-c(x) =
-\begin{cases}
-t(x) - h(x), &amp; \text{if } y &gt; x \\
-0, &amp; \text{otherwise}
-\end{cases}
-\]</span></p>
-<p>故我们可以有代码：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="type">int</span> <span class="title">trap</span><span class="params">(vector&lt;<span class="type">int</span>&gt; &amp;height)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> n = height.<span class="built_in">size</span>();</span><br><span class="line">    <span class="type">int</span> *maxLessThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    <span class="type">int</span> *maxGreaterThan = <span class="keyword">new</span> <span class="type">int</span>[n];</span><br><span class="line">    maxLessThan[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">    maxGreaterThan[n - <span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i - <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i - <span class="number">1</span>];</span><br><span class="line">      maxLessThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line">    curMax = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = n - <span class="number">2</span>; i &gt;= <span class="number">0</span>; --i) &#123;</span><br><span class="line">      <span class="keyword">if</span> (height[i + <span class="number">1</span>] &gt; curMax)</span><br><span class="line">        curMax = height[i + <span class="number">1</span>];</span><br><span class="line">      maxGreaterThan[i] = curMax;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; ++i) &#123;</span><br><span class="line">      <span class="type">int</span> t = std::<span class="built_in">min</span>(maxLessThan[i], maxGreaterThan[i]);</span><br><span class="line">      <span class="type">int</span> capa = t &gt; height[i] ? t - height[i] : <span class="number">0</span>;</span><br><span class="line">      ret += capa;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>当然还有同样思想的双指针法，此处不表。</p>
 
       
     </div>
@@ -1104,114 +1213,6 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Cache-Performance-Analysis/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Cache-Performance-Analysis/" class="post-title-link" itemprop="url">Cache Performance Analysis</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 16:21:00 / Modified: 21:55:41" itemprop="dateCreated datePublished" datetime="2023-08-07T16:21:00+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="some-concepts">Some Concepts</h2>
-<p>AMAT: Average memory access time. <span class="math inline">\(AMAT = t_{hit} + rate_{missed} * penalty_{missed}\)</span></p>
-<h2 id="cache-miss">Cache Miss</h2>
-<p>Sources of Cache Misses:</p>
-<ul>
-<li>Compulsory: (Like cold start, process migration, 1st reference)</li>
-<li>Capacity</li>
-<li>Conflict (Collison)</li>
-</ul>
-<p>The Design Solutions:</p>
-<ul>
-<li>Compulsory:
-<ul>
-<li>Increase block size</li>
-</ul></li>
-<li>Capacity:
-<ul>
-<li>Increase cache size</li>
-</ul></li>
-<li>Conflict:
-<ul>
-<li>Increase associativity (may increase hit-time)</li>
-</ul></li>
-</ul>
-<h2 id="miss-penalty">Miss Penalty</h2>
-<p>Factors:</p>
-<ul>
-<li>How big is your memory architecture</li>
-<li>How big is your block size</li>
-</ul>
-<h2 id="multiple-cache-levels">Multiple Cache Levels</h2>
-<p>To minimize AMAT, we need to adjust the type/parameters of cache. But it's hard to reduce hit time, miss rate and miss penalty at once.</p>
-<p>Multiple Cache Levels resolves this.</p>
-<p>In general, L1 focuses on low hit time, L2,L3 focus on low miss rate. However, there is also big write back cost for such design.</p>
-<h2 id="the-cache-design-space">The Cache Design Space</h2>
-<ul>
-<li>Cache parameters</li>
-<li>Policy choices (Rewrite, Replacement)</li>
-<li>Optimal choice is a compromise</li>
-<li>Simplicity often wins</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1283,20 +1284,20 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
