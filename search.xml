@@ -1378,7 +1378,7 @@ D \\
     <title>(Paper Reading) SCC-Based Value Numbering</title>
     <url>/2023/10/18/Paper-Reading-SCC-VN/</url>
     <content><![CDATA[<h2 id="introduction">Introduction</h2>
-<p><em>Value Numbering</em> is an universally useful optimization implemented by most compilers like <em>Clang, GCC</em>, etc. Traditionally <em>GVN</em> can be divided into <em>Hash-Based</em> and <em>Value-Partitioning</em>. The former handles algebraic simplifications but locally. The latter is global but handling only simple redundancies. <em>K. C</em> and <em>T. S</em> came up with a new method to solve it for <em>SSA</em>.</p>
+<p><em>Value Numbering</em> is a universally useful optimization implemented by most compilers like <em>Clang, GCC</em>, etc. Traditionally <em>GVN</em> can be divided into <em>Hash-Based</em> and <em>Value-Partitioning</em>. The former handles algebraic simplifications but locally. The latter is global but handling only simple redundancies. <em>K. C</em> and <em>T. S</em> came up with a new method to solve it for <em>SSA</em>.</p>
 <span id="more"></span>
 <h2 id="scc-based-value-numebring-easy-version">SCC-Based Value Numebring (Easy Version)</h2>
 <p>This paper proposed an <span class="math inline">\(O(N \cdot D(SSA))\)</span> algorithm at first, which is based on the RPO traversal and SSA form IR.</p>
