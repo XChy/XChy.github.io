@@ -1434,13 +1434,63 @@ D \\
       </tags>
   </entry>
   <entry>
-    <title>Analyse ELF Symbol Table</title>
+    <title>Looking into ELF Symbol Table</title>
     <url>/2023/10/26/ELF-Symbol-Table/</url>
     <content><![CDATA[<h2 id="introduction">Introduction</h2>
 <p>ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists of an ELF header, followed by a program header table or a section header table, or both. The two tables describe the rest of the particularities of the file.</p>
 <p>The header file &lt;elf.h&gt; defines the format of ELF files and related C structures.</p>
 <span id="more"></span>
 <h2 id="top-view">Top-View</h2>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">| -------------- |</span><br><span class="line">|   ELF Header   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Program Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">| Section Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Symbol  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line">| String  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>We take Elf32 as an example, it's ELF header is like below:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>     e_ident[EI_NIDENT];      <span class="comment">/* Magic number and other info */</span></span><br><span class="line">  Elf64_Half        e_type;                  <span class="comment">/* Object file type */</span></span><br><span class="line">  Elf64_Half        e_machine;               <span class="comment">/* Architecture */</span></span><br><span class="line">  Elf64_Word        e_version;               <span class="comment">/* Object file version */</span></span><br><span class="line">  Elf64_Addr        e_entry;                 <span class="comment">/* Entry point virtual address */</span></span><br><span class="line">  Elf64_Off         e_phoff;                 <span class="comment">/* Program header table file offset */</span></span><br><span class="line">  Elf64_Off         e_shoff;                 <span class="comment">/* Section header table file offset */</span></span><br><span class="line">  Elf64_Word        e_flags;                 <span class="comment">/* Processor-specific flags */</span></span><br><span class="line">  Elf64_Half        e_ehsize;                <span class="comment">/* ELF header size in bytes */</span></span><br><span class="line">  Elf64_Half        e_phentsize;             <span class="comment">/* Program header table entry size */</span></span><br><span class="line">  Elf64_Half        e_phnum;                 <span class="comment">/* Program header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shentsize;             <span class="comment">/* Section header table entry size */</span></span><br><span class="line">  Elf64_Half        e_shnum;                 <span class="comment">/* Section header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shstrndx;              <span class="comment">/* Section header string table index */</span></span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+<p><strong>e_shoff</strong> defines the offset of <strong>section header tables</strong> from <strong>file begin</strong>. And section tables consist of consecutive sections.<br />
+<strong>p_shoff</strong> defines the offset of <strong>program header tables</strong> from <strong>file begin</strong>.</p>
+<h3 id="section-header">Section Header</h3>
+<p>A file's section header table lets one locate all the file's sections. From <strong>e_shoff</strong> we can reach the table of section headers. And <strong>e_shnum</strong> holds the number of entries the section header table contains.</p>
+<p>A section header table index is a subscript into this array. Some section header table indices are reserved: the initial entry and the indices between <strong>SHN_LORESERVE</strong> and <strong>SHN_HIRESERVE</strong>. The initial entry is used in ELF extensions for <strong>e_phnum</strong>, <strong>e_shnum</strong>, and <strong>e_shstrndx</strong>; in other cases, each field in the initial entry is set to zero. An object file does not have sections for these special indices:</p>
+<p>For details about these special indices, see also <code>man 5 elf</code>.</p>
+<p>The section header has the following structure:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word    sh_name;        <span class="comment">/* Section name (string tbl index) */</span></span><br><span class="line">  Elf32_Word    sh_type;        <span class="comment">/* Section type */</span></span><br><span class="line">  Elf32_Word    sh_flags;       <span class="comment">/* Section flags */</span></span><br><span class="line">  Elf32_Addr    sh_addr;        <span class="comment">/* Section virtual addr at execution */</span></span><br><span class="line">  Elf32_Off     sh_offset;      <span class="comment">/* Section file offset */</span></span><br><span class="line">  Elf32_Word    sh_size;        <span class="comment">/* Section size in bytes */</span></span><br><span class="line">  Elf32_Word    sh_link;        <span class="comment">/* Link to another section */</span></span><br><span class="line">  Elf32_Word    sh_info;        <span class="comment">/* Additional section information */</span></span><br><span class="line">  Elf32_Word    sh_addralign;   <span class="comment">/* Section alignment */</span></span><br><span class="line">  Elf32_Word    sh_entsize;     <span class="comment">/* Entry size if section holds table */</span></span><br><span class="line">&#125; Elf32_Shdr;</span><br></pre></td></tr></table></figure>
+<p><strong>sh_name</strong>: indicates the <em>index</em> of <em>section name</em> in <em>Section Header String Table</em>.<br />
+<strong>sh_type</strong>: mainly includes(The part I'm interested in):</p>
+<ul>
+<li><strong>SHT_NULL</strong>: Marks the section header as inactive.</li>
+<li><strong>SHT_SYMTAB</strong>: Symbol Table, for link editing and dynamic linking.</li>
+<li><strong>SHT_DYNSYM</strong>: Dynamic Symbol Table, holds a minimal set of dynamic symbols linking symbols.</li>
+<li><strong>SHT_STRTAB</strong>: String Table. An object file may have multiple string sections.</li>
+</ul>
+<p><strong>sh_offset</strong>: functions as above, determining the offset of section from from begin.<br />
+<strong>sh_link</strong>: This member holds a section header table index link, whose interpretation depends on the section type. For symbol table, it's the section index of String Table Section (holding <strong>name</strong> of symbol).</p>
+<h3 id="elf-symbol-table">ELF Symbol Table</h3>
+<p>ELF Symbol Table consists of <strong>consecutive</strong> entries.<br />
+The structure of the ELF symbol table entry is like:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word       st_name;        <span class="comment">/* Symbol name (string tbl index) */</span></span><br><span class="line">  Elf32_Addr       st_value;       <span class="comment">/* Symbol value */</span></span><br><span class="line">  Elf32_Word       st_size;        <span class="comment">/* Symbol size */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_info;        <span class="comment">/* Symbol type and binding */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_other;       <span class="comment">/* Symbol visibility */</span></span><br><span class="line">  Elf32_Section    st_shndx;       <span class="comment">/* Section index */</span></span><br><span class="line">&#125; Elf32_Sym;</span><br></pre></td></tr></table></figure>
+<p>As the comment shows, <strong>st_name</strong> is an <em>entry</em> index in <em>String Table</em>. And the section index of <em>String Table</em> is holded in <strong>sh_link</strong>. Based on both, we can get the function/variable name easily.</p>
+<p><strong>st_info</strong>: Consist of 2 field: Bind and Type, we focus on latter(which can be derived by <code>ELF32_ST_TYPE(info)</code>) now.</p>
+<p>Symbol type mainly includes:</p>
+<ul>
+<li><strong>STT_OBJECT</strong>: A data object. (Such as <em>C</em> variable)</li>
+<li><strong>STT_FUNC</strong>: A function or other executable code.</li>
+<li><strong>STT_SECTION</strong>: A section, for relocation.</li>
+<li><strong>STT_FILE</strong>: The name of the source file.</li>
+<li><strong>STB_LOCAL</strong>: Local symbols are not visible outside the object file containing their definition. Local symbols of the same name may exist in multiple files without interfering with each other.</li>
+<li><strong>STB_GLOBAL</strong>: Global symbols are visible to all object files being com‐ bined. One file's definition of a global symbol will satisfy another file's undefined reference to the same symbol.</li>
+<li><strong>STB_WEAK</strong>: Weak symbols resemble global symbols, but their definitions have lower precedence.</li>
+</ul>
+<h3 id="how-to-find-string-in-string-table">How to Find String in String Table?</h3>
+<p>String Table can be seen as an array of multiple null-terminated strings. The index of the entry in String Table is just the index of string in array.</p>
+<p>For example, a String Table may look like this:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;\0hello\0world\0xxxxxxxxx&quot;</span></span><br></pre></td></tr></table></figure>
+<p>The 0th entry is always empty. The 1st entry is "hello". The 2nd is "world". So every time you want to find an string entry by index, you must traverse every string before the one you looks for. Or you can cache the whole string table to speed up the whole ELF analysis.</p>
+<h3 id="some-tools">Some Tools</h3>
+<p><em>readelf</em> can read the elf file easily by various options.</p>
+<p>Some cheatsheet:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">readelf -h <span class="comment"># show elf header</span></span><br><span class="line">readelf -l <span class="comment"># show program headers, or segments</span></span><br><span class="line">readelf -S <span class="comment"># show section headers</span></span><br><span class="line">readelf -g <span class="comment"># show section groups</span></span><br><span class="line">readelf -s <span class="comment"># show symbols</span></span><br></pre></td></tr></table></figure>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><strong><em>Linux ELF Manual</em></strong></li>
+</ul>
 ]]></content>
       <categories>
         <category>OS</category>
