@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">18</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">20</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">12</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">36</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">37</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,83 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/" class="post-title-link" itemprop="url">Neovim常用配置(3) (clangd & CMake)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-03-01 22:42:55 / Modified: 23:04:19" itemprop="dateCreated datePublished" datetime="2023-03-01T22:42:55+08:00">2023-03-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在使用 Neovim 进行 C/C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮/重构等语言服务</p>
+<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
+<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
+<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
+<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
+<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
+<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+<p>构建时只需要输入 build.sh</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -754,20 +831,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">37</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

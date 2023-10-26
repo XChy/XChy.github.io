@@ -1433,4 +1433,21 @@ D \\
         <tag>Paper</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Analyse ELF Symbol Table</title>
+    <url>/2023/10/26/ELF-Symbol-Table/</url>
+    <content><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists of an ELF header, followed by a program header table or a section header table, or both. The two tables describe the rest of the particularities of the file.</p>
+<p>The header file &lt;elf.h&gt; defines the format of ELF files and related C structures.</p>
+<span id="more"></span>
+<h2 id="top-view">Top-View</h2>
+]]></content>
+      <categories>
+        <category>OS</category>
+      </categories>
+      <tags>
+        <tag>ELF</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
 </search>

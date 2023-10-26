@@ -20,20 +20,21 @@
     var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 clangd 作为 lsp 提供语法高亮&#x2F;重构等语言服务 其中 clangd 根据自动推断宏的功能也是十分有效，搭配CMake可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件) 下面提供简要的集成 clangd 与 cmake 的方法 一般来说clangd可以自动识别CMake生成的c">
+  <meta name="description" content="Introduction ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Neovim常用配置(3) (clangd &amp; CMake)">
-<meta property="og:url" content="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/index.html">
+<meta property="og:title" content="Analyse ELF Symbol Table">
+<meta property="og:url" content="http://xchy.github.io/2023/10/26/ELF-Symbol-Table/index.html">
 <meta property="og:site_name" content="XChy&#39;s Blog">
-<meta property="og:description" content="在使用 Neovim 进行 C&#x2F;C++的开发时，我们常常使用 clangd 作为 lsp 提供语法高亮&#x2F;重构等语言服务 其中 clangd 根据自动推断宏的功能也是十分有效，搭配CMake可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件) 下面提供简要的集成 clangd 与 cmake 的方法 一般来说clangd可以自动识别CMake生成的c">
+<meta property="og:description" content="Introduction ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2023-03-01T14:42:55.000Z">
-<meta property="article:modified_time" content="2023-03-01T15:04:19.074Z">
+<meta property="article:published_time" content="2023-10-26T09:29:51.000Z">
+<meta property="article:modified_time" content="2023-10-26T09:44:59.237Z">
 <meta property="article:author" content="XChy">
-<meta property="article:tag" content="Vim">
+<meta property="article:tag" content="ELF">
+<meta property="article:tag" content="Linux">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
+<link rel="canonical" href="http://xchy.github.io/2023/10/26/ELF-Symbol-Table/">
 
 
 <script id="page-configurations">
@@ -46,7 +47,7 @@
   };
 </script>
 
-  <title>Neovim常用配置(3) (clangd & CMake) | XChy's Blog</title>
+  <title>Analyse ELF Symbol Table | XChy's Blog</title>
   
 
 
@@ -199,7 +200,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/03/01/Neovim%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE-3-Clangd---CMake/">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/26/ELF-Symbol-Table/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/doge.jpg">
@@ -212,7 +213,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Neovim常用配置(3) (clangd & CMake)
+          Analyse ELF Symbol Table
         </h1>
 
         <div class="post-meta">
@@ -223,7 +224,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2023-03-01 22:42:55 / Modified: 23:04:19" itemprop="dateCreated datePublished" datetime="2023-03-01T22:42:55+08:00">2023-03-01</time>
+              <time title="Created: 2023-10-26 17:29:51 / Modified: 17:44:59" itemprop="dateCreated datePublished" datetime="2023-10-26T17:29:51+08:00">2023-10-26</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,7 +232,7 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Tools/" itemprop="url" rel="index"><span itemprop="name">Tools</span></a>
+                  <a href="/categories/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
                 </span>
             </span>
 
@@ -246,16 +247,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>在使用 Neovim 进行 C/C++的开发时，我们常常使用 <strong>clangd</strong> 作为 <strong>lsp</strong> 提供语法高亮/重构等语言服务</p>
-<p>其中 clangd 根据自动推断宏的功能也是十分有效，搭配<strong>CMake</strong>可以达到更加好的效果(如支持 CMake 内置宏，支持自动 include CMake 配置的头文件)</p>
-<p>下面提供简要的集成 clangd 与 cmake 的方法</p>
-<p>一般来说<strong>clangd</strong>可以自动识别<strong>CMake</strong>生成的<strong>compile_commands.json</strong>来进行头文件的识别与宏的分析</p>
-<p>但 compile_commands.json 不会自动生产，故我们可以通过以下命令实现 compile_commands 的自动生产</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure>
-<p>其中 <em><code>-DCMAKE_EXPORT_COMPILE_COMMANDS=ON</code></em> 是用于导出编译命令的 flag</p>
-<p>故我常常会在项目目录下建立一个 build.sh 来构建项目:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmake . -G -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
-<p>构建时只需要输入 build.sh</p>
+        <h2 id="introduction">Introduction</h2>
+<p>ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists of an ELF header, followed by a program header table or a section header table, or both. The two tables describe the rest of the particularities of the file.</p>
+<p>The header file &lt;elf.h&gt; defines the format of ELF files and related C structures.</p>
+<span id="more"></span>
+<h2 id="top-view">Top-View</h2>
 
     </div>
 
@@ -266,7 +262,8 @@
       <footer class="post-footer">
           
           <div class="post-tags">
-              <a href="/tags/Vim/" rel="tag"><i class="fa fa-tag"></i> Vim</a>
+              <a href="/tags/ELF/" rel="tag"><i class="fa fa-tag"></i> ELF</a>
+              <a href="/tags/Linux/" rel="tag"><i class="fa fa-tag"></i> Linux</a>
           </div>
 
         
@@ -275,13 +272,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/" rel="prev" title="XSharp开发思路-Type">
-      <i class="fa fa-chevron-left"></i> XSharp开发思路-Type
+    <a href="/2023/10/18/Paper-Reading-SCC-VN/" rel="prev" title="(Paper Reading) SCC-Based Value Numbering">
+      <i class="fa fa-chevron-left"></i> (Paper Reading) SCC-Based Value Numbering
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2023/03/03/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Mutable-Variable%E7%9A%84LLVM-IR%E7%94%9F%E6%88%90/" rel="next" title="XSharp开发思路-Mutable Variable的LLVM IR生成">
-      XSharp开发思路-Mutable Variable的LLVM IR生成 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -340,6 +334,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#top-view"><span class="nav-number">2.</span> <span class="nav-text">Top-View</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

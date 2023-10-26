@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">18</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">20</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">12</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">36</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">37</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,110 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/04/CS144-Lab0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/04/CS144-Lab0/" class="post-title-link" itemprop="url">CS144-Lab0</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-04 15:35:27" itemprop="dateCreated datePublished" datetime="2023-09-04T15:35:27+08:00">2023-09-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-18 23:19:07" itemprop="dateModified" datetime="2023-09-18T23:19:07+08:00">2023-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文基于<a target="_blank" rel="noopener" href="https://cs144.github.io/assignments/check0.pdf">指导文档</a>进行编写。</p>
+<p>CS144 的 Lab0 主要分为三部分</p>
+<ul>
+<li>第一部分是 VM 的安装/使用</li>
+<li>第二部分则是 telnet 等网络程序的尝试</li>
+<li>第三部分则是写一个基于 OS 自带 socket 库的网络程序和实现一个简单 ByteStream</li>
+</ul>
+<p>第一部分可以略过。</p>
+<p>第二部分则主要是介绍<strong>telnet</strong>和<strong>telcat</strong>，其中<strong>telnet</strong>的作用就是建立 connection, 并用不同协议进行通信。 <strong>netcat</strong>则是用于建立 client/server 一类的 end-to-end 的端。</p>
+<p>首先用</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telcat 9091</span><br></pre></td></tr></table></figure>
+<p>建立一个对于 9091 端口的监听 socket, 然后打开另一个终端用</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telnet localhost 9091</span><br></pre></td></tr></table></figure>
+<p>连接到该端口，此时 telcat 的窗口就会显示连接信息。</p>
+<p>重点是第三部分的实验。这个实验将利用 Linux 的 Socket 构建一个基于 TCP 的程序，要求该程序可以连接到 Web Server，并抓取一个界面。</p>
+<p>这里有些需要注意的要点：</p>
+<ul>
+<li>在 HTTP 协议中每行必须以‘’结尾</li>
+<li>不能漏了‘Connection: closed’, 不然进程会一直等待</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">get_URL</span><span class="params">( <span class="type">const</span> string&amp; host, <span class="type">const</span> string&amp; path )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  TCPSocket sock1;</span><br><span class="line">  Address addr = <span class="built_in">Address</span>( host, <span class="string">&quot;http&quot;</span> );</span><br><span class="line">  sock1.<span class="built_in">connect</span>( addr );</span><br><span class="line">  sock1.<span class="built_in">write</span>( <span class="string">&quot;GET &quot;</span> + path + <span class="string">&quot; &quot;</span> + <span class="string">&quot;HTTP/1.1\r\nHost: &quot;</span> + host + <span class="string">&quot;\r\nConnection: close\r\n\r\n&quot;</span> );</span><br><span class="line">  <span class="keyword">while</span> ( <span class="number">1</span> ) &#123;</span><br><span class="line">    string recv;</span><br><span class="line">    sock1.<span class="built_in">read</span>( recv );</span><br><span class="line">    cout &lt;&lt; recv;</span><br><span class="line">    <span class="keyword">if</span> ( sock1.<span class="built_in">eof</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  sock1.<span class="built_in">close</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 ByteStream 部分，要实现对于数据的读写，笔者主要是基于<code>std::queue</code>实现的缓存， 主要难点在于 peek 函数，参考网上代码后，发现 string_view 必须像下列代码一样初始化：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">string_view <span class="title">Reader::peek</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123; &amp;buffer.<span class="built_in">front</span>(), <span class="number">1</span> &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="优化部分">优化部分</h3>
+<p>用 string_view 和 move 实现移动语义：</p>
+<p>两个队列存数据和引用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::queue&lt;std::string_view&gt; buffer;</span><br><span class="line">std::queue&lt;std::string&gt; buffer_actual;</span><br></pre></td></tr></table></figure>
+<p>Reader 的 pop 则要分类讨论：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reader::pop</span><span class="params">( <span class="type">uint64_t</span> len )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  bytesPopped += len;</span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">unsigned</span> i = <span class="number">0</span>; i &lt; len; ) &#123;</span><br><span class="line">    <span class="keyword">if</span> ( buffer.<span class="built_in">front</span>().<span class="built_in">size</span>() &gt; len - i ) &#123;</span><br><span class="line">      buffer.<span class="built_in">front</span>() = buffer.<span class="built_in">front</span>().<span class="built_in">substr</span>( len - i );</span><br><span class="line">      i = len;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      i += buffer.<span class="built_in">front</span>().<span class="built_in">size</span>();</span><br><span class="line">      buffer.<span class="built_in">pop</span>();</span><br><span class="line">      buffer_actual.<span class="built_in">pop</span>();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> ( !buffer.<span class="built_in">empty</span>() &amp;&amp; buffer.<span class="built_in">front</span>().<span class="built_in">empty</span>() )</span><br><span class="line">    buffer.<span class="built_in">pop</span>();</span><br><span class="line">  bytesBuffered -= len;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后优化的结果： <img src="/images/CS144_Lab0.png" alt="img" /></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -1140,79 +1244,6 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/OS-Boot/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/OS-Boot/" class="post-title-link" itemprop="url">OS Boot</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-08-07 21:55:02 / Modified: 21:57:56" itemprop="dateCreated datePublished" datetime="2023-08-07T21:55:02+08:00">2023-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>The 1st period: the CPU executes instructions from some start address (stored in Flash ROM)</p>
-<ol type="1">
-<li>BIOS: FInd a storage device and load first sector.</li>
-<li>Bootloader: Load the OS kernel from disk into a location in memory and jump into it.</li>
-<li>OS Boot: Initialize services, drivers, etc.</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1284,20 +1315,20 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">37</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
