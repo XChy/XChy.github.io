@@ -131,7 +131,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">37</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">38</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,76 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/10/30/LLVM-Docs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/10/30/LLVM-Docs/" class="post-title-link" itemprop="url">有关LLVM的文档</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-10-30 19:02:08 / Modified: 19:05:35" itemprop="dateCreated datePublished" datetime="2023-10-30T19:02:08+08:00">2023-10-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><a target="_blank" rel="noopener" href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
+<a target="_blank" rel="noopener" href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
+<a target="_blank" rel="noopener" href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -389,7 +459,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-10-18 01:06:33" itemprop="dateModified" datetime="2023-10-18T01:06:33+08:00">2023-10-18</time>
+                <time title="Modified: 2023-10-29 16:13:27" itemprop="dateModified" datetime="2023-10-29T16:13:27+08:00">2023-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -937,85 +1007,6 @@ For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for C
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/12/CS144-Lab1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/09/12/CS144-Lab1/" class="post-title-link" itemprop="url">CS144-Lab1</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-09-12 10:07:39 / Modified: 10:30:04" itemprop="dateCreated datePublished" datetime="2023-09-12T10:07:39+08:00">2023-09-12</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>CS144 Lab1的主要任务是完成<strong>TCP</strong>的<strong>Reassembler</strong>，其主要功能为： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span>;</span><br></pre></td></tr></table></figure> 其中<code>first_index</code>是数据的逻辑下标，也就是数据到达的顺序，<code>is_last_substring</code>标识了该数据是否代表了最后一份数据。 而<code>output</code>明显就是输出的字节流。</p>
-<p>TCP的数据流一般由以下部分组成：</p>
-<p><code>| popped data | unpopped-and-pushed data | arrived-and-unpushed data |</code></p>
-<p>其中<strong>popped data</strong>已经被Reader获取，而<strong>unpopped-and-pushed data</strong>已经被Writer写进缓存， 但Reader暂时还未读取，最后的<strong>arrived-and-unpushed data</strong>是从网络接收，尚未组装传入Writer，非连续的数据， 是本Lab的核心工作对象。</p>
-<p>计算机网络的特性决定了：不同的数据到来顺序是乱序的，他们之间可能有重叠(overlapping)，而且到来的数据可能已经被push， 而Reassembler要解决这些问题，提供可靠的<strong>流服务(Reliable Flow)</strong>。</p>
-<h2 id="设计思路">设计思路</h2>
-<p>我的基本想法是用一个类似char数组的缓存存储<strong>arrived-and-unpushed</strong>的数据， 然后用一个<code>map&lt;int,int&gt;</code>存储已经到达的数据的index区间 <span class="math inline">\([l,r]\)</span>，在数据到达时进行区间的合并， 这一问题和经典算法题<strong>插入区间</strong>一致。</p>
-<p>其他的逻辑比较简单，主要是： - <code>first_index</code>若是arrived-and-unpushed data的首地址，要直接push - 若是空字符则省略，但若有last_string的标识，则要把writer关闭 - 一部分data在push之后，buf之后的数据要往前推（有优化空间？）</p>
-<p>Reassembler的成员如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  std::map&lt;<span class="type">uint64_t</span>, <span class="type">uint64_t</span>&gt; buffer;</span><br><span class="line">  std::string buf;</span><br><span class="line">  <span class="type">uint64_t</span> end_index;</span><br><span class="line">  <span class="type">uint64_t</span> pending;</span><br></pre></td></tr></table></figure></p>
-<p>实现代码如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Your code here.</span></span><br><span class="line">  (<span class="type">void</span>)first_index;</span><br><span class="line">  (<span class="type">void</span>)data;</span><br><span class="line">  (<span class="type">void</span>)is_last_substring;</span><br><span class="line">  (<span class="type">void</span>)output;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( buf.<span class="built_in">empty</span>() )</span><br><span class="line">    buf.<span class="built_in">resize</span>( output.<span class="built_in">capacity</span>() );</span><br><span class="line"></span><br><span class="line">  <span class="type">uint64_t</span> bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">  <span class="type">uint64_t</span> insert_l = <span class="built_in">max</span>( output.<span class="built_in">bytes_pushed</span>(), first_index );</span><br><span class="line">  <span class="type">uint64_t</span> insert_r = <span class="built_in">min</span>( first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>, output.<span class="built_in">available_capacity</span>() + bias_push - <span class="number">1</span> );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( is_last_substring )</span><br><span class="line">    end_index = first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( data.<span class="built_in">empty</span>() &amp;&amp; is_last_substring ) &#123;</span><br><span class="line">    output.<span class="built_in">close</span>();</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l - first_index &gt;= data.<span class="built_in">size</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span> ( insert_l &gt; insert_r )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = insert_l; i &lt;= insert_r; i++ ) &#123;</span><br><span class="line">    buf[i - bias_push] = data[i - first_index];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">bool</span> changed = <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">while</span> ( changed &amp;&amp; !buffer.<span class="built_in">empty</span>() ) &#123;</span><br><span class="line">    changed = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">auto</span> upper = buffer.<span class="built_in">lower_bound</span>( insert_l );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// upper.first &gt;= l, compare [l,r] with [uf, us]</span></span><br><span class="line">    <span class="keyword">if</span> ( upper != buffer.<span class="built_in">end</span>() &amp;&amp; insert_r + <span class="number">1</span> &gt;= upper-&gt;first ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_r = <span class="built_in">max</span>( upper-&gt;second, insert_r );</span><br><span class="line">      pending -= upper-&gt;second - upper-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( upper );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( upper == buffer.<span class="built_in">begin</span>() || buffer.<span class="built_in">empty</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">auto</span> lower = --upper;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// lower.first &lt; l, compare [lf, ls] with [l, r]</span></span><br><span class="line">    <span class="keyword">if</span> ( lower != buffer.<span class="built_in">end</span>() &amp;&amp; lower-&gt;second + <span class="number">1</span> &gt;= insert_l ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_l =  lower-&gt;first;</span><br><span class="line">      insert_r = <span class="built_in">max</span>( lower-&gt;second, insert_r );</span><br><span class="line">      pending -= lower-&gt;second - lower-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( lower );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l == output.<span class="built_in">bytes_pushed</span>() ) &#123;</span><br><span class="line">    <span class="type">uint64_t</span> old_bias = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">    output.<span class="built_in">push</span>( buf.<span class="built_in">substr</span>( insert_l - output.<span class="built_in">bytes_pushed</span>(), insert_r - insert_l + <span class="number">1</span> ) );</span><br><span class="line">    bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( insert_r == end_index ) &#123;</span><br><span class="line">      output.<span class="built_in">close</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ( <span class="keyword">auto</span> it = buffer.<span class="built_in">begin</span>(); it != buffer.<span class="built_in">end</span>(); it++ )</span><br><span class="line">      <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = it-&gt;first; i &lt;= it-&gt;second; ++i )</span><br><span class="line">        buf[i - bias_push] = buf[i - old_bias];</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    buffer[insert_l] = insert_r;</span><br><span class="line">    pending += insert_r - insert_l + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Reassembler::bytes_pending</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> pending;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>大部分的代码和插入区间问题一致,最后的性能指标为 1.78Gbit/s，有一定的优化空间。</p>
-<p>我想用string先存储起来，最后进行合并的话性能会提高不少。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1087,7 +1078,7 @@ For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for C
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-count">38</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

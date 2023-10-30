@@ -311,6 +311,7 @@ For my recent work on <em>LLVM</em>, I'd like to share some experience about it.
 <h2 id="reference">Reference</h2>
 <ul>
 <li><a href="https://clangbuiltlinux.github.io/llvm-dev-conf-2020/nick/debugging_llvm.html">Debugging llvm</a></li>
+<li><a href="https://www.npopov.com/2023/10/22/How-to-reduce-LLVM-crashes.html">Nikic's Blog</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -1498,6 +1499,22 @@ The structure of the ELF symbol table entry is like:</p>
       <tags>
         <tag>ELF</tag>
         <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>有关LLVM的文档</title>
+    <url>/2023/10/30/LLVM-Docs/</url>
+    <content><![CDATA[<p><a href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
+<a href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
+<a href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a></p>
+]]></content>
+      <categories>
+        <category>LLVM</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>OpenSource</tag>
       </tags>
   </entry>
 </search>
