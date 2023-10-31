@@ -1517,4 +1517,30 @@ The structure of the ELF symbol table entry is like:</p>
         <tag>OpenSource</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Introduction to GPU</title>
+    <url>/2023/10/31/Introduction-To-GPU/</url>
+    <content><![CDATA[<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>GPU, Graphics Processing Unit, is initially designed to accelerate image rendering<br>such as video games. For its high performance at parallel computation, it has become<br>a great processor for accelerating DL/ML training.</p>
+<span id="more"></span>
+<p>Unlike CPU, GPU consists of numerous computational units, long pipeline and a<br>video memory, which determines its advantages in parallel computation and disadvantages<br>in complex control logic handling.</p>
+<p><img src="/images/CPU-GPU.webp" alt=""></p>
+<h2 id="Computational-units-cores"><a href="#Computational-units-cores" class="headerlink" title="Computational units(cores)"></a>Computational units(cores)</h2><p>In total, computational units of CPU are fast but few, while that of GPU are slow but numerous.<br>The fastness of CPU is based on its high frequency and smart calculation. Here, smartness is<br>reflected by its out-of-order executions, multiple branch prediction and etc.</p>
+<p>But GPU can only handle some easy linear work like <code>fmuladd</code> instructions. In fact, except small<br>scalar float, modern GPU can perform operations on more complicated type like tensor(<em>tensor core</em>).</p>
+<p>SIMD not only exist in CPU, but also in GPU. Same operation, but different data, such feature<br>make GPU fast in parallel work like matrix multiplication.</p>
+<h2 id="Memory"><a href="#Memory" class="headerlink" title="Memory"></a>Memory</h2><p>Memory of GPU is much tinier than CPU’s. And cache in GPU has some difference with<br>what L1, L2 in CPU do.</p>
+<p>For <code>reduce</code> in parallel computation, it requires multiple cores share memory. But<br>it’s hard and expensive for thousands of core share one memory segment. So we divide<br>different types of cores into multiple groups, called <em>Streaming Multiprocessors</em>;</p>
+<p>There are INT32, FP32 and other types of SM in GPU. So how they cooperate?</p>
+<p>In TU102. every 4 SMs share a shared segment of L1 cache, and all cores share L2<br>cache. Like CPU, after missing data in L1, core will try to hit L2, and then GMEM.<br>To note, how L1 is shared is controlled by software or programmer, not hardware.<br>But L2 and GMEM is controlled by hardware. Besides, cores can also share data in<br>registers.</p>
+<p>The basic idea is that every thread holds a register to keep temporary result and<br>every register can only be visited by one consistent thread(or by same wrap/group).</p>
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p><a href="https://zhuanlan.zhihu.com/p/598173226">Clarence’s Zhihu</a><br><a href="https://medium.com/codex/understanding-the-architecture-of-a-gpu-d5d2d2e8978b">Understanding the architecture of a GPU</a></p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>GPU</tag>
+        <tag>HPC</tag>
+      </tags>
+  </entry>
 </search>

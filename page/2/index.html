@@ -121,7 +121,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">20</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">22</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -131,7 +131,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">38</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">39</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,89 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/12/CS144-Lab2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/12/CS144-Lab2/" class="post-title-link" itemprop="url">CS144-Lab2</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-12 10:37:55" itemprop="dateCreated datePublished" datetime="2023-09-12T10:37:55+08:00">2023-09-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-17 20:24:21" itemprop="dateModified" datetime="2023-09-17T20:24:21+08:00">2023-09-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>CS144 Lab2的主要任务是完成一个TCP Receiver，在TCP协议中每一个端系统都会有两个角色： <strong>Sender</strong>和<strong>Receiver</strong>，这个Lab的主要研究对象就是后者了。</p>
+<p>而Receiver要完成几个任务： - 从Sender接受数据 - Reassemble 这些数据（在Lab1已经完成） - 决定是否把<strong>Acknowledgement</strong>和<strong>Flow-Control</strong>的数据send back</p>
+<p>注意， <strong>Acknowledgement</strong> 表示的是Receiver所需要下一个byte的index， <strong>Flow-Control</strong> 表示的则是Receiver想获取多少数据。</p>
+<h2 id="转换64位和32位的seqnos">转换64位和32位的seqnos</h2>
+<p>众所周知，64位非常大，以至于可以认为其永远不会溢出，但32位最大只有4GB，这意味着32位的地址可能会不够用。 而TCP header中，seqno是用32位来表示，也就是说为了节省空间，每份sequence的地址都是32位寻址的。</p>
+<p>这导致了TCP的一些机制： - 一旦32位的sequence number积累到 <span class="math inline">\(2^{32} - 1\)</span>，下一字节的index就变成了0。 - 为了提高TCP的健壮性并避免在同一端点之间的早期连接中混淆旧的数据段，TCP试图确保序列号不易被猜测并且不太可能重复。 因此，流的TCP sequences number不从零开始。流中的第一个序列号是一个随机的32位数字，称为初始序列号(<span class="math inline">\(ISN\)</span>）。 这是表示“零点”或<span class="math inline">\(SYN\)</span>（流的开始）的序列号。之后的序列号行为与正常情况下相同： 数据的第一个字节将具有<span class="math inline">\(ISN + 1\mod 2^{32}\)</span>的序列号，第二个字节将具有<span class="math inline">\(ISN + 2\mod 2^{32}\)</span>的序列号，依此类推。 - (懒得翻译直接粘贴了)The logical beginning and ending each occupy one sequence number: In addition to ensuring the receipt of all bytes of data, TCP makes sure that the beginning and ending of the stream are received reliably. Thus, in TCP the SYN (beginning-ofstream) and FIN (end-of-stream) control flags are assigned sequence numbers. Each of these occupies one sequence number. (The sequence number occupied by the SYN flag is the ISN.) Each byte of data in the stream also occupies one sequence number. Keep in mind that SYN and FIN aren’t part of the stream itself and aren’t “bytes”—they represent the beginning and ending of the byte stream itself.</p>
+<p>总之我们要实现一个<code>Wrap32</code>类来进行有关转换，基本代码如下： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Wrap32 <span class="title">Wrap32::wrap</span><span class="params">( <span class="type">uint64_t</span> n, Wrap32 zero_point )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> zero_point + n;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Wrap32::unwrap</span><span class="params">( Wrap32 zero_point, <span class="type">uint64_t</span> checkpoint )</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">uint64_t</span> cycle = <span class="number">1ll</span> &lt;&lt; <span class="number">32</span>;</span><br><span class="line">  <span class="type">uint64_t</span> n_cycle = checkpoint / cycle;</span><br><span class="line">  <span class="type">uint64_t</span> diff = raw_value_ - zero_point.raw_value_;</span><br><span class="line">  <span class="type">uint64_t</span> upper = ( n_cycle + <span class="number">1ll</span> ) * cycle + diff;</span><br><span class="line">  <span class="type">uint64_t</span> middle = n_cycle * cycle + diff;</span><br><span class="line">  <span class="type">uint64_t</span> lower = ( n_cycle - <span class="number">1ll</span> ) * cycle + diff;</span><br><span class="line">  <span class="keyword">if</span> ( ( ( n_cycle == <span class="number">0</span> &amp;&amp; cycle &lt;= diff ) || n_cycle != <span class="number">0</span> ) &amp;&amp; checkpoint &lt;= ( lower + middle ) / <span class="number">2</span> )</span><br><span class="line">    <span class="keyword">return</span> lower;</span><br><span class="line">  <span class="keyword">if</span> ( checkpoint &lt;= ( middle + upper ) / <span class="number">2</span> )</span><br><span class="line">    <span class="keyword">return</span> middle;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    <span class="keyword">return</span> upper;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>说实话这里我debug了很久，主要是没有考虑 <span class="math inline">\(lower &lt; 0\)</span> 的情况。</p>
+<p>然后是receiver的代码： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">TCPReceiver::<span class="built_in">TCPReceiver</span>() : <span class="built_in">ISN</span>( <span class="literal">nullopt</span> ), <span class="built_in">FIN</span>( <span class="literal">false</span> ) &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TCPReceiver::receive</span><span class="params">( TCPSenderMessage message, Reassembler&amp; reassembler, Writer&amp; inbound_stream )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">if</span> ( message.SYN )</span><br><span class="line">    ISN = message.seqno;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( !ISN.<span class="built_in">has_value</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( message.FIN )</span><br><span class="line">    FIN = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">  reassembler.<span class="built_in">insert</span>( message.seqno.<span class="built_in">unwrap</span>( ISN.<span class="built_in">value</span>(), reassembler.<span class="built_in">bytes_pending</span>() ) + message.SYN - <span class="number">1ll</span>,</span><br><span class="line">                      message.payload,</span><br><span class="line">                      message.FIN,</span><br><span class="line">                      inbound_stream );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">TCPReceiverMessage <span class="title">TCPReceiver::send</span><span class="params">( <span class="type">const</span> Writer&amp; inbound_stream )</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  (<span class="type">void</span>)inbound_stream;</span><br><span class="line">  TCPReceiverMessage ret;</span><br><span class="line">  <span class="keyword">if</span> ( !ISN.<span class="built_in">has_value</span>() )</span><br><span class="line">    ret.ackno = <span class="literal">nullopt</span>;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    <span class="comment">// +1 for the SYN flag, and finish only when FIN flag reached and stream is closed.</span></span><br><span class="line">    ret.ackno</span><br><span class="line">      = Wrap32::<span class="built_in">wrap</span>( inbound_stream.<span class="built_in">bytes_pushed</span>() + <span class="number">1</span> + ( FIN &amp;&amp; inbound_stream.<span class="built_in">is_closed</span>() ), ISN.<span class="built_in">value</span>() );</span><br><span class="line"></span><br><span class="line">  ret.window_size = <span class="built_in">min</span>( inbound_stream.<span class="built_in">available_capacity</span>(), (<span class="type">uint64_t</span>)UINT16_MAX );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>逻辑很简单，就是要处理 <span class="math inline">\(SYN\)</span> 和 <span class="math inline">\(FIN\)</span> 的情况。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -1140,109 +1223,6 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/07/Direct-Memory-Access/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/07/Direct-Memory-Access/" class="post-title-link" itemprop="url">Direct Memory Access Mechanism</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-07 23:59:31" itemprop="dateCreated datePublished" datetime="2023-08-07T23:59:31+08:00">2023-08-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-08 00:18:00" itemprop="dateModified" datetime="2023-08-08T00:18:00+08:00">2023-08-08</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Architecture/" itemprop="url" rel="index"><span itemprop="name">Architecture</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>DMA serves asa real solution for I/O problems.</p>
-<ul>
-<li>Device controller transfers data directly to/from memory without involving the processor.</li>
-<li>Only interrupts once per page (large) once transfer is complete.</li>
-</ul>
-<p>The incoming procedure:</p>
-<ul>
-<li>Receive interrupt from device</li>
-<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
-<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
-<li>Upon completion, Device/DMA engine interrupt the CPU again</li>
-</ul>
-<p>The outgoing procedure:</p>
-<ul>
-<li>CPU decides to initiate transfer, confirms that external device is ready.</li>
-<li>CPU takes interrupt, begins transfer (instructs DMA to place data at certain address)</li>
-<li>Device/DMA engine handle the transfer (CPU is free to execute other things)</li>
-<li>Device/DMA engine interrupt the CPU again to signal completion</li>
-</ul>
-<h2 id="cache-coherency">Cache-coherency</h2>
-<p>DMA writes to memory, leading to incoherency with cache. Here we can see DMA as another processor core, whose coherency has been solved by most modern multiprocessors.</p>
-<h2 id="dma-and-cpu-sharing-memory">DMA and CPU Sharing Memory</h2>
-<h3 id="cycle-stealing-mode">Cycle Stealing mode</h3>
-<ul>
-<li>DMA Engine transfers a byte, releases control, then repeats</li>
-</ul>
-<h3 id="transparent-mode-maybe-best">Transparent Mode (Maybe best)</h3>
-<ul>
-<li>DMA transfer only occurs when CPU is not using the system bus</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1314,7 +1294,7 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-count">39</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1327,7 +1307,7 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
