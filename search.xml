@@ -1,31 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>CS144-Lab1</title>
-    <url>/2023/09/12/CS144-Lab1/</url>
-    <content><![CDATA[<p>CS144 Lab1的主要任务是完成<strong>TCP</strong>的<strong>Reassembler</strong>，其主要功能为： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span>;</span><br></pre></td></tr></table></figure> 其中<code>first_index</code>是数据的逻辑下标，也就是数据到达的顺序，<code>is_last_substring</code>标识了该数据是否代表了最后一份数据。 而<code>output</code>明显就是输出的字节流。</p>
-<p>TCP的数据流一般由以下部分组成：</p>
-<p><code>| popped data | unpopped-and-pushed data | arrived-and-unpushed data |</code></p>
-<p>其中<strong>popped data</strong>已经被Reader获取，而<strong>unpopped-and-pushed data</strong>已经被Writer写进缓存， 但Reader暂时还未读取，最后的<strong>arrived-and-unpushed data</strong>是从网络接收，尚未组装传入Writer，非连续的数据， 是本Lab的核心工作对象。</p>
-<p>计算机网络的特性决定了：不同的数据到来顺序是乱序的，他们之间可能有重叠(overlapping)，而且到来的数据可能已经被push， 而Reassembler要解决这些问题，提供可靠的<strong>流服务(Reliable Flow)</strong>。</p>
-<h2 id="设计思路">设计思路</h2>
-<p>我的基本想法是用一个类似char数组的缓存存储<strong>arrived-and-unpushed</strong>的数据， 然后用一个<code>map&lt;int,int&gt;</code>存储已经到达的数据的index区间 <span class="math inline">\([l,r]\)</span>，在数据到达时进行区间的合并， 这一问题和经典算法题<strong>插入区间</strong>一致。</p>
-<p>其他的逻辑比较简单，主要是： - <code>first_index</code>若是arrived-and-unpushed data的首地址，要直接push - 若是空字符则省略，但若有last_string的标识，则要把writer关闭 - 一部分data在push之后，buf之后的数据要往前推（有优化空间？）</p>
-<p>Reassembler的成员如下： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  std::map&lt;<span class="type">uint64_t</span>, <span class="type">uint64_t</span>&gt; buffer;</span><br><span class="line">  std::string buf;</span><br><span class="line">  <span class="type">uint64_t</span> end_index;</span><br><span class="line">  <span class="type">uint64_t</span> pending;</span><br></pre></td></tr></table></figure></p>
-<p>实现代码如下： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Your code here.</span></span><br><span class="line">  (<span class="type">void</span>)first_index;</span><br><span class="line">  (<span class="type">void</span>)data;</span><br><span class="line">  (<span class="type">void</span>)is_last_substring;</span><br><span class="line">  (<span class="type">void</span>)output;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( buf.<span class="built_in">empty</span>() )</span><br><span class="line">    buf.<span class="built_in">resize</span>( output.<span class="built_in">capacity</span>() );</span><br><span class="line"></span><br><span class="line">  <span class="type">uint64_t</span> bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">  <span class="type">uint64_t</span> insert_l = <span class="built_in">max</span>( output.<span class="built_in">bytes_pushed</span>(), first_index );</span><br><span class="line">  <span class="type">uint64_t</span> insert_r = <span class="built_in">min</span>( first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>, output.<span class="built_in">available_capacity</span>() + bias_push - <span class="number">1</span> );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( is_last_substring )</span><br><span class="line">    end_index = first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( data.<span class="built_in">empty</span>() &amp;&amp; is_last_substring ) &#123;</span><br><span class="line">    output.<span class="built_in">close</span>();</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l - first_index &gt;= data.<span class="built_in">size</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span> ( insert_l &gt; insert_r )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = insert_l; i &lt;= insert_r; i++ ) &#123;</span><br><span class="line">    buf[i - bias_push] = data[i - first_index];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">bool</span> changed = <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">while</span> ( changed &amp;&amp; !buffer.<span class="built_in">empty</span>() ) &#123;</span><br><span class="line">    changed = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">auto</span> upper = buffer.<span class="built_in">lower_bound</span>( insert_l );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// upper.first &gt;= l, compare [l,r] with [uf, us]</span></span><br><span class="line">    <span class="keyword">if</span> ( upper != buffer.<span class="built_in">end</span>() &amp;&amp; insert_r + <span class="number">1</span> &gt;= upper-&gt;first ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_r = <span class="built_in">max</span>( upper-&gt;second, insert_r );</span><br><span class="line">      pending -= upper-&gt;second - upper-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( upper );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( upper == buffer.<span class="built_in">begin</span>() || buffer.<span class="built_in">empty</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">auto</span> lower = --upper;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// lower.first &lt; l, compare [lf, ls] with [l, r]</span></span><br><span class="line">    <span class="keyword">if</span> ( lower != buffer.<span class="built_in">end</span>() &amp;&amp; lower-&gt;second + <span class="number">1</span> &gt;= insert_l ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_l =  lower-&gt;first;</span><br><span class="line">      insert_r = <span class="built_in">max</span>( lower-&gt;second, insert_r );</span><br><span class="line">      pending -= lower-&gt;second - lower-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( lower );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l == output.<span class="built_in">bytes_pushed</span>() ) &#123;</span><br><span class="line">    <span class="type">uint64_t</span> old_bias = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">    output.<span class="built_in">push</span>( buf.<span class="built_in">substr</span>( insert_l - output.<span class="built_in">bytes_pushed</span>(), insert_r - insert_l + <span class="number">1</span> ) );</span><br><span class="line">    bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( insert_r == end_index ) &#123;</span><br><span class="line">      output.<span class="built_in">close</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ( <span class="keyword">auto</span> it = buffer.<span class="built_in">begin</span>(); it != buffer.<span class="built_in">end</span>(); it++ )</span><br><span class="line">      <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = it-&gt;first; i &lt;= it-&gt;second; ++i )</span><br><span class="line">        buf[i - bias_push] = buf[i - old_bias];</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    buffer[insert_l] = insert_r;</span><br><span class="line">    pending += insert_r - insert_l + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Reassembler::bytes_pending</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> pending;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>大部分的代码和插入区间问题一致,最后的性能指标为 1.78Gbit/s，有一定的优化空间。</p>
-<p>我想用string先存储起来，最后进行合并的话性能会提高不少。</p>
-]]></content>
-      <categories>
-        <category>Network</category>
-      </categories>
-      <tags>
-        <tag>Network</tag>
-        <tag>Algorithm</tag>
-        <tag>CS144</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>CS144-Lab0</title>
     <url>/2023/09/04/CS144-Lab0/</url>
     <content><![CDATA[<p>本文基于<a href="https://cs144.github.io/assignments/check0.pdf">指导文档</a>进行编写。</p>
@@ -176,6 +151,31 @@
       </tags>
   </entry>
   <entry>
+    <title>CS144-Lab1</title>
+    <url>/2023/09/12/CS144-Lab1/</url>
+    <content><![CDATA[<p>CS144 Lab1的主要任务是完成<strong>TCP</strong>的<strong>Reassembler</strong>，其主要功能为： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span>;</span><br></pre></td></tr></table></figure> 其中<code>first_index</code>是数据的逻辑下标，也就是数据到达的顺序，<code>is_last_substring</code>标识了该数据是否代表了最后一份数据。 而<code>output</code>明显就是输出的字节流。</p>
+<p>TCP的数据流一般由以下部分组成：</p>
+<p><code>| popped data | unpopped-and-pushed data | arrived-and-unpushed data |</code></p>
+<p>其中<strong>popped data</strong>已经被Reader获取，而<strong>unpopped-and-pushed data</strong>已经被Writer写进缓存， 但Reader暂时还未读取，最后的<strong>arrived-and-unpushed data</strong>是从网络接收，尚未组装传入Writer，非连续的数据， 是本Lab的核心工作对象。</p>
+<p>计算机网络的特性决定了：不同的数据到来顺序是乱序的，他们之间可能有重叠(overlapping)，而且到来的数据可能已经被push， 而Reassembler要解决这些问题，提供可靠的<strong>流服务(Reliable Flow)</strong>。</p>
+<h2 id="设计思路">设计思路</h2>
+<p>我的基本想法是用一个类似char数组的缓存存储<strong>arrived-and-unpushed</strong>的数据， 然后用一个<code>map&lt;int,int&gt;</code>存储已经到达的数据的index区间 <span class="math inline">\([l,r]\)</span>，在数据到达时进行区间的合并， 这一问题和经典算法题<strong>插入区间</strong>一致。</p>
+<p>其他的逻辑比较简单，主要是： - <code>first_index</code>若是arrived-and-unpushed data的首地址，要直接push - 若是空字符则省略，但若有last_string的标识，则要把writer关闭 - 一部分data在push之后，buf之后的数据要往前推（有优化空间？）</p>
+<p>Reassembler的成员如下： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">  std::map&lt;<span class="type">uint64_t</span>, <span class="type">uint64_t</span>&gt; buffer;</span><br><span class="line">  std::string buf;</span><br><span class="line">  <span class="type">uint64_t</span> end_index;</span><br><span class="line">  <span class="type">uint64_t</span> pending;</span><br></pre></td></tr></table></figure></p>
+<p>实现代码如下： <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Reassembler::insert</span><span class="params">( <span class="type">uint64_t</span> first_index, string data, <span class="type">bool</span> is_last_substring, Writer&amp; output )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="comment">// Your code here.</span></span><br><span class="line">  (<span class="type">void</span>)first_index;</span><br><span class="line">  (<span class="type">void</span>)data;</span><br><span class="line">  (<span class="type">void</span>)is_last_substring;</span><br><span class="line">  (<span class="type">void</span>)output;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( buf.<span class="built_in">empty</span>() )</span><br><span class="line">    buf.<span class="built_in">resize</span>( output.<span class="built_in">capacity</span>() );</span><br><span class="line"></span><br><span class="line">  <span class="type">uint64_t</span> bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">  <span class="type">uint64_t</span> insert_l = <span class="built_in">max</span>( output.<span class="built_in">bytes_pushed</span>(), first_index );</span><br><span class="line">  <span class="type">uint64_t</span> insert_r = <span class="built_in">min</span>( first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>, output.<span class="built_in">available_capacity</span>() + bias_push - <span class="number">1</span> );</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( is_last_substring )</span><br><span class="line">    end_index = first_index + data.<span class="built_in">size</span>() - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( data.<span class="built_in">empty</span>() &amp;&amp; is_last_substring ) &#123;</span><br><span class="line">    output.<span class="built_in">close</span>();</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l - first_index &gt;= data.<span class="built_in">size</span>() )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  <span class="keyword">if</span> ( insert_l &gt; insert_r )</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = insert_l; i &lt;= insert_r; i++ ) &#123;</span><br><span class="line">    buf[i - bias_push] = data[i - first_index];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">bool</span> changed = <span class="literal">true</span>;</span><br><span class="line">  <span class="keyword">while</span> ( changed &amp;&amp; !buffer.<span class="built_in">empty</span>() ) &#123;</span><br><span class="line">    changed = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">auto</span> upper = buffer.<span class="built_in">lower_bound</span>( insert_l );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// upper.first &gt;= l, compare [l,r] with [uf, us]</span></span><br><span class="line">    <span class="keyword">if</span> ( upper != buffer.<span class="built_in">end</span>() &amp;&amp; insert_r + <span class="number">1</span> &gt;= upper-&gt;first ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_r = <span class="built_in">max</span>( upper-&gt;second, insert_r );</span><br><span class="line">      pending -= upper-&gt;second - upper-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( upper );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( upper == buffer.<span class="built_in">begin</span>() || buffer.<span class="built_in">empty</span>() )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">auto</span> lower = --upper;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// lower.first &lt; l, compare [lf, ls] with [l, r]</span></span><br><span class="line">    <span class="keyword">if</span> ( lower != buffer.<span class="built_in">end</span>() &amp;&amp; lower-&gt;second + <span class="number">1</span> &gt;= insert_l ) &#123;</span><br><span class="line"></span><br><span class="line">      insert_l =  lower-&gt;first;</span><br><span class="line">      insert_r = <span class="built_in">max</span>( lower-&gt;second, insert_r );</span><br><span class="line">      pending -= lower-&gt;second - lower-&gt;first + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">      buffer.<span class="built_in">erase</span>( lower );</span><br><span class="line">      changed = <span class="literal">true</span>;</span><br><span class="line">      <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> ( insert_l == output.<span class="built_in">bytes_pushed</span>() ) &#123;</span><br><span class="line">    <span class="type">uint64_t</span> old_bias = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line">    output.<span class="built_in">push</span>( buf.<span class="built_in">substr</span>( insert_l - output.<span class="built_in">bytes_pushed</span>(), insert_r - insert_l + <span class="number">1</span> ) );</span><br><span class="line">    bias_push = output.<span class="built_in">bytes_pushed</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( insert_r == end_index ) &#123;</span><br><span class="line">      output.<span class="built_in">close</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> ( <span class="keyword">auto</span> it = buffer.<span class="built_in">begin</span>(); it != buffer.<span class="built_in">end</span>(); it++ )</span><br><span class="line">      <span class="keyword">for</span> ( <span class="type">uint64_t</span> i = it-&gt;first; i &lt;= it-&gt;second; ++i )</span><br><span class="line">        buf[i - bias_push] = buf[i - old_bias];</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    buffer[insert_l] = insert_r;</span><br><span class="line">    pending += insert_r - insert_l + <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">Reassembler::bytes_pending</span><span class="params">()</span> <span class="type">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> pending;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>大部分的代码和插入区间问题一致,最后的性能指标为 1.78Gbit/s，有一定的优化空间。</p>
+<p>我想用string先存储起来，最后进行合并的话性能会提高不少。</p>
+]]></content>
+      <categories>
+        <category>Network</category>
+      </categories>
+      <tags>
+        <tag>Network</tag>
+        <tag>Algorithm</tag>
+        <tag>CS144</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Different Caches</title>
     <url>/2023/08/07/Different-Caches/</url>
     <content><![CDATA[<h2 id="fully-associative-caches">Fully Associative Caches</h2>
@@ -266,6 +266,73 @@
       </tags>
   </entry>
   <entry>
+    <title>Looking into ELF Symbol Table</title>
+    <url>/2023/10/26/ELF-Symbol-Table/</url>
+    <content><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists of an ELF header, followed by a program header table or a section header table, or both. The two tables describe the rest of the particularities of the file.</p>
+<p>The header file &lt;elf.h&gt; defines the format of ELF files and related C structures.</p>
+<span id="more"></span>
+<h2 id="top-view">Top-View</h2>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">| -------------- |</span><br><span class="line">|   ELF Header   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Program Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">| Section Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Symbol  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line">| String  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>We take Elf32 as an example, it's ELF header is like below:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>     e_ident[EI_NIDENT];      <span class="comment">/* Magic number and other info */</span></span><br><span class="line">  Elf64_Half        e_type;                  <span class="comment">/* Object file type */</span></span><br><span class="line">  Elf64_Half        e_machine;               <span class="comment">/* Architecture */</span></span><br><span class="line">  Elf64_Word        e_version;               <span class="comment">/* Object file version */</span></span><br><span class="line">  Elf64_Addr        e_entry;                 <span class="comment">/* Entry point virtual address */</span></span><br><span class="line">  Elf64_Off         e_phoff;                 <span class="comment">/* Program header table file offset */</span></span><br><span class="line">  Elf64_Off         e_shoff;                 <span class="comment">/* Section header table file offset */</span></span><br><span class="line">  Elf64_Word        e_flags;                 <span class="comment">/* Processor-specific flags */</span></span><br><span class="line">  Elf64_Half        e_ehsize;                <span class="comment">/* ELF header size in bytes */</span></span><br><span class="line">  Elf64_Half        e_phentsize;             <span class="comment">/* Program header table entry size */</span></span><br><span class="line">  Elf64_Half        e_phnum;                 <span class="comment">/* Program header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shentsize;             <span class="comment">/* Section header table entry size */</span></span><br><span class="line">  Elf64_Half        e_shnum;                 <span class="comment">/* Section header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shstrndx;              <span class="comment">/* Section header string table index */</span></span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+<p><strong>e_shoff</strong> defines the offset of <strong>section header tables</strong> from <strong>file begin</strong>. And section tables consist of consecutive sections.<br />
+<strong>p_shoff</strong> defines the offset of <strong>program header tables</strong> from <strong>file begin</strong>.</p>
+<h3 id="section-header">Section Header</h3>
+<p>A file's section header table lets one locate all the file's sections. From <strong>e_shoff</strong> we can reach the table of section headers. And <strong>e_shnum</strong> holds the number of entries the section header table contains.</p>
+<p>A section header table index is a subscript into this array. Some section header table indices are reserved: the initial entry and the indices between <strong>SHN_LORESERVE</strong> and <strong>SHN_HIRESERVE</strong>. The initial entry is used in ELF extensions for <strong>e_phnum</strong>, <strong>e_shnum</strong>, and <strong>e_shstrndx</strong>; in other cases, each field in the initial entry is set to zero. An object file does not have sections for these special indices:</p>
+<p>For details about these special indices, see also <code>man 5 elf</code>.</p>
+<p>The section header has the following structure:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word    sh_name;        <span class="comment">/* Section name (string tbl index) */</span></span><br><span class="line">  Elf32_Word    sh_type;        <span class="comment">/* Section type */</span></span><br><span class="line">  Elf32_Word    sh_flags;       <span class="comment">/* Section flags */</span></span><br><span class="line">  Elf32_Addr    sh_addr;        <span class="comment">/* Section virtual addr at execution */</span></span><br><span class="line">  Elf32_Off     sh_offset;      <span class="comment">/* Section file offset */</span></span><br><span class="line">  Elf32_Word    sh_size;        <span class="comment">/* Section size in bytes */</span></span><br><span class="line">  Elf32_Word    sh_link;        <span class="comment">/* Link to another section */</span></span><br><span class="line">  Elf32_Word    sh_info;        <span class="comment">/* Additional section information */</span></span><br><span class="line">  Elf32_Word    sh_addralign;   <span class="comment">/* Section alignment */</span></span><br><span class="line">  Elf32_Word    sh_entsize;     <span class="comment">/* Entry size if section holds table */</span></span><br><span class="line">&#125; Elf32_Shdr;</span><br></pre></td></tr></table></figure>
+<p><strong>sh_name</strong>: indicates the <em>index</em> of <em>section name</em> in <em>Section Header String Table</em>.<br />
+<strong>sh_type</strong>: mainly includes(The part I'm interested in):</p>
+<ul>
+<li><strong>SHT_NULL</strong>: Marks the section header as inactive.</li>
+<li><strong>SHT_SYMTAB</strong>: Symbol Table, for link editing and dynamic linking.</li>
+<li><strong>SHT_DYNSYM</strong>: Dynamic Symbol Table, holds a minimal set of dynamic symbols linking symbols.</li>
+<li><strong>SHT_STRTAB</strong>: String Table. An object file may have multiple string sections.</li>
+</ul>
+<p><strong>sh_offset</strong>: functions as above, determining the offset of section from from begin.<br />
+<strong>sh_link</strong>: This member holds a section header table index link, whose interpretation depends on the section type. For symbol table, it's the section index of String Table Section (holding <strong>name</strong> of symbol).</p>
+<h3 id="elf-symbol-table">ELF Symbol Table</h3>
+<p>ELF Symbol Table consists of <strong>consecutive</strong> entries.<br />
+The structure of the ELF symbol table entry is like:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word       st_name;        <span class="comment">/* Symbol name (string tbl index) */</span></span><br><span class="line">  Elf32_Addr       st_value;       <span class="comment">/* Symbol value */</span></span><br><span class="line">  Elf32_Word       st_size;        <span class="comment">/* Symbol size */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_info;        <span class="comment">/* Symbol type and binding */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_other;       <span class="comment">/* Symbol visibility */</span></span><br><span class="line">  Elf32_Section    st_shndx;       <span class="comment">/* Section index */</span></span><br><span class="line">&#125; Elf32_Sym;</span><br></pre></td></tr></table></figure>
+<p>As the comment shows, <strong>st_name</strong> is an <em>entry</em> index in <em>String Table</em>. And the section index of <em>String Table</em> is holded in <strong>sh_link</strong>. Based on both, we can get the function/variable name easily.</p>
+<p><strong>st_info</strong>: Consist of 2 field: Bind and Type, we focus on latter(which can be derived by <code>ELF32_ST_TYPE(info)</code>) now.</p>
+<p>Symbol type mainly includes:</p>
+<ul>
+<li><strong>STT_OBJECT</strong>: A data object. (Such as <em>C</em> variable)</li>
+<li><strong>STT_FUNC</strong>: A function or other executable code.</li>
+<li><strong>STT_SECTION</strong>: A section, for relocation.</li>
+<li><strong>STT_FILE</strong>: The name of the source file.</li>
+<li><strong>STB_LOCAL</strong>: Local symbols are not visible outside the object file containing their definition. Local symbols of the same name may exist in multiple files without interfering with each other.</li>
+<li><strong>STB_GLOBAL</strong>: Global symbols are visible to all object files being com‐ bined. One file's definition of a global symbol will satisfy another file's undefined reference to the same symbol.</li>
+<li><strong>STB_WEAK</strong>: Weak symbols resemble global symbols, but their definitions have lower precedence.</li>
+</ul>
+<h3 id="how-to-find-string-in-string-table">How to Find String in String Table?</h3>
+<p>String Table can be seen as an array of multiple null-terminated strings. The index of the entry in String Table is just the index of string in array.</p>
+<p>For example, a String Table may look like this:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;\0hello\0world\0xxxxxxxxx&quot;</span></span><br></pre></td></tr></table></figure>
+<p>The 0th entry is always empty. The 1st entry is "hello". The 2nd is "world". So every time you want to find an string entry by index, you must traverse every string before the one you looks for. Or you can cache the whole string table to speed up the whole ELF analysis.</p>
+<h3 id="some-tools">Some Tools</h3>
+<p><em>readelf</em> can read the elf file easily by various options.</p>
+<p>Some cheatsheet:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">readelf -h <span class="comment"># show elf header</span></span><br><span class="line">readelf -l <span class="comment"># show program headers, or segments</span></span><br><span class="line">readelf -S <span class="comment"># show section headers</span></span><br><span class="line">readelf -g <span class="comment"># show section groups</span></span><br><span class="line">readelf -s <span class="comment"># show symbols</span></span><br></pre></td></tr></table></figure>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><strong><em>Linux ELF Manual</em></strong></li>
+</ul>
+]]></content>
+      <categories>
+        <category>OS</category>
+      </categories>
+      <tags>
+        <tag>ELF</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>How to debug LLVM ?</title>
     <url>/2023/10/17/How-to-debug-LLVM/</url>
     <content><![CDATA[<h2 id="abstract">Abstract</h2>
@@ -321,6 +388,37 @@ For my recent work on <em>LLVM</em>, I'd like to share some experience about it.
         <tag>Compiler</tag>
         <tag>LLVM</tag>
         <tag>OpenSource</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Introduction to GPU</title>
+    <url>/2023/10/31/Introduction-To-GPU/</url>
+    <content><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>GPU, Graphics Processing Unit, is initially designed to accelerate image rendering such as video games. For its high performance at parallel computation, it has become a great processor for accelerating DL/ML training.</p>
+<span id="more"></span>
+<p>Unlike CPU, GPU consists of numerous computational units, long pipeline and a video memory, which determines its advantages in parallel computation and disadvantages in complex control logic handling.</p>
+<p><img src="/images/CPU-GPU.webp" /></p>
+<h2 id="computational-unitscores">Computational units(cores)</h2>
+<p>In total, computational units of CPU are fast but few, while that of GPU are slow but numerous. The fastness of CPU is based on its high frequency and smart calculation. Here, smartness is reflected by its out-of-order executions, multiple branch prediction and etc.</p>
+<p>But GPU can only handle some easy linear work like <code>fmuladd</code> instructions. In fact, except small scalar float, modern GPU can perform operations on more complicated type like tensor(<em>tensor core</em>).</p>
+<p>SIMD not only exist in CPU, but also in GPU. Same operation, but different data, such feature make GPU fast in parallel work like matrix multiplication.</p>
+<h2 id="memory">Memory</h2>
+<p>Memory of GPU is much tinier than CPU's. And cache in GPU has some difference with what L1, L2 in CPU do.</p>
+<p>For <code>reduce</code> in parallel computation, it requires multiple cores share memory. But it's hard and expensive for thousands of core share one memory segment. So we divide different types of cores into multiple groups, called <em>Streaming Multiprocessors</em>;</p>
+<p>There are INT32, FP32 and other types of SM in GPU. So how they cooperate?</p>
+<p>In TU102. every 4 SMs share a shared segment of L1 cache, and all cores share L2 cache. Like CPU, after missing data in L1, core will try to hit L2, and then GMEM. To note, how L1 is shared is controlled by software or programmer, not hardware. But L2 and GMEM is controlled by hardware. Besides, cores can also share data in registers.</p>
+<p>The basic idea is that every thread holds a register to keep temporary result and every register can only be visited by one consistent thread(or by same wrap/group).</p>
+<h2 id="references">References</h2>
+<p><a href="https://zhuanlan.zhihu.com/p/598173226">Clarence's Zhihu</a><br />
+<a href="https://medium.com/codex/understanding-the-architecture-of-a-gpu-d5d2d2e8978b">Understanding the architecture of a GPU</a></p>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>GPU</tag>
+        <tag>HPC</tag>
       </tags>
   </entry>
   <entry>
@@ -413,6 +511,23 @@ For my recent work on <em>LLVM</em>, I'd like to share some experience about it.
 <p>自己的总结</p>
 </blockquote>
 <p>第一次为大型开源项目Contribute是一次特别的经历，在不断与reviewer的沟通中，我也对LLVM的体系有了更深刻的了解，希望读者在看了本篇博客后也可以更活跃地参与开源活动。</p>
+]]></content>
+      <categories>
+        <category>LLVM</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>LLVM</tag>
+        <tag>OpenSource</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>有关LLVM的文档</title>
+    <url>/2023/10/30/LLVM-Docs/</url>
+    <content><![CDATA[<p><a href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
+<a href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
+<a href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a><br />
+<a href="https://llvm.org/docs/Reference.html">Reference Guide</a> <a href="https://llvm.org/docs/Passes.html">Current Passes</a></p>
 ]]></content>
       <categories>
         <category>LLVM</category>
@@ -842,24 +957,6 @@ D \\
       </tags>
   </entry>
   <entry>
-    <title>OS Boot</title>
-    <url>/2023/08/07/OS-Boot/</url>
-    <content><![CDATA[<p>The 1st period: the CPU executes instructions from some start address (stored in Flash ROM)</p>
-<ol type="1">
-<li>BIOS: FInd a storage device and load first sector.</li>
-<li>Bootloader: Load the OS kernel from disk into a location in memory and jump into it.</li>
-<li>OS Boot: Initialize services, drivers, etc.</li>
-</ol>
-]]></content>
-      <categories>
-        <category>Architecture</category>
-      </categories>
-      <tags>
-        <tag>Architecture</tag>
-        <tag>CS61C</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>OSPF (Open Shortest Path First) &amp; BGP (Border Gateway Protocol)</title>
     <url>/2023/08/19/OSPF_BGP/</url>
     <content><![CDATA[<h2 id="making-routing-scalable">Making routing scalable</h2>
@@ -954,6 +1051,83 @@ D \\
       <tags>
         <tag>Network</tag>
         <tag>Algorithm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OS Boot</title>
+    <url>/2023/08/07/OS-Boot/</url>
+    <content><![CDATA[<p>The 1st period: the CPU executes instructions from some start address (stored in Flash ROM)</p>
+<ol type="1">
+<li>BIOS: FInd a storage device and load first sector.</li>
+<li>Bootloader: Load the OS kernel from disk into a location in memory and jump into it.</li>
+<li>OS Boot: Initialize services, drivers, etc.</li>
+</ol>
+]]></content>
+      <categories>
+        <category>Architecture</category>
+      </categories>
+      <tags>
+        <tag>Architecture</tag>
+        <tag>CS61C</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>(Paper Reading) SCC-Based Value Numbering</title>
+    <url>/2023/10/18/Paper-Reading-SCC-VN/</url>
+    <content><![CDATA[<h2 id="introduction">Introduction</h2>
+<p><em>Value Numbering</em> is a universally useful optimization implemented by most compilers like <em>Clang, GCC</em>, etc. Traditionally <em>GVN</em> can be divided into <em>Hash-Based</em> and <em>Value-Partitioning</em>. The former handles algebraic simplifications but locally. The latter is global but handling only simple redundancies. <em>K. C</em> and <em>T. S</em> came up with a new method to solve it for <em>SSA</em>.</p>
+<span id="more"></span>
+<h2 id="scc-based-value-numebring-easy-version">SCC-Based Value Numebring (Easy Version)</h2>
+<p>This paper proposed an <span class="math inline">\(O(N \cdot D(SSA))\)</span> algorithm at first, which is based on the RPO traversal and SSA form IR.</p>
+<p><strong>Note</strong>: RPO traversal guarantees that predecessors through <strong>non-back</strong> edges of <strong>BasicBlocks</strong> are processed before the block itself</p>
+<p>Here is pseudocode for this easy version:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">VN.fill(Null)</span><br><span class="line">repeat</span><br><span class="line">  done = true</span><br><span class="line">  <span class="keyword">for</span> block b <span class="keyword">in</span> RPO(Function)</span><br><span class="line">    <span class="keyword">for</span> inst <span class="keyword">in</span> b</span><br><span class="line">      temp = lookup(x.op, VN[x[<span class="number">1</span>]], VN[x[<span class="number">2</span>]], x)</span><br><span class="line">      <span class="keyword">if</span> VN[x] != temp</span><br><span class="line">        done = false</span><br><span class="line">        VN[x] = temp</span><br><span class="line">until done</span><br></pre></td></tr></table></figure>
+<p>We define equivalence/congruence relation, <span class="math inline">\(\cong_i\)</span>. We say that <span class="math inline">\(x \cong_i y\)</span> if and only if <span class="math inline">\(VN[x] = VN[y]\)</span> after <span class="math inline">\(i^{th}\)</span> RPO iteration.</p>
+<p>We get:</p>
+<p><img src="/images/cong_scc.png" /></p>
+<p>Now we prove the correctness.</p>
+<p>Firstly, it's obvious that <span class="math inline">\(x \cong_i y \rightarrow x \cong_{i-1} y\)</span>. It's monotonicity.</p>
+<p>And each step produces a re nement of the partition, and refinement cannot continue indefinitely. Since the RPO algorithm begins with all SSA names congruent, we must converge to the same fixed point as value partitioning.</p>
+<p>Then, we try to get its time complexity. <strong>Back edges</strong> play a key role here.</p>
+<p><img src="/images/lemma1-scc.png" /></p>
+<p>Induction for <span class="math inline">\(x \ncong_{i} y\)</span>:</p>
+<p>Basis (<span class="math inline">\(i = 1\)</span>): Empty sequence</p>
+<ul>
+<li><p>Basics (<span class="math inline">\(j=1\)</span>) and Induction: (<span class="math inline">\(i &gt; 1\)</span>):</p>
+<ul>
+<li>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible due to <span class="math inline">\(x \cong_{i-1} y\)</span>.</li>
+<li>case2: <span class="math inline">\(x[e_1] \ncong_{i} y[e_1]\)</span> for some <strong>non-back</strong> edge. <strong>Some</strong> here means that there exists non-back edge <span class="math inline">\(e\)</span> cause it. But that contradicts with <span class="math inline">\(x \cong_{i - 1} y\)</span>. Just like graph below, it's impossible: <img src="/images/flow-scc.png" /></li>
+<li>case 3: <span class="math inline">\(x[e_1] \ncong_{i-1} y[e_1]\)</span> for some <strong>back</strong> edge. That's possible. Sequence now consists of <span class="math inline">\(e\)</span>.</li>
+</ul></li>
+<li><p>Induction (<span class="math inline">\(j &gt; 1\)</span>)</p>
+<ul>
+<li><p>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible as before.</p></li>
+<li><p>case2: <span class="math inline">\(x[e_j] \ncong_{i} y[e_j]\)</span> for some <strong>non-back</strong> edge. The sequence consists of <span class="math inline">\(e\)</span> followed by the sequence for the pair <span class="math inline">\(x[e_{j-1}],y[e_{j-1}]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(j\)</span></strong>: <span class="math inline">\(s\)</span></p></li>
+<li><p>case 3: <span class="math inline">\(x[e_j] \ncong_{i-1} y[e_j]\)</span> for some <strong>back</strong> edge. The sequence consists of <span class="math inline">\(e_j\)</span> followed by the sequence for the pair <span class="math inline">\(x[e],y[e]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(i\)</span></strong>.</p></li>
+</ul></li>
+</ul>
+<p>Final time analysis (<span class="math inline">\(D(SSA)\)</span> is the <em>loop connectedness</em>): <img src="/images/theorem2-scc.jpg" /></p>
+<h2 id="the-scc-algorithm-more-efficient">The SCC Algorithm (More efficient)</h2>
+<blockquote>
+<p>To make the algorithm more efficient in practice, we operate on the <strong>SSA graph</strong> instead of the <strong>control-flow graph</strong>. We refer to the improved algorithm as the SCC algorithm because it concentrates on the strongly connected components of the SSA graph.</p>
+</blockquote>
+<p>The paper works with <em>Tarjan's depth-first algorithm for finding SCCs</em>. Just handle the single node firstly and then handle nodes in SCCs in RPO order.</p>
+<h2 id="result">Result</h2>
+<p>Not worse than <em>Hash-Based</em> and <em>Value-Partitioning</em> methods. Details in paper.</p>
+<h2 id="connection-with-modern-compilers">Connection with modern compilers</h2>
+<p><em>NewGVN in LLVM</em> applies the algorithm in this paper, in development still.</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><em>SCC-Based Value Numbering, by Keith Cooper and Taylor Simpson</em></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Paper-Reading</category>
+      </categories>
+      <tags>
+        <tag>Algorithm</tag>
+        <tag>Compiler</tag>
+        <tag>Paper</tag>
       </tags>
   </entry>
   <entry>
@@ -1184,31 +1358,6 @@ D \\
       </tags>
   </entry>
   <entry>
-    <title>XSharp开发思路-Type</title>
-    <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
-    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统">一个好的编程语言需要有一个好的类型系统</h3>
-<p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
-<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
-<p>于是<strong>TypeNode</strong>出现了</p>
-<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<span id="more"></span>
-<p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
-<p>从而确定 TypeNode 的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
-<p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析 variant 类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的 typeID，并通过 typeID 实现运行时反射</p>
-<p>在 TypeSystem 中我们将实现这一功能</p>
-]]></content>
-      <categories>
-        <category>XSharp</category>
-      </categories>
-      <tags>
-        <tag>Compiler</tag>
-        <tag>XSharp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>XSharp开发思路-表达式解析-Pratt Parsing</title>
     <url>/2023/03/15/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%A7%A3%E6%9E%90-Pratt-Parsing/</url>
     <content><![CDATA[<p>手工实现 Parser 常用<strong>递归下降法(Recusive Descent)</strong>，XSharp 的 Parser 也采用了<strong>递归下降</strong>的主体结构。</p>
@@ -1287,6 +1436,31 @@ D \\
       <tags>
         <tag>Helloworld</tag>
         <tag>Blog&#39;s configuration</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>XSharp开发思路-Type</title>
+    <url>/2023/02/18/XSharp%E5%BC%80%E5%8F%91%E6%80%9D%E8%B7%AF-Type/</url>
+    <content><![CDATA[<h3 id="一个好的编程语言需要有一个好的类型系统">一个好的编程语言需要有一个好的类型系统</h3>
+<p>笔者计划为 XSharp 开发一个静态且可拓展的类型系统，其中支持基本类型(如<em>i32</em>,<em>i64</em>)，数组，函数，Closure，类等类型及其复合</p>
+<p>而复合的需求就意味着类型必须是多层次，且多种类型的形式，而树这种数据结构正好符合要求</p>
+<p>于是<strong>TypeNode</strong>出现了</p>
+<p>我们社设计具体类型的<strong>类型相关</strong>设置，从而构建不同的类型结构，如 ArrayType 有 elementType 的子类型，FunctionType 有 paramTypes 的子节点列表</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//arrayDimension指的是数组类型的维度</span></span><br><span class="line"><span class="comment">//而elementType则是元素类型的TypeNode指针</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">ArrayType</span> &#123;</span><br><span class="line">    uint arrayDimension;</span><br><span class="line">    TypeNode* elementType;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//paramTypes指的是参数的类型</span></span><br><span class="line"><span class="comment">//returnValueType则是返回值的类型</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">FunctionType</span> &#123;</span><br><span class="line">    std::vector&lt;TypeNode*&gt; paramTypes;</span><br><span class="line">    TypeNode* returnValueType;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<p>而<strong>TypeNode</strong>则用枚举<strong>Category</strong>表示类型的范畴，即<strong>类型相关</strong>的类型设置(<strong>typeSpecifiedInfo</strong>)的范畴</p>
+<p>从而确定 TypeNode 的类型结构，使用<strong>std::variant</strong>使存储多种类型相关设置成为可能</p>
+<p>搭配上<strong>Category</strong>，就可根据<strong>category</strong>解析 variant 类型的<strong>typeSpecifiedInfo</strong>，获得具体的类型信息</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">TypeNode</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="built_in">TypeNode</span>(<span class="type">const</span> TypeNode&amp; other);</span><br><span class="line">    ~<span class="built_in">TypeNode</span>();</span><br><span class="line">    <span class="function"><span class="type">bool</span> <span class="title">equals</span><span class="params">(<span class="type">const</span> TypeNode&amp; other)</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Basic type</span></span><br><span class="line">    <span class="function">BasicType <span class="title">basicType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Function type, TODO complete below</span></span><br><span class="line">    <span class="function">TypeNode* <span class="title">returnValueType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">std::vector&lt;TypeNode*&gt; <span class="title">paramsType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Array type, TODO complete below</span></span><br><span class="line">    <span class="function">uint <span class="title">arrayDimension</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line">    <span class="function">TypeNode* <span class="title">elementType</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Class type,  TODO complete below</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// generate a unique name for a type</span></span><br><span class="line">    <span class="function">XString <span class="title">typeName</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">    uint typeID;</span><br><span class="line">    XString baseName;</span><br><span class="line">    <span class="type">bool</span> isConst;</span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">Categories</span> &#123; Basic, Array, Function, Closure, Class &#125; category;</span><br><span class="line"></span><br><span class="line">    std::variant&lt;BasicType, ClassType, FunctionType, ArrayType, ClosureType&gt;</span><br><span class="line">        typeSpecifiedInfo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>同时注意到<strong>typeID</strong>，我们将会在编译时为特定类型分配<strong>唯一</strong>(<strong>unique</strong>)的 typeID，并通过 typeID 实现运行时反射</p>
+<p>在 TypeSystem 中我们将实现这一功能</p>
+]]></content>
+      <categories>
+        <category>XSharp</category>
+      </categories>
+      <tags>
+        <tag>Compiler</tag>
+        <tag>XSharp</tag>
       </tags>
   </entry>
   <entry>
@@ -1374,173 +1548,5 @@ D \\
       <categories>
         <category>Compiler Theory</category>
       </categories>
-  </entry>
-  <entry>
-    <title>(Paper Reading) SCC-Based Value Numbering</title>
-    <url>/2023/10/18/Paper-Reading-SCC-VN/</url>
-    <content><![CDATA[<h2 id="introduction">Introduction</h2>
-<p><em>Value Numbering</em> is a universally useful optimization implemented by most compilers like <em>Clang, GCC</em>, etc. Traditionally <em>GVN</em> can be divided into <em>Hash-Based</em> and <em>Value-Partitioning</em>. The former handles algebraic simplifications but locally. The latter is global but handling only simple redundancies. <em>K. C</em> and <em>T. S</em> came up with a new method to solve it for <em>SSA</em>.</p>
-<span id="more"></span>
-<h2 id="scc-based-value-numebring-easy-version">SCC-Based Value Numebring (Easy Version)</h2>
-<p>This paper proposed an <span class="math inline">\(O(N \cdot D(SSA))\)</span> algorithm at first, which is based on the RPO traversal and SSA form IR.</p>
-<p><strong>Note</strong>: RPO traversal guarantees that predecessors through <strong>non-back</strong> edges of <strong>BasicBlocks</strong> are processed before the block itself</p>
-<p>Here is pseudocode for this easy version:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">VN.fill(Null)</span><br><span class="line">repeat</span><br><span class="line">  done = true</span><br><span class="line">  <span class="keyword">for</span> block b <span class="keyword">in</span> RPO(Function)</span><br><span class="line">    <span class="keyword">for</span> inst <span class="keyword">in</span> b</span><br><span class="line">      temp = lookup(x.op, VN[x[<span class="number">1</span>]], VN[x[<span class="number">2</span>]], x)</span><br><span class="line">      <span class="keyword">if</span> VN[x] != temp</span><br><span class="line">        done = false</span><br><span class="line">        VN[x] = temp</span><br><span class="line">until done</span><br></pre></td></tr></table></figure>
-<p>We define equivalence/congruence relation, <span class="math inline">\(\cong_i\)</span>. We say that <span class="math inline">\(x \cong_i y\)</span> if and only if <span class="math inline">\(VN[x] = VN[y]\)</span> after <span class="math inline">\(i^{th}\)</span> RPO iteration.</p>
-<p>We get:</p>
-<p><img src="/images/cong_scc.png" /></p>
-<p>Now we prove the correctness.</p>
-<p>Firstly, it's obvious that <span class="math inline">\(x \cong_i y \rightarrow x \cong_{i-1} y\)</span>. It's monotonicity.</p>
-<p>And each step produces a re nement of the partition, and refinement cannot continue indefinitely. Since the RPO algorithm begins with all SSA names congruent, we must converge to the same fixed point as value partitioning.</p>
-<p>Then, we try to get its time complexity. <strong>Back edges</strong> play a key role here.</p>
-<p><img src="/images/lemma1-scc.png" /></p>
-<p>Induction for <span class="math inline">\(x \ncong_{i} y\)</span>:</p>
-<p>Basis (<span class="math inline">\(i = 1\)</span>): Empty sequence</p>
-<ul>
-<li><p>Basics (<span class="math inline">\(j=1\)</span>) and Induction: (<span class="math inline">\(i &gt; 1\)</span>):</p>
-<ul>
-<li>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible due to <span class="math inline">\(x \cong_{i-1} y\)</span>.</li>
-<li>case2: <span class="math inline">\(x[e_1] \ncong_{i} y[e_1]\)</span> for some <strong>non-back</strong> edge. <strong>Some</strong> here means that there exists non-back edge <span class="math inline">\(e\)</span> cause it. But that contradicts with <span class="math inline">\(x \cong_{i - 1} y\)</span>. Just like graph below, it's impossible: <img src="/images/flow-scc.png" /></li>
-<li>case 3: <span class="math inline">\(x[e_1] \ncong_{i-1} y[e_1]\)</span> for some <strong>back</strong> edge. That's possible. Sequence now consists of <span class="math inline">\(e\)</span>.</li>
-</ul></li>
-<li><p>Induction (<span class="math inline">\(j &gt; 1\)</span>)</p>
-<ul>
-<li><p>case1: <span class="math inline">\(x.op \ne y.op\)</span>. Obviously impossible as before.</p></li>
-<li><p>case2: <span class="math inline">\(x[e_j] \ncong_{i} y[e_j]\)</span> for some <strong>non-back</strong> edge. The sequence consists of <span class="math inline">\(e\)</span> followed by the sequence for the pair <span class="math inline">\(x[e_{j-1}],y[e_{j-1}]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(j\)</span></strong>: <span class="math inline">\(s\)</span></p></li>
-<li><p>case 3: <span class="math inline">\(x[e_j] \ncong_{i-1} y[e_j]\)</span> for some <strong>back</strong> edge. The sequence consists of <span class="math inline">\(e_j\)</span> followed by the sequence for the pair <span class="math inline">\(x[e],y[e]\)</span>, which we know exists by the induction hypothesis for <strong><span class="math inline">\(i\)</span></strong>.</p></li>
-</ul></li>
-</ul>
-<p>Final time analysis (<span class="math inline">\(D(SSA)\)</span> is the <em>loop connectedness</em>): <img src="/images/theorem2-scc.jpg" /></p>
-<h2 id="the-scc-algorithm-more-efficient">The SCC Algorithm (More efficient)</h2>
-<blockquote>
-<p>To make the algorithm more efficient in practice, we operate on the <strong>SSA graph</strong> instead of the <strong>control-flow graph</strong>. We refer to the improved algorithm as the SCC algorithm because it concentrates on the strongly connected components of the SSA graph.</p>
-</blockquote>
-<p>The paper works with <em>Tarjan's depth-first algorithm for finding SCCs</em>. Just handle the single node firstly and then handle nodes in SCCs in RPO order.</p>
-<h2 id="result">Result</h2>
-<p>Not worse than <em>Hash-Based</em> and <em>Value-Partitioning</em> methods. Details in paper.</p>
-<h2 id="connection-with-modern-compilers">Connection with modern compilers</h2>
-<p><em>NewGVN in LLVM</em> applies the algorithm in this paper, in development still.</p>
-<h2 id="reference">Reference</h2>
-<ul>
-<li><em>SCC-Based Value Numbering, by Keith Cooper and Taylor Simpson</em></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Paper-Reading</category>
-      </categories>
-      <tags>
-        <tag>Algorithm</tag>
-        <tag>Compiler</tag>
-        <tag>Paper</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Looking into ELF Symbol Table</title>
-    <url>/2023/10/26/ELF-Symbol-Table/</url>
-    <content><![CDATA[<h2 id="introduction">Introduction</h2>
-<p>ELF, Executable and Linking Format (ELF) files, is a universal binary format in Linux. As its name suggests, any executable or linking files in Linux are in format of ELF, which consists of an ELF header, followed by a program header table or a section header table, or both. The two tables describe the rest of the particularities of the file.</p>
-<p>The header file &lt;elf.h&gt; defines the format of ELF files and related C structures.</p>
-<span id="more"></span>
-<h2 id="top-view">Top-View</h2>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">| -------------- |</span><br><span class="line">|   ELF Header   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Program Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">| Section Header |</span><br><span class="line">|     Table      |</span><br><span class="line">| -------------- |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">|   ..........   |</span><br><span class="line">| -------------- |</span><br><span class="line">| Symbol  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line">| String  Table  |</span><br><span class="line">|     Section    |</span><br><span class="line">| -------------- |</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>We take Elf32 as an example, it's ELF header is like below:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>     e_ident[EI_NIDENT];      <span class="comment">/* Magic number and other info */</span></span><br><span class="line">  Elf64_Half        e_type;                  <span class="comment">/* Object file type */</span></span><br><span class="line">  Elf64_Half        e_machine;               <span class="comment">/* Architecture */</span></span><br><span class="line">  Elf64_Word        e_version;               <span class="comment">/* Object file version */</span></span><br><span class="line">  Elf64_Addr        e_entry;                 <span class="comment">/* Entry point virtual address */</span></span><br><span class="line">  Elf64_Off         e_phoff;                 <span class="comment">/* Program header table file offset */</span></span><br><span class="line">  Elf64_Off         e_shoff;                 <span class="comment">/* Section header table file offset */</span></span><br><span class="line">  Elf64_Word        e_flags;                 <span class="comment">/* Processor-specific flags */</span></span><br><span class="line">  Elf64_Half        e_ehsize;                <span class="comment">/* ELF header size in bytes */</span></span><br><span class="line">  Elf64_Half        e_phentsize;             <span class="comment">/* Program header table entry size */</span></span><br><span class="line">  Elf64_Half        e_phnum;                 <span class="comment">/* Program header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shentsize;             <span class="comment">/* Section header table entry size */</span></span><br><span class="line">  Elf64_Half        e_shnum;                 <span class="comment">/* Section header table entry count */</span></span><br><span class="line">  Elf64_Half        e_shstrndx;              <span class="comment">/* Section header string table index */</span></span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
-<p><strong>e_shoff</strong> defines the offset of <strong>section header tables</strong> from <strong>file begin</strong>. And section tables consist of consecutive sections.<br />
-<strong>p_shoff</strong> defines the offset of <strong>program header tables</strong> from <strong>file begin</strong>.</p>
-<h3 id="section-header">Section Header</h3>
-<p>A file's section header table lets one locate all the file's sections. From <strong>e_shoff</strong> we can reach the table of section headers. And <strong>e_shnum</strong> holds the number of entries the section header table contains.</p>
-<p>A section header table index is a subscript into this array. Some section header table indices are reserved: the initial entry and the indices between <strong>SHN_LORESERVE</strong> and <strong>SHN_HIRESERVE</strong>. The initial entry is used in ELF extensions for <strong>e_phnum</strong>, <strong>e_shnum</strong>, and <strong>e_shstrndx</strong>; in other cases, each field in the initial entry is set to zero. An object file does not have sections for these special indices:</p>
-<p>For details about these special indices, see also <code>man 5 elf</code>.</p>
-<p>The section header has the following structure:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word    sh_name;        <span class="comment">/* Section name (string tbl index) */</span></span><br><span class="line">  Elf32_Word    sh_type;        <span class="comment">/* Section type */</span></span><br><span class="line">  Elf32_Word    sh_flags;       <span class="comment">/* Section flags */</span></span><br><span class="line">  Elf32_Addr    sh_addr;        <span class="comment">/* Section virtual addr at execution */</span></span><br><span class="line">  Elf32_Off     sh_offset;      <span class="comment">/* Section file offset */</span></span><br><span class="line">  Elf32_Word    sh_size;        <span class="comment">/* Section size in bytes */</span></span><br><span class="line">  Elf32_Word    sh_link;        <span class="comment">/* Link to another section */</span></span><br><span class="line">  Elf32_Word    sh_info;        <span class="comment">/* Additional section information */</span></span><br><span class="line">  Elf32_Word    sh_addralign;   <span class="comment">/* Section alignment */</span></span><br><span class="line">  Elf32_Word    sh_entsize;     <span class="comment">/* Entry size if section holds table */</span></span><br><span class="line">&#125; Elf32_Shdr;</span><br></pre></td></tr></table></figure>
-<p><strong>sh_name</strong>: indicates the <em>index</em> of <em>section name</em> in <em>Section Header String Table</em>.<br />
-<strong>sh_type</strong>: mainly includes(The part I'm interested in):</p>
-<ul>
-<li><strong>SHT_NULL</strong>: Marks the section header as inactive.</li>
-<li><strong>SHT_SYMTAB</strong>: Symbol Table, for link editing and dynamic linking.</li>
-<li><strong>SHT_DYNSYM</strong>: Dynamic Symbol Table, holds a minimal set of dynamic symbols linking symbols.</li>
-<li><strong>SHT_STRTAB</strong>: String Table. An object file may have multiple string sections.</li>
-</ul>
-<p><strong>sh_offset</strong>: functions as above, determining the offset of section from from begin.<br />
-<strong>sh_link</strong>: This member holds a section header table index link, whose interpretation depends on the section type. For symbol table, it's the section index of String Table Section (holding <strong>name</strong> of symbol).</p>
-<h3 id="elf-symbol-table">ELF Symbol Table</h3>
-<p>ELF Symbol Table consists of <strong>consecutive</strong> entries.<br />
-The structure of the ELF symbol table entry is like:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  Elf32_Word       st_name;        <span class="comment">/* Symbol name (string tbl index) */</span></span><br><span class="line">  Elf32_Addr       st_value;       <span class="comment">/* Symbol value */</span></span><br><span class="line">  Elf32_Word       st_size;        <span class="comment">/* Symbol size */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_info;        <span class="comment">/* Symbol type and binding */</span></span><br><span class="line">  <span class="type">unsigned</span> <span class="type">char</span>    st_other;       <span class="comment">/* Symbol visibility */</span></span><br><span class="line">  Elf32_Section    st_shndx;       <span class="comment">/* Section index */</span></span><br><span class="line">&#125; Elf32_Sym;</span><br></pre></td></tr></table></figure>
-<p>As the comment shows, <strong>st_name</strong> is an <em>entry</em> index in <em>String Table</em>. And the section index of <em>String Table</em> is holded in <strong>sh_link</strong>. Based on both, we can get the function/variable name easily.</p>
-<p><strong>st_info</strong>: Consist of 2 field: Bind and Type, we focus on latter(which can be derived by <code>ELF32_ST_TYPE(info)</code>) now.</p>
-<p>Symbol type mainly includes:</p>
-<ul>
-<li><strong>STT_OBJECT</strong>: A data object. (Such as <em>C</em> variable)</li>
-<li><strong>STT_FUNC</strong>: A function or other executable code.</li>
-<li><strong>STT_SECTION</strong>: A section, for relocation.</li>
-<li><strong>STT_FILE</strong>: The name of the source file.</li>
-<li><strong>STB_LOCAL</strong>: Local symbols are not visible outside the object file containing their definition. Local symbols of the same name may exist in multiple files without interfering with each other.</li>
-<li><strong>STB_GLOBAL</strong>: Global symbols are visible to all object files being com‐ bined. One file's definition of a global symbol will satisfy another file's undefined reference to the same symbol.</li>
-<li><strong>STB_WEAK</strong>: Weak symbols resemble global symbols, but their definitions have lower precedence.</li>
-</ul>
-<h3 id="how-to-find-string-in-string-table">How to Find String in String Table?</h3>
-<p>String Table can be seen as an array of multiple null-terminated strings. The index of the entry in String Table is just the index of string in array.</p>
-<p>For example, a String Table may look like this:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;\0hello\0world\0xxxxxxxxx&quot;</span></span><br></pre></td></tr></table></figure>
-<p>The 0th entry is always empty. The 1st entry is "hello". The 2nd is "world". So every time you want to find an string entry by index, you must traverse every string before the one you looks for. Or you can cache the whole string table to speed up the whole ELF analysis.</p>
-<h3 id="some-tools">Some Tools</h3>
-<p><em>readelf</em> can read the elf file easily by various options.</p>
-<p>Some cheatsheet:</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">readelf -h <span class="comment"># show elf header</span></span><br><span class="line">readelf -l <span class="comment"># show program headers, or segments</span></span><br><span class="line">readelf -S <span class="comment"># show section headers</span></span><br><span class="line">readelf -g <span class="comment"># show section groups</span></span><br><span class="line">readelf -s <span class="comment"># show symbols</span></span><br></pre></td></tr></table></figure>
-<h2 id="reference">Reference</h2>
-<ul>
-<li><strong><em>Linux ELF Manual</em></strong></li>
-</ul>
-]]></content>
-      <categories>
-        <category>OS</category>
-      </categories>
-      <tags>
-        <tag>ELF</tag>
-        <tag>Linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>有关LLVM的文档</title>
-    <url>/2023/10/30/LLVM-Docs/</url>
-    <content><![CDATA[<p><a href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
-<a href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
-<a href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a></p>
-]]></content>
-      <categories>
-        <category>LLVM</category>
-      </categories>
-      <tags>
-        <tag>Compiler</tag>
-        <tag>LLVM</tag>
-        <tag>OpenSource</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Introduction to GPU</title>
-    <url>/2023/10/31/Introduction-To-GPU/</url>
-    <content><![CDATA[<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>GPU, Graphics Processing Unit, is initially designed to accelerate image rendering<br>such as video games. For its high performance at parallel computation, it has become<br>a great processor for accelerating DL/ML training.</p>
-<span id="more"></span>
-<p>Unlike CPU, GPU consists of numerous computational units, long pipeline and a<br>video memory, which determines its advantages in parallel computation and disadvantages<br>in complex control logic handling.</p>
-<p><img src="/images/CPU-GPU.webp" alt=""></p>
-<h2 id="Computational-units-cores"><a href="#Computational-units-cores" class="headerlink" title="Computational units(cores)"></a>Computational units(cores)</h2><p>In total, computational units of CPU are fast but few, while that of GPU are slow but numerous.<br>The fastness of CPU is based on its high frequency and smart calculation. Here, smartness is<br>reflected by its out-of-order executions, multiple branch prediction and etc.</p>
-<p>But GPU can only handle some easy linear work like <code>fmuladd</code> instructions. In fact, except small<br>scalar float, modern GPU can perform operations on more complicated type like tensor(<em>tensor core</em>).</p>
-<p>SIMD not only exist in CPU, but also in GPU. Same operation, but different data, such feature<br>make GPU fast in parallel work like matrix multiplication.</p>
-<h2 id="Memory"><a href="#Memory" class="headerlink" title="Memory"></a>Memory</h2><p>Memory of GPU is much tinier than CPU’s. And cache in GPU has some difference with<br>what L1, L2 in CPU do.</p>
-<p>For <code>reduce</code> in parallel computation, it requires multiple cores share memory. But<br>it’s hard and expensive for thousands of core share one memory segment. So we divide<br>different types of cores into multiple groups, called <em>Streaming Multiprocessors</em>;</p>
-<p>There are INT32, FP32 and other types of SM in GPU. So how they cooperate?</p>
-<p>In TU102. every 4 SMs share a shared segment of L1 cache, and all cores share L2<br>cache. Like CPU, after missing data in L1, core will try to hit L2, and then GMEM.<br>To note, how L1 is shared is controlled by software or programmer, not hardware.<br>But L2 and GMEM is controlled by hardware. Besides, cores can also share data in<br>registers.</p>
-<p>The basic idea is that every thread holds a register to keep temporary result and<br>every register can only be visited by one consistent thread(or by same wrap/group).</p>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p><a href="https://zhuanlan.zhihu.com/p/598173226">Clarence’s Zhihu</a><br><a href="https://medium.com/codex/understanding-the-architecture-of-a-gpu-d5d2d2e8978b">Understanding the architecture of a GPU</a></p>
-]]></content>
-      <categories>
-        <category>Architecture</category>
-      </categories>
-      <tags>
-        <tag>Architecture</tag>
-        <tag>GPU</tag>
-        <tag>HPC</tag>
-      </tags>
   </entry>
 </search>
