@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"xchy.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":5,"unescape":false,"preload":false},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SMT Solver 继上篇有关 SAT 的介绍，我们接着展开看看 SMT - Satisfiability Modulo Theories。 SAT 是基于布尔逻辑回答某个命题的可满足性，如\(x \vee y\)。但现实中有各种其他的理论， 如实数理论等：\(a &lt; c \vee a &gt; b\)，那我们怎么判断这种公式的可满足性呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SMT-可满足性模理论">
+<meta property="og:url" content="http://xchy.github.io/2023/11/23/SMT-Introduction/index.html">
+<meta property="og:site_name" content="XChy&#39;s Blog">
+<meta property="og:description" content="SMT Solver 继上篇有关 SAT 的介绍，我们接着展开看看 SMT - Satisfiability Modulo Theories。 SAT 是基于布尔逻辑回答某个命题的可满足性，如\(x \vee y\)。但现实中有各种其他的理论， 如实数理论等：\(a &lt; c \vee a &gt; b\)，那我们怎么判断这种公式的可满足性呢？">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://xchy.github.io/images/smt-eager.png">
+<meta property="og:image" content="http://xchy.github.io/images/smt-lazy.png">
+<meta property="og:image" content="http://xchy.github.io/images/smt-dpllt.png">
+<meta property="article:published_time" content="2023-11-23T12:15:59.000Z">
+<meta property="article:modified_time" content="2023-11-23T15:07:11.303Z">
+<meta property="article:author" content="XChy">
+<meta property="article:tag" content="PL">
+<meta property="article:tag" content="Constraint Solver">
+<meta property="article:tag" content="SMT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://xchy.github.io/images/smt-eager.png">
+
+<link rel="canonical" href="http://xchy.github.io/2023/11/23/SMT-Introduction/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>SMT-可满足性模理论 | XChy's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">XChy's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">For life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">26</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">13</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">42</span></a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/11/23/SMT-Introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SMT-可满足性模理论
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-11-23 20:15:59 / Modified: 23:07:11" itemprop="dateCreated datePublished" datetime="2023-11-23T20:15:59+08:00">2023-11-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PL/" itemprop="url" rel="index"><span itemprop="name">PL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="smt-solver">SMT Solver</h2>
+<p>继上篇有关 SAT 的介绍，我们接着展开看看 SMT - Satisfiability Modulo Theories。 SAT 是基于布尔逻辑回答某个命题的可满足性，如<span class="math inline">\(x \vee y\)</span>。但现实中有各种其他的理论， 如实数理论等：<span class="math inline">\(a &lt; c \vee a &gt; b\)</span>，那我们怎么判断这种公式的可满足性呢？</p>
+<span id="more"></span>
+<p>这里我们就提出了可满足性模理论 Satisfiability Modulo Theories：</p>
+<ul>
+<li>给定一组理论，根据给定逻辑，求在该组理论解释下公式的可满足性</li>
+<li>现有理论通常针对一阶理论，即公理都是一阶的</li>
+</ul>
+<p>比如 EUF(Equality with Uninterpreted Functions): <span class="math inline">\(a = b \rightarrow f(a) = f(b)\)</span><br />
+<span class="math inline">\(a = b \leftrightarrow f(a) = f(b)\)</span><br />
+以及等价关系的性质。</p>
+<p>再比如线性方程组，算数求解之类的理论。</p>
+<h2 id="eager-method">Eager Method</h2>
+<p>我们可以将 SMT 问题编码为 SAT 问题，如:</p>
+<ul>
+<li><p><span class="math inline">\(f(a) = f(c) \wedge f(b) \ne c \wedge a \ne b\)</span>, 我们把<span class="math inline">\(f(a)\)</span>替换为<span class="math inline">\(A\)</span>, <span class="math inline">\(f(b)\)</span>替换为<span class="math inline">\(B\)</span>，原式就变为了 <span class="math inline">\(A = C \wedge B \ne c \wedge a \ne b\)</span>， 然后根据 EUF 理论的传递性，我们得到一堆的 SAT 可解的命题：</p>
+<p><span class="math display">\[
+P_{A=c} \wedge
+P_{B=c} \rightarrow P_{A=B}
+\]</span></p>
+<p><span class="math display">\[
+P_{A=B} \wedge
+P_{B=c} \rightarrow P\_{A=c}
+\]</span></p>
+<p><span class="math display">\[ \cdots \]</span></p></li>
+</ul>
+<p>从这个例子就可以知道，Eager 方法有许多问题，再摘自北大软件分析 PPT: <img src="/images/smt-eager.png" alt="img" /></p>
+<h2 id="lazy-method">Lazy Method</h2>
+<p>把 Theory Solver 当作输出 SAT/UNSAT 的黑盒，那么我们可以先把命题看成 SAT 命题，然后有流程： 对于一个类似<span class="math inline">\(f(a) = b \wedge (g(b) \ne c \vee g(c) = d) \wedge k(d) = a\)</span>的公式，</p>
+<ul>
+<li>SAT Solver 将其看成 <span class="math inline">\(A \wedge (\neg B \vee C) \wedge D\)</span></li>
+<li>SAT Solver 返回 SAT 并赋值 <span class="math inline">\(\{A = 1, B = 1, C = 1\}\)</span></li>
+<li>然后把 <span class="math inline">\(A,\neg B,C\)</span> 对应的公式组给到 Theory Solver</li>
+<li>Theory Solver 返回 SAT/UNSAT
+<ul>
+<li>SAT，继续让 SAT Solver 赋值，直到赋值 complete 为止</li>
+<li>UNSAT，表示 SAT 达到了 Conflict，加新约束到子句集中，若加入后不可满足了，那么宣告整个命题 UNSAT</li>
+</ul></li>
+</ul>
+<p>Lazy 方法的优点与问题： <img src="/images/smt-lazy.png" alt="img1" /></p>
+<p>怎么解决这个问题呢? 我们只需要给 Theory Solver 加接口就行了，这个就是<em>DPLL(T)</em>算法了（懒得再写了，如北大 PPT 所示）： <img src="/images/smt-dpllt.png" alt="img2" /> 注意，这里的冲突项的前驱和 SAT 那篇文章里求合适分割是一样的。</p>
+<h2 id="混合多个理论----nelson-oppen-方法">混合多个理论 -- Nelson-Oppen 方法</h2>
+<p>本质和 SAT 与其他理论的结合一样，通过变形让同一个文字(Literal)变为不同的文字，然后 让不同的理论处理不同的文字，最后再结合不同 Theory Solver 的结果，也就是让不同理论之间通过 接口属性交换信息。但通常我们不能遍历所有的接口属性（通常是无限多的）。</p>
+<blockquote>
+<p>注: 接口属性指的是两种理论都包含的命题集合</p>
+</blockquote>
+<p><span class="math inline">\(DPLL(T)\)</span>算法可以处理混合的多个理论，但前提是他们没有共享变量，共享变量的情况该怎么处理呢？</p>
+<p>Nelson-Oppen 方法解决了这一问题，但他有一定的限定范围：</p>
+<ul>
+<li>两个理论除等号外没有公共函数或者谓词</li>
+<li>理论在某种无限域上成立</li>
+<li>理论是凸的：
+<ul>
+<li>这里引入一个凸理论(Convex Theory)，一个理论是凸的当其满足: 其对于每个变量自由的公式<span class="math inline">\(F\)</span>，若<span class="math display">\[F \rightarrow \bigvee_{i=1}^n u_i = v_i\]</span> 则 <span class="math display">\[F \rightarrow u_i = v_i \text{ for some } i \in \{1,\cdots, n\}\]</span> 可以举个反例，对于<span class="math inline">\(F: 1 \le z \wedge z \le 2 \wedge u = 1 \wedge v = 2\)</span> 那么<span class="math inline">\(F \rightarrow z = u \vee z = v\)</span><br />
+但是无法推出<span class="math inline">\(F \rightarrow z = u\)</span> 或 <span class="math inline">\(F \rightarrow z = v\)</span><br />
+对于凸理论，我们只需要考虑<strong>变量之间的等价关系</strong>，这些关系则是有限的。</li>
+</ul></li>
+</ul>
+<p>基于以上限制，对于混合多个理论的命题，我们只需要沿着 AST 自底向上将其他理论的子树用变量替代即可, 对于以下例子，假设我们有 EUC 和线性方程组两个理论求解器： <span class="math display">\[f(f(x) + f(x)) = 2a\]</span> <span class="math display">\[f(1) = 1\]</span> <span class="math display">\[f(2) = a\]</span> <span class="math display">\[2x = x + 1\]</span></p>
+<p>令<span class="math inline">\(e_0 = f(x), e_1 = e_0 + e_0, e_2 = 1, e_3 = 2, e_4 = 2x, e_5 = x + 1, e_6 = 2a\)</span> ，对 EUC 我们有:</p>
+<p><span class="math display">\[e_0 = f(x)\]</span> <span class="math display">\[f(e_1) = e_6\]</span> <span class="math display">\[f(e_2) = e_2\]</span> <span class="math display">\[f(e_3) = a\]</span> <span class="math display">\[e_4 = e_5\]</span></p>
+<p>在线性方程组理论中我们有：</p>
+<p><span class="math display">\[e_1 = e_0 + e_0\]</span> <span class="math display">\[e_2 = 1\]</span> <span class="math display">\[e_3 = 2\]</span> <span class="math display">\[e_4 = 2x\]</span> <span class="math display">\[e_5 = x + 1\]</span> <span class="math display">\[e_6 = 2a\]</span> <span class="math display">\[2x = x + 1\]</span></p>
+<p>故我们有共享变量<span class="math inline">\(V = \{x, e_0, e_1, e_2, e_3, e_4, e_5, e_6\}\)</span></p>
+<p>线性方程组理论解得： <span class="math display">\[x = 1, e_4 = 2, e_5 = 2\]</span></p>
+<p>接口属性经过 EUC 处理，再次求解得：</p>
+<p><span class="math display">\[x = e_2 = 1, e_0 = f(x) = f(e_2) = 1, e_4 = e_5 = e_3 = 2\]</span></p>
+<p>线性方程组求解得:</p>
+<p><span class="math display">\[e_1 = e_0 + e_0 = 2\]</span></p>
+<p>EUC 继而求到:</p>
+<p><span class="math display">\[e_3 = e_1 = 2 \rightarrow f(e_1) = f(e_3) \rightarrow e_6 = a\]</span></p>
+<p>最后线性方程组求解<span class="math inline">\(e_6 = 2a = a\)</span>得到<span class="math inline">\(a = 0\)</span> 还是要注意：沿着 AST 自底向上将<strong>其他理论的子树</strong>用变量替代，而非所有子树都要用变量代替。</p>
+<p>把例子扔了，我们只剩下一个简单的流程： 遍历 <span class="math inline">\(V\)</span> 中的变量对 <span class="math inline">\(x,y\)</span>，然后求解 <span class="math inline">\(F \wedge x \ne y\)</span>，如果 UNSAT 说明 <span class="math inline">\(x=y\)</span> 成立</p>
+<blockquote>
+<p>具体理论通常有高效的实现方式</p>
+</blockquote>
+<h3 id="对于非凸包">对于非凸包</h3>
+<p>任何时候遇到一个等价关系的析取式，依次尝试每个等价关系, 如果任意一个得出 SAT，即整体 SAT, 如果全部 UNSAT，即整体 UNSAT。</p>
+<h2 id="application">Application</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/Z3Prover/z3">Z3</a> 是一个基于 SMT 理论的求解器</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/AliveToolkit/alive2">Alive2</a> 基于 <em>Z3</em> 完成了 LLVM-IR 的程序验证/refinement 关系验证的工作</p>
+<h2 id="reference">Reference</h2>
+<p><a target="_blank" rel="noopener" href="https://xiongyingfei.github.io/SA_new/2023/slides/slides14_SMT.pdf">北大软件分析</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/PL/" rel="tag"><i class="fa fa-tag"></i> PL</a>
+              <a href="/tags/Constraint-Solver/" rel="tag"><i class="fa fa-tag"></i> Constraint Solver</a>
+              <a href="/tags/SMT/" rel="tag"><i class="fa fa-tag"></i> SMT</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/23/SAT-Introduction/" rel="prev" title="SAT-布尔可满足性理论">
+      <i class="fa fa-chevron-left"></i> SAT-布尔可满足性理论
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#smt-solver"><span class="nav-number">1.</span> <span class="nav-text">SMT Solver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eager-method"><span class="nav-number">2.</span> <span class="nav-text">Eager Method</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lazy-method"><span class="nav-number">3.</span> <span class="nav-text">Lazy Method</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%A4%9A%E4%B8%AA%E7%90%86%E8%AE%BA----nelson-oppen-%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">混合多个理论 -- Nelson-Oppen 方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8E%E9%9D%9E%E5%87%B8%E5%8C%85"><span class="nav-number">4.1.</span> <span class="nav-text">对于非凸包</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#application"><span class="nav-number">5.</span> <span class="nav-text">Application</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reference"><span class="nav-number">6.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="XChy"
+      src="/images/doge.jpg">
+  <p class="site-author-name" itemprop="name">XChy</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/XChy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;XChy" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:xxs_chy@outlook.com" title="E-Mail → mailto:xxs_chy@outlook.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XChy</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

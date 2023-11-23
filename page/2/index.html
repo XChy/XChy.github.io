@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">22</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">26</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">12</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">13</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">39</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">42</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,255 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/21/Whale-Dependencies-Analysis-0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/21/Whale-Dependencies-Analysis-0/" class="post-title-link" itemprop="url">Whale-Dependencies-Analysis-0</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-09-21 15:33:44 / Modified: 19:52:14" itemprop="dateCreated datePublished" datetime="2023-09-21T15:33:44+08:00">2023-09-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="why-do-we-need-dependencies-analysis">Why do we need dependencies analysis?</h2>
+<p>Dependencies analysis is the <strong>foundation</strong> for <em>instruction scheduling</em> and <em>data-cached optimization</em>. It detects and analyzes the conflict relation on resources, control, data, etc, such that other transform can reorder the instruction/BasicBlock to chase better performance.</p>
+<p>Here, we mainly focus on the <strong>instruction dependencies</strong>.</p>
+<h2 id="classifications-of-instruction-dependencies">Classifications of instruction dependencies</h2>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/17/CS144-Lab3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/17/CS144-Lab3/" class="post-title-link" itemprop="url">CS144-Lab3</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-09-17 20:23:55" itemprop="dateCreated datePublished" datetime="2023-09-17T20:23:55+08:00">2023-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-09-21 15:31:42" itemprop="dateModified" datetime="2023-09-21T15:31:42+08:00">2023-09-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Lab3 接续 Lab2，要完成<strong>Sender</strong>的角色。 TCP 的任务主要为：</p>
+<ul>
+<li>Keep track of the receiver's window (acknos and window size)</li>
+<li>Fill the window when possible, by reading from the <em>ByteStream</em>, creating new TCP segments (including <em>SYN</em> and <em>FIN</em> flags if needed), and sending them.</li>
+<li>Keep track of which segments have been sent but not yet acknowledged by the receiver — we call these “<strong>outstanding</strong>” segments</li>
+<li>Re-send <strong>outstanding</strong> segments if <strong>enough time passes</strong> since they were sent, and they haven’t been acknowledged yet</li>
+</ul>
+<blockquote>
+<p>Why am I doing this? The basic principle is to send whatever the receiver will allow</p>
+<p>us to send (filling the window), and keep retransmitting until the receiver acknowledges</p>
+<p>each segment. This is called “automatic repeat request” (ARQ).</p>
+</blockquote>
+<h2 id="那么tcpsender是怎么时候知道一段segment丢失了呢">那么TCPSender是怎么时候知道一段segment丢失了呢？</h2>
+<p>Sender会记录每一个outstanding segment直到收到receiver的ackno。而如果一个segment outstand了太久的话， 我们就需要将其重新发送一遍。</p>
+<p>当然，这里有些关于"outstanding for too long"的原则，但Lab3不会让我们解决一些tricky或者过于文字游戏的问题 （留在Lab4）。</p>
+<p>这里有几个要点： - Sender的<strong>tick</strong>函数是唯一一个你可以用的，关于时间的函数。其他对于CPU/OS的调用都是被禁止的。 - Sender会被设置一个<strong>retransmission timeout (RTO)</strong>。这个就是我们resend segment的时长了。 - 我们需要自己实现retransmission timer，<strong>基于tick</strong>。 - 每个包含数据的segment被发送时，若timer没有运行，就启动timer。 - 当所有outstanding data被acknowledged了，停止timer。</p>
+<p>在这里我们可以讨论一下RTO和Retransmission timer。 首先，当有带数据的segment被发送时，我们要让timer run起来。 当tick时若timer超时，则： - 把segno最低的重发一遍 - 若window大小不为0,则： - retransmission num ++ (timer stop的时候置零) - RTO *= 2, 这是根据流量调整速率的 - reset timer and start it</p>
+<p>除此之外<span class="math inline">\(FIN\)</span>的处理也有点dirty，实现的时候要注意一下。</p>
+<p>Lab4和Lab5比较简单，就不记录了，一个是IP/Ethernet以及ARP的NetworkInterface实现，一个则是Router的跳转表实现， 不需要太动脑子。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/15/LeetCode-89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/09/15/LeetCode-89/" class="post-title-link" itemprop="url">LeetCode 89 格雷编码</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-09-15 15:26:07 / Modified: 15:38:36" itemprop="dateCreated datePublished" datetime="2023-09-15T15:26:07+08:00">2023-09-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>题目如下：</p>
+<p>n 位格雷码序列 是一个由 <span class="math inline">\(2^n\)</span> 个整数组成的序列，其中：</p>
+<p>每个整数都在范围 <span class="math inline">\([0, 2^n - 1]\)</span> 内, 要求：</p>
+<ul>
+<li>第一个整数是 0</li>
+<li>一个整数在序列中出现 不超过一次</li>
+<li>每对 相邻 整数的二进制表示 恰好一位不同 ，且</li>
+<li>第一个 和 最后一个 整数的二进制表示 恰好一位不同</li>
+</ul>
+<p>给你一个整数 n ，返回任一有效的 n 位格雷码序列 。</p>
+<blockquote>
+<p>说实话我一开始想的简单了，直接暴力搜索，最后发现不行，只能 refer 一下官方题解了</p>
+</blockquote>
+<h2 id="方法一">方法一</h2>
+<p>我们可以用归纳法，从 <span class="math inline">\(n-1\)</span>推到<span class="math inline">\(n\)</span>，设序列 <span class="math inline">\(G_n\)</span> 为<span class="math inline">\(n\)</span> 位的格雷码序列, 我们可以从 <span class="math inline">\(G_{n-1}\)</span> 推到 <span class="math inline">\(G_n\)</span>。</p>
+<p>首先把 <span class="math inline">\(G_{n-1}\)</span> 中所有元素的<span class="math inline">\(n-1\)</span>位设为 1，得到<span class="math inline">\(G_{n-1}^T\)</span>, 然后拼接 <span class="math inline">\(G_{n-1}\)</span>和<span class="math inline">\(G_{n-1}^T\)</span>就得到了我们想要的结果。</p>
+<p>为什么呢？其实很简单，<span class="math inline">\(G_{n-1}^T\)</span> 中每个数字都与<span class="math inline">\(G_{n-1}\)</span> <strong>有且仅有</strong>一位不同, 且 <span class="math inline">\(G_{n-1}\)</span>是<span class="math inline">\([0,2^{n-1}]\)</span>的一个排列，<span class="math inline">\(G_{n-1}^T\)</span>则是<span class="math inline">\([2^{n-1}, 2^{n}-1]\)</span>上的排列。 二者组合后自然就得到了<span class="math inline">\([0,2^n-1]\)</span>上的排列，且依次穿插后二进制位恰有一位不同。</p>
+<h2 id="方法二">方法二</h2>
+<p>这个方法是纯粹的找规律，如下： <img src="/images/leetcode89.png" alt="a" /></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -844,389 +1093,10 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/OSPF_BGP/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/19/OSPF_BGP/" class="post-title-link" itemprop="url">OSPF (Open Shortest Path First) & BGP (Border Gateway Protocol)</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-19 23:23:17" itemprop="dateCreated datePublished" datetime="2023-08-19T23:23:17+08:00">2023-08-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-20 00:20:54" itemprop="dateModified" datetime="2023-08-20T00:20:54+08:00">2023-08-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="making-routing-scalable">Making routing scalable</h2>
-<p>Here are some concepts to note:</p>
-<p>scale: billions of destinations:</p>
-<ul>
-<li>can't store all destinations in routing tables.</li>
-<li>routing table exchange would swamp links.</li>
-</ul>
-<p>administrative autonomy:</p>
-<ul>
-<li>Internet: a network of networks</li>
-<li>each network admin may want to control routing in its own network</li>
-</ul>
-<h2 id="approach-to-scalable-routing">Approach to scalable routing</h2>
-<p>We always aggregate routers into regions known as "autonomous systems" (a.k.a "domains").</p>
-<p>And <strong>intra-AS (intra-domain)</strong> is such routing among routers within same AS(network).</p>
-<ul>
-<li>all routers in AS must run same intra-domain protocol.</li>
-<li>routers in different AS can run different intra-domain protocols.</li>
-<li>gateway router: at edge of its own AS, has link(s) to router(s) in other AS'es</li>
-</ul>
-<p><strong>inter-AS</strong> routing among AS'es is the gateways perform inter-domain routing</p>
-<p>Both of them determine entries for destination of routers, while former is <em>within</em> AS and latter is for <em>external</em> destinations. Most common intra-AS routing protocols:</p>
-<ul>
-<li>RIP (Routing Information Protocol), which is no longer widely used.</li>
-<li>OSPF (Open Shortest Path First), which includes classic <strong>link-state</strong> routing.</li>
-<li>EIGRP: (Enhanced Interior Gateway Routing Protocol), which is <strong>DV</strong> based/</li>
-</ul>
-<h2 id="ospf">OSPF</h2>
-<p>OSPF is an intra-domain routing protocol.</p>
-<ul>
-<li><p>open: publicly available</p></li>
-<li><p>classic link-state:</p>
-<ul>
-<li>each router floods OSPF link-state advertisements (directly over IP) to all other routers in entire AS.</li>
-<li>multiple link costs metrics possible: bandwidth, delay.</li>
-<li>global (has full topology)</li>
-</ul>
-<p>There is two-level hierarchy: local <em>area</em> and <em>backbone</em>.</p>
-<ul>
-<li><strong>Local routers</strong> only know/compute detailed topology within its local area, and forwad information to <strong>area border routers</strong>.</li>
-<li>And <strong>area border routers</strong> are responsible for <em>summarizing</em> distances to destinations in own area, and advertising in backbone.</li>
-</ul></li>
-</ul>
-<h2 id="bgp">BGP</h2>
-<p>BGP is an inter-domain routing protocol ("glue that holds the Internet together").</p>
-<p>BGP provides each AS a means to:</p>
-<ul>
-<li>obtain destination network reachability information from neighboring ASes (<strong>eBGP</strong>).</li>
-<li>determine roues to other networks based on reachability information and policy.</li>
-<li>propagate reachability information to all AS-internal routers (<strong>iBGP</strong>).</li>
-<li>advertise destination reachability information.</li>
-</ul>
-<h3 id="bgp-basics">BGP Basics</h3>
-<p>BGP Session: two BGP routers exchange BGP messages over semi-permanent TCP connection:</p>
-<ul>
-<li>advertising paths to different destination network prefixes</li>
-<li>BGP is a "path vector" protocol</li>
-</ul>
-<p>BGP protocol messages [RFC 4371]:</p>
-<ul>
-<li>Open: opens <strong>TCP</strong> connection to peer and authenticates sending BGP peer</li>
-<li>Update: advertises new path (or withdraws old)</li>
-<li>Keepalive: keeps connection alive in absence of UPDATES; also ACKS OPEN request</li>
-<li>Notification: reports erros in previous msg; also used to close connection</li>
-</ul>
-<h3 id="bgp-path-advertisement">BGP: path advertisement</h3>
-<p>BGP advertised path: prefix + attributes</p>
-<ul>
-<li>path prefix: destination being advertised</li>
-<li>two important attributes:
-<ul>
-<li>AS-PATH: list of ASes through which prefix advertisement has passed</li>
-<li>NEXT-HOP: indicates specific internal-AS router to next-hop AS</li>
-</ul></li>
-</ul>
-<h3 id="bgp-policy">BGP policy</h3>
-<p>ISP only wants to route traffic to/from its customer networks (does not want to carry transit traffic between other ISPs – a typical “real world” policy)</p>
-<h3 id="bgp-populating-forwading-tables">BGP: populating forwading tables</h3>
-<p>Just popluate from boundary to internal and choose local gateway that has least intra-domain cost. Omit details here.</p>
-<h2 id="benefits">Benefits</h2>
-<p>Intra/Inter-AS routing scale the network, creating hierarchical routing, reducing forwarding table size. And seperate them can make:</p>
-<ul>
-<li>intra-AS focus on performance.</li>
-<li>inter-AS has policy dominates over performaance.</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/19/Routing-Algorithms/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/19/Routing-Algorithms/" class="post-title-link" itemprop="url">Routing-Algorithms</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-19 13:09:21" itemprop="dateCreated datePublished" datetime="2023-08-19T13:09:21+08:00">2023-08-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-09-21 15:34:29" itemprop="dateModified" datetime="2023-09-21T15:34:29+08:00">2023-09-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Compiler-Theory/" itemprop="url" rel="index"><span itemprop="name">Compiler Theory</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Routing algorithm goal: determine <strong>good</strong> paths from sending hosts to receiving host. So what is a good path? Here "good" means least cost, fastest and least congested. Cost is defined by network operator: related to bandwidth, related to congestion, etc.</p>
-<p>For the characterisitics of network, We apply <strong>graph abstraction</strong> to solve this problem. Let routers be vertices, connections be edges and the "cost" of connection be weights of edges.</p>
-<p>There is routing algorithm classification:</p>
-<ul>
-<li>global: all routers have complete topology, link cost info</li>
-<li>decentralized: iterative process of computation, exchange of info with neighbors</li>
-<li>dynamic: routes change more quickly</li>
-<li>static: routes change slowly over time</li>
-</ul>
-<h2 id="link-state">Link State</h2>
-<p><strong>Link State Algorithm</strong> is iterative and centralized/global, which knows network topology, link costs needed. And it computes least cost paths from one node to all other nodes.</p>
-<p>Notation: <span class="math inline">\(C_{a,b}\)</span> is the cost from <span class="math inline">\(a\)</span> to <span class="math inline">\(b\)</span>. <span class="math inline">\(D(a)\)</span> is the cost of least-cost-path from source to destination <span class="math inline">\(a\)</span>. <span class="math inline">\(p(a)\)</span> is the predecessor node along path from source to <span class="math inline">\(a\)</span>. And <span class="math inline">\(N&#39;\)</span> is set of nodes whose least-cost-path definitively known.</p>
-<p>And it's mostly the same as <strong>Dijkstra's Algorithm</strong> or <strong>Prim Algorithm</strong> in Graph Theory. Omit details here.</p>
-<p>Optimized algorithm complexity: <span class="math inline">\(O(nlogn)\)</span></p>
-<p>Message Complexity: Each router must broadcast its link state information to other <span class="math inline">\(n\)</span> routers, so complexity is <span class="math inline">\(O(n^2)\)</span></p>
-<h2 id="distance-vector">Distance Vector</h2>
-<p><strong>Distance Vector</strong> is an application of <strong>Bellman Ford Algorithm</strong>, which is decentralized, iterative and asynchronous. In this algorithm, each node propagates its cost(distance vector) to its neighbors, so that they can update their own distance vectors.</p>
-<p>The process for each node is: - wait for change in local link cost or msg from neighbor - recompute its own DV estimates with DV received from neighbor - if its own DV changed, send it to its neightbors</p>
-<p>Such thing is like state information diffusion. <strong>As a compiler learner, I think it's the same as what MFP(Maximum FixedPoint) implements</strong></p>
-<p>However, there's difference where one of the costs increase. For example, with path x-4-y-1-z, when <span class="math inline">\(C_{x,y}\)</span> updates to 60, <span class="math inline">\(y\)</span> will update <span class="math inline">\(D_y(x)\)</span> to 6 because <span class="math display">\[D_y(x) = min(D_y(x), C_{y,z} + D_z(x))\]</span>, while <span class="math inline">\(D_z(x)\)</span> is out-of-date. Such count-to-infinity problem is tricky to solve.</p>
-<p>Message complexity: exchange between neighbors; convergence time varies.</p>
-<h2 id="comparsion-of-ls-and-dv-algorithms">Comparsion of LS and DV algorithms</h2>
-<p>robustness: - LS: - router can advertise incorrect link cost. - each router computes only its own table.</p>
-<ul>
-<li>DV:
-<ul>
-<li>DV router can advertise incorrect path cost:black-holing.</li>
-<li>each router;s DV is used by others: error propagate through network.</li>
-</ul></li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/08/17/TCP-Congestion-Control/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/08/17/TCP-Congestion-Control/" class="post-title-link" itemprop="url">TCP Congestion Control</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-08-17 14:42:32" itemprop="dateCreated datePublished" datetime="2023-08-17T14:42:32+08:00">2023-08-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-08-19 13:09:57" itemprop="dateModified" datetime="2023-08-19T13:09:57+08:00">2023-08-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="classic-tcp">Classic TCP</h1>
-<h2 id="aimd">AIMD</h2>
-<p><strong>A</strong>I<strong>M</strong>D - a distributed, asynchronous algorithm - has been shown to:</p>
-<ul>
-<li>optimize congested flow rates network wide.</li>
-<li>have desirable stability properties.</li>
-</ul>
-<p>Approach: senders can <strong>increase</strong> sending rate until packet loss occurs, then <strong>decrease</strong> sending rate on loss event.</p>
-<p>Additive Increase: Increase sending rate by 1 maximum segment size every RTT until loss detected.</p>
-<p>Multiplicative Decrease: Cut sending rate in half at each loss event by triple duplicate ACK (TCP Reno). Or cut to 1 maximum segment size when loss is detected by timeout (TCP Tahoe)</p>
-<h2 id="tcp-congestion-control-details">TCP Congestion Control Details</h2>
-<p>sender sequence number space:</p>
-<figure>
-<img src="/images/SenderSequenceSpace.png" alt="" /><figcaption>/images/SenderSequenceSpace.png</figcaption>
-</figure>
-<p>TCP rate ~= <span class="math inline">\(\frac{cwnd}{RTT}\)</span> bytes/sec</p>
-<ul>
-<li>TCP sender limits transmission : LastByteSent - LastByteAcked &lt;= cwnd</li>
-<li><em>cwnd</em> is dynamically adjusted in response to observed network congestion</li>
-</ul>
-<h3 id="tcp-slow-start">TCP slow start</h3>
-<p>initially cwnd = 1 MSS. double cwnd every RTT. done by incrementing cwnd for every ACK received.</p>
-<p>When cwnd gets to 1/2 of its value before, we should switch to linear</p>
-<h2 id="cubic">CUBIC</h2>
-<figure>
-<img src="/images/TCPCUBIC.png" alt="" /><figcaption>CUBIC</figcaption>
-</figure>
-<p>TCP CUBIC is default in Linux, most popular TCP for popular Web servers.</p>
-<h1 id="enhanced-tcps">Enhanced TCPs</h1>
-<h2 id="delay-based-tcp-congestion-control">Delay-based TCP congestion control</h2>
-<p>"Just full enough, but not fuller": keep bottleneck link busy transmitting, but avoid high delays/buffering</p>
-<h2 id="explicit-congestion-notification-ecn">Explicit congestion notification (ECN)</h2>
-<p>TCP deployments often implement network-assisted congestion control.</p>
-<ul>
-<li>two bits in IP header (ToS field) marked by network router to indicate congestion
-<ul>
-<li>policy to determine marking chosen by network operator</li>
-</ul></li>
-<li>congestion indication carried to destination</li>
-<li>destination sets ECE bit on ACK segment to notify sender of congestion</li>
-<li>involves both IP (IP header ECN bit marking) and TCP (TCP header C,E bit marking)</li>
-</ul>
-<h2 id="tcp-fairness">TCP fairness</h2>
-<p>Goal: Multiple TCP sessions share the equal resource of network.</p>
-<p>However, there is no Internet police policing use of congestion control.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -1294,20 +1164,20 @@ t(x) - h(x), &amp; \text{if } y &gt; x \\
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-count">42</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

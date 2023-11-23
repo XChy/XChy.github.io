@@ -527,7 +527,9 @@ For my recent work on <em>LLVM</em>, I'd like to share some experience about it.
     <content><![CDATA[<p><a href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
 <a href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
 <a href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a><br />
-<a href="https://llvm.org/docs/Reference.html">Reference Guide</a> <a href="https://llvm.org/docs/Passes.html">Current Passes</a></p>
+<a href="https://llvm.org/docs/Reference.html">Reference Guide</a><br />
+<a href="https://llvm.org/docs/Passes.html">Current Passes</a><br />
+<span id="more"></span></p>
 ]]></content>
       <categories>
         <category>LLVM</category>
@@ -1548,5 +1550,215 @@ D \\
       <categories>
         <category>Compiler Theory</category>
       </categories>
+  </entry>
+  <entry>
+    <title>线性代数的小trick-0</title>
+    <url>/2023/11/05/Linear-Algebra-Cheetsheet0/</url>
+    <content><![CDATA[<h2 id="矩阵多项式">矩阵多项式</h2>
+<p>对于矩阵<span class="math inline">\(A\)</span>，我们假设有关于矩阵<span class="math inline">\(A\)</span>的<span class="math inline">\(n\)</span>次多项式 <span class="math inline">\(f(A) = c_nA^n+c_{n-1}A^{n-1}+\cdots+c_1A+c_0E\)</span><br />
+那么假设我们知道<span class="math inline">\(A\)</span>的特征值<span class="math inline">\(\lambda_1,\lambda_2, \cdots, \lambda_n\)</span></p>
+<p>那么<span class="math inline">\(f(A)\)</span>的特征值会是什么呢？</p>
+<span id="more"></span>
+<p>如果<span class="math inline">\(\lambda_1\)</span>是<span class="math inline">\(f(A)\)</span>的一个特征值，<span class="math inline">\(\alpha\)</span>为对应的特征向量,那么： <span class="math display">\[f(A)\alpha = c_n\lambda_i^n\alpha+c_{n-1}\lambda_i^{n-1}\alpha+\cdots+c_1\lambda_i\alpha+c_0\alpha = f(\lambda_i)\]</span> 故<span class="math inline">\(f(\lambda_i)\)</span>是<span class="math inline">\(f(A)\)</span>的一个特征值，<span class="math inline">\(\alpha\)</span>是<span class="math inline">\(f(\lambda_i)\)</span>的特征向量</p>
+<h2 id="余子式-和-代数余子式的区别">余子式 和 代数余子式的区别</h2>
+<p>余子式记为<span class="math inline">\(M_{ij}\)</span>, 而代数余子式是<span class="math inline">\(A_{ij} = (-1)^{i+j}M_{ij}\)</span>，只有<strong>符号</strong>上的区别。 注意，伴随矩阵<span class="math inline">\(A^*\)</span>是用代数余子式定义的。</p>
+<h2 id="与秩有关的不等式">与秩有关的不等式</h2>
+<p><span class="math display">\[r(AB) \le \min{(r(A), r(B))}\]</span> <span class="math display">\[r(A+B) \le r(A) + r(B)\]</span> <span class="math display">\[r(A,B) \le r(A) + r(B)\]</span> <span class="math display">\[r(AA^T) = r(A^TA) = r(A)\]</span></p>
+<p>若<span class="math inline">\(A,B\)</span>为<span class="math inline">\(n\)</span> x <span class="math inline">\(n\)</span>的矩阵,<span class="math inline">\(AB=O\)</span>，则 <span class="math display">\[r(A)+r(B) \le n\]</span></p>
+<p><span class="math inline">\(A^*\)</span>为<span class="math inline">\(A\)</span>的伴随矩阵，则： <span class="math display">\[r(A^*) = n, r(A) = n\]</span> <span class="math display">\[r(A^*) = 1, r(A) = n-1\]</span> <span class="math display">\[r(A^*) = 0, r(A) &lt; n - 1\]</span></p>
+<p>对于分块矩阵，我们有：</p>
+<p><span class="math display">\[
+r\left(
+\begin{array}{l}
+A &amp; O \\
+O &amp; B
+\end{array}
+\right) = r(A) + r(B)
+\]</span></p>
+<p><span class="math display">\[
+r\left(
+\begin{array}{l}
+A &amp; C \\
+O &amp; B
+\end{array}
+\right) \ge r(A) + r(B)
+\]</span></p>
+<p><span class="math inline">\(Sylvester\)</span>不等式, <span class="math inline">\(A\)</span>为<span class="math inline">\(s\)</span> x <span class="math inline">\(n\)</span>, <span class="math inline">\(B\)</span>为<span class="math inline">\(n\)</span> x <span class="math inline">\(m\)</span>： <span class="math display">\[r(AB) \ge r(A)+r(B)-n\]</span></p>
+<p>若<span class="math inline">\(A^2=A\)</span>，if and only if: <span class="math display">\[r(A)+r(I-A) = n\]</span></p>
+<h2 id="引用">引用</h2>
+<p><a href="https://zhuanlan.zhihu.com/p/261152093">知乎文章</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/341263037">知乎文章 1</a></p>
+]]></content>
+      <categories>
+        <category>Linear Algebra</category>
+      </categories>
+      <tags>
+        <tag>Math</tag>
+        <tag>Linear Algebra</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SAT-布尔可满足性理论</title>
+    <url>/2023/11/23/SAT-Introduction/</url>
+    <content><![CDATA[<h2 id="什么是约束求解">什么是约束求解？</h2>
+<p>现实世界中有许多问题可以被抽象为基于约束(Constraint)的问题，<strong>约束</strong>指的是就是条件。<br />
+而约束求解就是在给定约束的情况下，如果可满足(Satisfiable)我们就返回一组解， 如果不可满足，我们就给出一个较小的矛盾集(Unsatisfiable core)。</p>
+<span id="more"></span>
+<p>约束求解是不可判定(Undecidable)的问题，但许多子问题是可判定的。 比如求解一个不等式组 <span class="math inline">\(a &lt; 0 \&amp;\&amp; b &gt; 0\)</span> ，我们有一组可满足的解 <span class="math inline">\(a = -1, b = 1\)</span>， 但对于<span class="math inline">\(a &lt; 0 \&amp;\&amp; a &gt; 0\)</span>，我们不可能满足该命题，故我们需要给出矛盾集 <span class="math inline">\(\{1, 2\}\)</span>。 其中<span class="math inline">\(1\)</span>指的就是第一个命题<span class="math inline">\(a &lt; 0\)</span>成立，<span class="math inline">\(\{1, 2\}\)</span> 则是两个命题同时成立， 显然，这个命题集合是矛盾的。</p>
+<p>SAT-布尔可满足性问题就是一种约束求解问题，该问题是 NP-complete 的，除此之外 线性方程组、不等式组之类的求解问题同样属于约束求解问题。</p>
+<h2 id="notations">Notations</h2>
+<ul>
+<li>文字(literal): 布尔变量 <span class="math inline">\(x\)</span></li>
+<li>子句(clause): 文字的析取(disjunction): <span class="math inline">\(x \vee \neg y\)</span></li>
+</ul>
+<p>那么 SAT 就是给定一组子句，寻找对各文字(或者布尔变量)的赋值使得所有子句为真。</p>
+<p>其实就是使子句的合取为真: <span class="math inline">\((\neg x \vee y) \wedge x\)</span></p>
+<h2 id="穷举法">穷举法</h2>
+<p>最简单的暴力解法，一个个试就行了， <span class="math inline">\(O(2^n)\)</span>的复杂度，过于慢了。</p>
+<h2 id="dpll">DPLL</h2>
+<h3 id="冲突conflict检测">冲突(Conflict)检测</h3>
+<p>对于一个赋值<span class="math inline">\(\{x, y\}\)</span>，我们可以推出 <span class="math inline">\(x \vee y\)</span> 与 <span class="math inline">\(x \vee \neg y\)</span>是冲突的， 即两个子句在该赋值下无法同时为真，那么我们不需要完整赋值就可以排除该情况。 这时我们有伪代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Sat(assign) &#123;</span><br><span class="line">  <span class="keyword">if</span> (conflict(assign)) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="keyword">if</span> (complete(assign)) <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  choose a unassigned x；</span><br><span class="line">  <span class="keyword">return</span> sat(assign ∪ &#123;x=<span class="number">0</span>&#125;) || sat(assign ∪ &#123;x=<span class="number">1</span>&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="标准推导方法">标准推导方法</h3>
+<ul>
+<li>Unit Propagation: 其他文字都为假，剩下的一个文字必定为真</li>
+<li>Unate Propagation: 当一个子句存在为真的文字时，可以从子句集合中删除</li>
+<li>Pure literal elimination: 当一个变量只有为真或者为假的形式的时候，可以把包含该变量的子句删除</li>
+</ul>
+<p>最后我们根据以上两个方法得到算法：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">dpll(assign) &#123;</span><br><span class="line">  assign’ = assign_prop(assign);</span><br><span class="line">  <span class="keyword">if</span> (conflict(assign’)) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="keyword">if</span> (complete(assign’)) <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">  choose a unassigned x；</span><br><span class="line">  <span class="keyword">return</span> dpll(assign’ ∪ &#123;x=<span class="number">0</span>&#125;) || dpll(assign’ ∪ &#123;x=<span class="number">1</span>&#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中 <em>assign_prop</em> 是推导方法，</p>
+<p>这里还有一些预处理/归结/Resolution 方法如：</p>
+<ul>
+<li>Probing: 如果 x=0 或者 x=1 都能推导出 y=0，则推导出 y=0</li>
+<li>Equivalence: classes<br />
+预先检查出等价的子句集合，然后删除其中一个<br />
+{1, 2, -3}<br />
+{2, 1, -3}</li>
+</ul>
+<p>早期存在完全基于归结，不穷举赋值的算法（DP 算法），但速 度通常显著落后于 DPLL</p>
+<p>变量选择有很多的 heuristics，有基于子句集，也有基于历史的，这里就不多写了。</p>
+<h2 id="cdcl----conflict-driven-clause-learning">CDCL -- Conflict-Driven Clause Learning</h2>
+<p>核心思想很简单：遇到 conflict 的时候，把和 conflict <strong>相关</strong>的布尔赋值取反加入子句集， 若<span class="math inline">\(x \wedge y \wedge z\)</span>导致了冲突，那么我们加入子句<span class="math inline">\(\neg x \vee \neg y \vee \neg z \vee\)</span>， 通过这种方式，我们不再需要记录之前遍历过的赋值，每次任意选择剩下的变量和赋值即可，因为 从新添加约束出发的推导实际保证了之前探过的冲突赋值不会出现。</p>
+<p>这里有个新问题，寻找什么样的切割，让决策节点和矛盾不联通？参考北大 PPT: <img src="/images/sat-cut.png" alt="img" /></p>
+<p>这里也有个可互动的例子来解释这个算法：<a href="https://cse442-17f.github.io/Conflict-Driven-Clause-Learning/">Conflict Driven Clause Learning</a></p>
+<p>同样，这里也有个英文的解释：</p>
+<ul>
+<li>Non-Chronological Backtracking<br />
+When CDCL learns a clause, it backtracks to the clause’s asserting level.<br />
+You can just think of this meaning that it backtracks to the latest guess that affects a literal in the learned clause. Since this clause has x1 and x5, and x1 was the latest one to be guessed in that clause, we backtrack to when we set x1 to be True. When we backtrack to this level, the learned clause will immediately be available for BCP letting us put into action what we just learned!</li>
+</ul>
+<p>最后，我们有伪代码：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">dpll(assign) &#123;</span><br><span class="line">assign = &#123;&#125;;</span><br><span class="line">  <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">  assign’ = assign_prop(assign);</span><br><span class="line">  <span class="keyword">if</span> (conflict(assign’)) &#123;</span><br><span class="line">    <span class="keyword">if</span>(assign is empty) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    add new constraint;</span><br><span class="line">    backtrack;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (complete(assign’)) <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    choose a unassigned x；</span><br><span class="line">    assign = assign<span class="number">&#x27;</span></span><br><span class="line">    add x into assign</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这个方法使后来的 SAT/SMT 速度变得特别快</p>
+</blockquote>
+<h2 id="reference">Reference</h2>
+<p><a href="https://xiongyingfei.github.io/SA/2022/12_SAT.pdf">北大软件分析</a> <a href="https://cse442-17f.github.io/Conflict-Driven-Clause-Learning/">Conflict Driven Clause Learning</a></p>
+]]></content>
+      <categories>
+        <category>PL</category>
+      </categories>
+      <tags>
+        <tag>PL</tag>
+        <tag>SAT</tag>
+        <tag>Constraint Solver</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SMT-可满足性模理论</title>
+    <url>/2023/11/23/SMT-Introduction/</url>
+    <content><![CDATA[<h2 id="smt-solver">SMT Solver</h2>
+<p>继上篇有关 SAT 的介绍，我们接着展开看看 SMT - Satisfiability Modulo Theories。 SAT 是基于布尔逻辑回答某个命题的可满足性，如<span class="math inline">\(x \vee y\)</span>。但现实中有各种其他的理论， 如实数理论等：<span class="math inline">\(a &lt; c \vee a &gt; b\)</span>，那我们怎么判断这种公式的可满足性呢？</p>
+<span id="more"></span>
+<p>这里我们就提出了可满足性模理论 Satisfiability Modulo Theories：</p>
+<ul>
+<li>给定一组理论，根据给定逻辑，求在该组理论解释下公式的可满足性</li>
+<li>现有理论通常针对一阶理论，即公理都是一阶的</li>
+</ul>
+<p>比如 EUF(Equality with Uninterpreted Functions): <span class="math inline">\(a = b \rightarrow f(a) = f(b)\)</span><br />
+<span class="math inline">\(a = b \leftrightarrow f(a) = f(b)\)</span><br />
+以及等价关系的性质。</p>
+<p>再比如线性方程组，算数求解之类的理论。</p>
+<h2 id="eager-method">Eager Method</h2>
+<p>我们可以将 SMT 问题编码为 SAT 问题，如:</p>
+<ul>
+<li><p><span class="math inline">\(f(a) = f(c) \wedge f(b) \ne c \wedge a \ne b\)</span>, 我们把<span class="math inline">\(f(a)\)</span>替换为<span class="math inline">\(A\)</span>, <span class="math inline">\(f(b)\)</span>替换为<span class="math inline">\(B\)</span>，原式就变为了 <span class="math inline">\(A = C \wedge B \ne c \wedge a \ne b\)</span>， 然后根据 EUF 理论的传递性，我们得到一堆的 SAT 可解的命题：</p>
+<p><span class="math display">\[
+P_{A=c} \wedge
+P_{B=c} \rightarrow P_{A=B}
+\]</span></p>
+<p><span class="math display">\[
+P_{A=B} \wedge
+P_{B=c} \rightarrow P\_{A=c}
+\]</span></p>
+<p><span class="math display">\[ \cdots \]</span></p></li>
+</ul>
+<p>从这个例子就可以知道，Eager 方法有许多问题，再摘自北大软件分析 PPT: <img src="/images/smt-eager.png" alt="img" /></p>
+<h2 id="lazy-method">Lazy Method</h2>
+<p>把 Theory Solver 当作输出 SAT/UNSAT 的黑盒，那么我们可以先把命题看成 SAT 命题，然后有流程： 对于一个类似<span class="math inline">\(f(a) = b \wedge (g(b) \ne c \vee g(c) = d) \wedge k(d) = a\)</span>的公式，</p>
+<ul>
+<li>SAT Solver 将其看成 <span class="math inline">\(A \wedge (\neg B \vee C) \wedge D\)</span></li>
+<li>SAT Solver 返回 SAT 并赋值 <span class="math inline">\(\{A = 1, B = 1, C = 1\}\)</span></li>
+<li>然后把 <span class="math inline">\(A,\neg B,C\)</span> 对应的公式组给到 Theory Solver</li>
+<li>Theory Solver 返回 SAT/UNSAT
+<ul>
+<li>SAT，继续让 SAT Solver 赋值，直到赋值 complete 为止</li>
+<li>UNSAT，表示 SAT 达到了 Conflict，加新约束到子句集中，若加入后不可满足了，那么宣告整个命题 UNSAT</li>
+</ul></li>
+</ul>
+<p>Lazy 方法的优点与问题： <img src="/images/smt-lazy.png" alt="img1" /></p>
+<p>怎么解决这个问题呢? 我们只需要给 Theory Solver 加接口就行了，这个就是<em>DPLL(T)</em>算法了（懒得再写了，如北大 PPT 所示）： <img src="/images/smt-dpllt.png" alt="img2" /> 注意，这里的冲突项的前驱和 SAT 那篇文章里求合适分割是一样的。</p>
+<h2 id="混合多个理论----nelson-oppen-方法">混合多个理论 -- Nelson-Oppen 方法</h2>
+<p>本质和 SAT 与其他理论的结合一样，通过变形让同一个文字(Literal)变为不同的文字，然后 让不同的理论处理不同的文字，最后再结合不同 Theory Solver 的结果，也就是让不同理论之间通过 接口属性交换信息。但通常我们不能遍历所有的接口属性（通常是无限多的）。</p>
+<blockquote>
+<p>注: 接口属性指的是两种理论都包含的命题集合</p>
+</blockquote>
+<p><span class="math inline">\(DPLL(T)\)</span>算法可以处理混合的多个理论，但前提是他们没有共享变量，共享变量的情况该怎么处理呢？</p>
+<p>Nelson-Oppen 方法解决了这一问题，但他有一定的限定范围：</p>
+<ul>
+<li>两个理论除等号外没有公共函数或者谓词</li>
+<li>理论在某种无限域上成立</li>
+<li>理论是凸的：
+<ul>
+<li>这里引入一个凸理论(Convex Theory)，一个理论是凸的当其满足: 其对于每个变量自由的公式<span class="math inline">\(F\)</span>，若<span class="math display">\[F \rightarrow \bigvee_{i=1}^n u_i = v_i\]</span> 则 <span class="math display">\[F \rightarrow u_i = v_i \text{ for some } i \in \{1,\cdots, n\}\]</span> 可以举个反例，对于<span class="math inline">\(F: 1 \le z \wedge z \le 2 \wedge u = 1 \wedge v = 2\)</span> 那么<span class="math inline">\(F \rightarrow z = u \vee z = v\)</span><br />
+但是无法推出<span class="math inline">\(F \rightarrow z = u\)</span> 或 <span class="math inline">\(F \rightarrow z = v\)</span><br />
+对于凸理论，我们只需要考虑<strong>变量之间的等价关系</strong>，这些关系则是有限的。</li>
+</ul></li>
+</ul>
+<p>基于以上限制，对于混合多个理论的命题，我们只需要沿着 AST 自底向上将其他理论的子树用变量替代即可, 对于以下例子，假设我们有 EUC 和线性方程组两个理论求解器： <span class="math display">\[f(f(x) + f(x)) = 2a\]</span> <span class="math display">\[f(1) = 1\]</span> <span class="math display">\[f(2) = a\]</span> <span class="math display">\[2x = x + 1\]</span></p>
+<p>令<span class="math inline">\(e_0 = f(x), e_1 = e_0 + e_0, e_2 = 1, e_3 = 2, e_4 = 2x, e_5 = x + 1, e_6 = 2a\)</span> ，对 EUC 我们有:</p>
+<p><span class="math display">\[e_0 = f(x)\]</span> <span class="math display">\[f(e_1) = e_6\]</span> <span class="math display">\[f(e_2) = e_2\]</span> <span class="math display">\[f(e_3) = a\]</span> <span class="math display">\[e_4 = e_5\]</span></p>
+<p>在线性方程组理论中我们有：</p>
+<p><span class="math display">\[e_1 = e_0 + e_0\]</span> <span class="math display">\[e_2 = 1\]</span> <span class="math display">\[e_3 = 2\]</span> <span class="math display">\[e_4 = 2x\]</span> <span class="math display">\[e_5 = x + 1\]</span> <span class="math display">\[e_6 = 2a\]</span> <span class="math display">\[2x = x + 1\]</span></p>
+<p>故我们有共享变量<span class="math inline">\(V = \{x, e_0, e_1, e_2, e_3, e_4, e_5, e_6\}\)</span></p>
+<p>线性方程组理论解得： <span class="math display">\[x = 1, e_4 = 2, e_5 = 2\]</span></p>
+<p>接口属性经过 EUC 处理，再次求解得：</p>
+<p><span class="math display">\[x = e_2 = 1, e_0 = f(x) = f(e_2) = 1, e_4 = e_5 = e_3 = 2\]</span></p>
+<p>线性方程组求解得:</p>
+<p><span class="math display">\[e_1 = e_0 + e_0 = 2\]</span></p>
+<p>EUC 继而求到:</p>
+<p><span class="math display">\[e_3 = e_1 = 2 \rightarrow f(e_1) = f(e_3) \rightarrow e_6 = a\]</span></p>
+<p>最后线性方程组求解<span class="math inline">\(e_6 = 2a = a\)</span>得到<span class="math inline">\(a = 0\)</span> 还是要注意：沿着 AST 自底向上将<strong>其他理论的子树</strong>用变量替代，而非所有子树都要用变量代替。</p>
+<p>把例子扔了，我们只剩下一个简单的流程： 遍历 <span class="math inline">\(V\)</span> 中的变量对 <span class="math inline">\(x,y\)</span>，然后求解 <span class="math inline">\(F \wedge x \ne y\)</span>，如果 UNSAT 说明 <span class="math inline">\(x=y\)</span> 成立</p>
+<blockquote>
+<p>具体理论通常有高效的实现方式</p>
+</blockquote>
+<h3 id="对于非凸包">对于非凸包</h3>
+<p>任何时候遇到一个等价关系的析取式，依次尝试每个等价关系, 如果任意一个得出 SAT，即整体 SAT, 如果全部 UNSAT，即整体 UNSAT。</p>
+<h2 id="application">Application</h2>
+<p><a href="https://github.com/Z3Prover/z3">Z3</a> 是一个基于 SMT 理论的求解器</p>
+<p><a href="https://github.com/AliveToolkit/alive2">Alive2</a> 基于 <em>Z3</em> 完成了 LLVM-IR 的程序验证/refinement 关系验证的工作</p>
+<h2 id="reference">Reference</h2>
+<p><a href="https://xiongyingfei.github.io/SA_new/2023/slides/slides14_SMT.pdf">北大软件分析</a></p>
+]]></content>
+      <categories>
+        <category>PL</category>
+      </categories>
+      <tags>
+        <tag>PL</tag>
+        <tag>Constraint Solver</tag>
+        <tag>SMT</tag>
+      </tags>
   </entry>
 </search>

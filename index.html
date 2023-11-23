@@ -121,17 +121,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">22</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">26</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">12</span></a>
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">13</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">39</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">42</span></a>
 
   </li>
         <li class="menu-item menu-item-sitemap">
@@ -189,6 +189,237 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/11/23/SMT-Introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/11/23/SMT-Introduction/" class="post-title-link" itemprop="url">SMT-可满足性模理论</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-11-23 20:15:59 / Modified: 23:07:11" itemprop="dateCreated datePublished" datetime="2023-11-23T20:15:59+08:00">2023-11-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PL/" itemprop="url" rel="index"><span itemprop="name">PL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="smt-solver">SMT Solver</h2>
+<p>继上篇有关 SAT 的介绍，我们接着展开看看 SMT - Satisfiability Modulo Theories。 SAT 是基于布尔逻辑回答某个命题的可满足性，如<span class="math inline">\(x \vee y\)</span>。但现实中有各种其他的理论， 如实数理论等：<span class="math inline">\(a &lt; c \vee a &gt; b\)</span>，那我们怎么判断这种公式的可满足性呢？</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/11/23/SMT-Introduction/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/11/23/SAT-Introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/11/23/SAT-Introduction/" class="post-title-link" itemprop="url">SAT-布尔可满足性理论</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-11-23 19:12:02 / Modified: 20:15:40" itemprop="dateCreated datePublished" datetime="2023-11-23T19:12:02+08:00">2023-11-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PL/" itemprop="url" rel="index"><span itemprop="name">PL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="什么是约束求解">什么是约束求解？</h2>
+<p>现实世界中有许多问题可以被抽象为基于约束(Constraint)的问题，<strong>约束</strong>指的是就是条件。<br />
+而约束求解就是在给定约束的情况下，如果可满足(Satisfiable)我们就返回一组解， 如果不可满足，我们就给出一个较小的矛盾集(Unsatisfiable core)。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/11/23/SAT-Introduction/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/11/05/Linear-Algebra-Cheetsheet0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/doge.jpg">
+      <meta itemprop="name" content="XChy">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="XChy's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/11/05/Linear-Algebra-Cheetsheet0/" class="post-title-link" itemprop="url">线性代数的小trick-0</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-11-05 16:05:00 / Modified: 21:12:33" itemprop="dateCreated datePublished" datetime="2023-11-05T16:05:00+08:00">2023-11-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linear-Algebra/" itemprop="url" rel="index"><span itemprop="name">Linear Algebra</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="矩阵多项式">矩阵多项式</h2>
+<p>对于矩阵<span class="math inline">\(A\)</span>，我们假设有关于矩阵<span class="math inline">\(A\)</span>的<span class="math inline">\(n\)</span>次多项式 <span class="math inline">\(f(A) = c_nA^n+c_{n-1}A^{n-1}+\cdots+c_1A+c_0E\)</span><br />
+那么假设我们知道<span class="math inline">\(A\)</span>的特征值<span class="math inline">\(\lambda_1,\lambda_2, \cdots, \lambda_n\)</span></p>
+<p>那么<span class="math inline">\(f(A)\)</span>的特征值会是什么呢？</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/11/05/Linear-Algebra-Cheetsheet0/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -306,7 +537,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-11-01 00:34:59" itemprop="dateModified" datetime="2023-11-01T00:34:59+08:00">2023-11-01</time>
+                <time title="Modified: 2023-11-03 00:18:25" itemprop="dateModified" datetime="2023-11-03T00:18:25+08:00">2023-11-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -332,8 +563,16 @@
           <p><a target="_blank" rel="noopener" href="https://llvm.org/docs/LangRef.html">LangRef</a><br />
 <a target="_blank" rel="noopener" href="https://llvm.org/docs/LoopTerminology.html">循环术语/Loop Terminology</a><br />
 <a target="_blank" rel="noopener" href="https://llvm.org/docs/MemorySSA.html">MemorySSA</a><br />
-<a target="_blank" rel="noopener" href="https://llvm.org/docs/Reference.html">Reference Guide</a> <a target="_blank" rel="noopener" href="https://llvm.org/docs/Passes.html">Current Passes</a></p>
-
+<a target="_blank" rel="noopener" href="https://llvm.org/docs/Reference.html">Reference Guide</a><br />
+<a target="_blank" rel="noopener" href="https://llvm.org/docs/Passes.html">Current Passes</a><br />
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/10/30/LLVM-Docs/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -764,259 +1003,10 @@ For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for C
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/21/Whale-Dependencies-Analysis-0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/09/21/Whale-Dependencies-Analysis-0/" class="post-title-link" itemprop="url">Whale-Dependencies-Analysis-0</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-09-21 15:33:44 / Modified: 19:52:14" itemprop="dateCreated datePublished" datetime="2023-09-21T15:33:44+08:00">2023-09-21</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/LLVM/" itemprop="url" rel="index"><span itemprop="name">LLVM</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="why-do-we-need-dependencies-analysis">Why do we need dependencies analysis?</h2>
-<p>Dependencies analysis is the <strong>foundation</strong> for <em>instruction scheduling</em> and <em>data-cached optimization</em>. It detects and analyzes the conflict relation on resources, control, data, etc, such that other transform can reorder the instruction/BasicBlock to chase better performance.</p>
-<p>Here, we mainly focus on the <strong>instruction dependencies</strong>.</p>
-<h2 id="classifications-of-instruction-dependencies">Classifications of instruction dependencies</h2>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/17/CS144-Lab3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/09/17/CS144-Lab3/" class="post-title-link" itemprop="url">CS144-Lab3</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2023-09-17 20:23:55" itemprop="dateCreated datePublished" datetime="2023-09-17T20:23:55+08:00">2023-09-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-09-21 15:31:42" itemprop="dateModified" datetime="2023-09-21T15:31:42+08:00">2023-09-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Lab3 接续 Lab2，要完成<strong>Sender</strong>的角色。 TCP 的任务主要为：</p>
-<ul>
-<li>Keep track of the receiver's window (acknos and window size)</li>
-<li>Fill the window when possible, by reading from the <em>ByteStream</em>, creating new TCP segments (including <em>SYN</em> and <em>FIN</em> flags if needed), and sending them.</li>
-<li>Keep track of which segments have been sent but not yet acknowledged by the receiver — we call these “<strong>outstanding</strong>” segments</li>
-<li>Re-send <strong>outstanding</strong> segments if <strong>enough time passes</strong> since they were sent, and they haven’t been acknowledged yet</li>
-</ul>
-<blockquote>
-<p>Why am I doing this? The basic principle is to send whatever the receiver will allow</p>
-<p>us to send (filling the window), and keep retransmitting until the receiver acknowledges</p>
-<p>each segment. This is called “automatic repeat request” (ARQ).</p>
-</blockquote>
-<h2 id="那么tcpsender是怎么时候知道一段segment丢失了呢">那么TCPSender是怎么时候知道一段segment丢失了呢？</h2>
-<p>Sender会记录每一个outstanding segment直到收到receiver的ackno。而如果一个segment outstand了太久的话， 我们就需要将其重新发送一遍。</p>
-<p>当然，这里有些关于"outstanding for too long"的原则，但Lab3不会让我们解决一些tricky或者过于文字游戏的问题 （留在Lab4）。</p>
-<p>这里有几个要点： - Sender的<strong>tick</strong>函数是唯一一个你可以用的，关于时间的函数。其他对于CPU/OS的调用都是被禁止的。 - Sender会被设置一个<strong>retransmission timeout (RTO)</strong>。这个就是我们resend segment的时长了。 - 我们需要自己实现retransmission timer，<strong>基于tick</strong>。 - 每个包含数据的segment被发送时，若timer没有运行，就启动timer。 - 当所有outstanding data被acknowledged了，停止timer。</p>
-<p>在这里我们可以讨论一下RTO和Retransmission timer。 首先，当有带数据的segment被发送时，我们要让timer run起来。 当tick时若timer超时，则： - 把segno最低的重发一遍 - 若window大小不为0,则： - retransmission num ++ (timer stop的时候置零) - RTO *= 2, 这是根据流量调整速率的 - reset timer and start it</p>
-<p>除此之外<span class="math inline">\(FIN\)</span>的处理也有点dirty，实现的时候要注意一下。</p>
-<p>Lab4和Lab5比较简单，就不记录了，一个是IP/Ethernet以及ARP的NetworkInterface实现，一个则是Router的跳转表实现， 不需要太动脑子。</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://xchy.github.io/2023/09/15/LeetCode-89/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/doge.jpg">
-      <meta itemprop="name" content="XChy">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="XChy's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/09/15/LeetCode-89/" class="post-title-link" itemprop="url">LeetCode 89 格雷编码</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2023-09-15 15:26:07 / Modified: 15:38:36" itemprop="dateCreated datePublished" datetime="2023-09-15T15:26:07+08:00">2023-09-15</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/LeetCode/" itemprop="url" rel="index"><span itemprop="name">LeetCode</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>题目如下：</p>
-<p>n 位格雷码序列 是一个由 <span class="math inline">\(2^n\)</span> 个整数组成的序列，其中：</p>
-<p>每个整数都在范围 <span class="math inline">\([0, 2^n - 1]\)</span> 内, 要求：</p>
-<ul>
-<li>第一个整数是 0</li>
-<li>一个整数在序列中出现 不超过一次</li>
-<li>每对 相邻 整数的二进制表示 恰好一位不同 ，且</li>
-<li>第一个 和 最后一个 整数的二进制表示 恰好一位不同</li>
-</ul>
-<p>给你一个整数 n ，返回任一有效的 n 位格雷码序列 。</p>
-<blockquote>
-<p>说实话我一开始想的简单了，直接暴力搜索，最后发现不行，只能 refer 一下官方题解了</p>
-</blockquote>
-<h2 id="方法一">方法一</h2>
-<p>我们可以用归纳法，从 <span class="math inline">\(n-1\)</span>推到<span class="math inline">\(n\)</span>，设序列 <span class="math inline">\(G_n\)</span> 为<span class="math inline">\(n\)</span> 位的格雷码序列, 我们可以从 <span class="math inline">\(G_{n-1}\)</span> 推到 <span class="math inline">\(G_n\)</span>。</p>
-<p>首先把 <span class="math inline">\(G_{n-1}\)</span> 中所有元素的<span class="math inline">\(n-1\)</span>位设为 1，得到<span class="math inline">\(G_{n-1}^T\)</span>, 然后拼接 <span class="math inline">\(G_{n-1}\)</span>和<span class="math inline">\(G_{n-1}^T\)</span>就得到了我们想要的结果。</p>
-<p>为什么呢？其实很简单，<span class="math inline">\(G_{n-1}^T\)</span> 中每个数字都与<span class="math inline">\(G_{n-1}\)</span> <strong>有且仅有</strong>一位不同, 且 <span class="math inline">\(G_{n-1}\)</span>是<span class="math inline">\([0,2^{n-1}]\)</span>的一个排列，<span class="math inline">\(G_{n-1}^T\)</span>则是<span class="math inline">\([2^{n-1}, 2^{n}-1]\)</span>上的排列。 二者组合后自然就得到了<span class="math inline">\([0,2^n-1]\)</span>上的排列，且依次穿插后二进制位恰有一位不同。</p>
-<h2 id="方法二">方法二</h2>
-<p>这个方法是纯粹的找规律，如下： <img src="/images/leetcode89.png" alt="a" /></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -1084,20 +1074,20 @@ For LLVM, there is <strong>EarlyCSE</strong> pass as one of implementation for C
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-count">42</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
