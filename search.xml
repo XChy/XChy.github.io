@@ -1767,7 +1767,7 @@ P_{B=c} \rightarrow P\_{A=c}
     <content><![CDATA[<h2 id="introduction">1. Introduction</h2>
 <p>It's always hard to write code for parallel programs, and harder to write correct and fast code on GPU. Writing a simple <a href="https://github.com/stanford-cs149/asst3">CUDA Renderer</a> would be an opportunity to practice.</p>
 <span id="more"></span>
-<p>In this article, the CUDA version is 12.1, the GPU is GTX 3090.</p>
+<p>In this article, the CUDA version is 12.1, the GPU is RTX 3090.</p>
 <h2 id="task">2. Task</h2>
 <p>Given the positions, RGBs and other information of a bunch of circles(may be transparent), you need to implement a <strong>fastest</strong> and <strong>correct</strong> render function for these circles you can.</p>
 <p>If we don't care about the <strong>order</strong> of circles, it would be just an easy programming assignment. However, the circles can be <strong>transparent</strong>, that is, we need to blend every pixel based on the original color in that pixel. The render uses the following math: <span class="math display">\[C_{new} = \alpha C_{i} + (1 - \alpha) C_{old}\]</span> Such composition is not commutative, so it's important to draw the pixel following the correct order:</p>
